@@ -1,6 +1,16 @@
 import { z } from 'zod'
 export { clientSchema } from '@/lib/validations/client'
 export type { ClientFormData as ClientInput } from '@/lib/validations/client'
+export {
+  startTimeLogSchema,
+  manualTimeLogSchema,
+  timeLogActionSchema,
+} from '@/lib/validations/timeLog'
+export type {
+  StartTimeLogInput,
+  ManualTimeLogInput,
+  TimeLogActionInput,
+} from '@/lib/validations/timeLog'
 
 /**
  * Contract validation schema

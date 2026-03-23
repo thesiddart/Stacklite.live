@@ -1,5 +1,4 @@
 import React from 'react'
-import { Button } from '@/components/ui/Button'
 
 interface ModuleButton {
   id: string

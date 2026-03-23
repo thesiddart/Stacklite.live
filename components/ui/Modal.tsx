@@ -1,6 +1,8 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React from 'react'
+import * as Dialog from '@radix-ui/react-dialog'
+import { cn } from '@/lib/utils/cn'
 
 interface ModalProps {
   isOpen: boolean
@@ -11,86 +13,45 @@ interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
-  // Close on Escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose()
-      }
-    }
-    
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [isOpen, onClose])
-  
-  // Prevent body scroll when modal is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [isOpen])
-  
-  if (!isOpen) return null
-  
   const sizeStyles = {
     sm: 'max-w-md',
     md: 'max-w-lg',
     lg: 'max-w-2xl',
     xl: 'max-w-4xl',
   }
-  
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-lg">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fadeIn"
-        onClick={onClose}
-      />
-      
-      {/* Modal */}
-      <div
-        className={`
-          relative bg-background-base rounded-lg 
-          shadow-lg w-full ${sizeStyles[size]} 
-          animate-slideIn overflow-hidden border border-border-base
-        `}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-lg py-md border-b border-border-muted">
-          <h2 className="text-lg font-semibold text-text-base">
-            {title}
-          </h2>
-          
-          <button
-            onClick={onClose}
-            className="text-text-muted hover:text-text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand rounded-md p-sm"
-            aria-label="Close modal"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+    <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-background-emphasis/60 backdrop-blur-sm" />
+        <Dialog.Content
+          className={cn(
+            'fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border-base bg-background-base shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background-base',
+            sizeStyles[size]
+          )}
+        >
+          <div className="flex items-center justify-between border-b border-border-muted px-4 py-3">
+            <Dialog.Title className="text-lg font-semibold text-text-base">{title}</Dialog.Title>
+            <Dialog.Close
+              className="rounded-md p-2 text-text-muted transition-colors hover:text-text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background-base"
+              aria-label="Close modal"
             >
-              <path d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        {/* Content */}
-        <div className="px-lg py-md max-h-[calc(100vh-200px)] overflow-y-auto">
-          {children}
-        </div>
-      </div>
-    </div>
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </Dialog.Close>
+          </div>
+          <div className="max-h-[calc(100vh-12rem)] overflow-y-auto px-4 py-3">{children}</div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   )
 }

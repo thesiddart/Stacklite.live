@@ -1,11 +1,24 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react'
-import { AddBold, ClockBold, DangerBold, EditBold, KeyboardBold } from 'sicons'
-import { Button } from '@/components/ui/Button'
-import { KEYBOARD_SHORTCUTS } from '@/lib/constants/design-system'
-import { formatDuration, formatHoursAndMinutes, getElapsedMilliseconds, isSameDay, isSameWeek } from '@/lib/utils/time'
-import { useTimerStore } from '@/stores/timerStore'
+import React, { useMemo, useState } from 'react'
+import { AddCircleBold, CloseCircleBold, Timer1Bold } from 'sicons'
+import { useCurrentTime } from '@/hooks/useCurrentTime'
+import { useClients } from '@/hooks/useClients'
+import {
+  useActiveTimeLog,
+  usePauseTimeLog,
+  useResumeTimeLog,
+  useStopTimeLog,
+  useTimeLogs,
+} from '@/hooks/useTimeLogs'
+import {
+  formatHoursAndMinutes,
+  getTimeLogElapsedMilliseconds,
+  getTimeLogStatus,
+  isSameDay,
+  isSameWeek,
+} from '@/lib/utils/time'
+import type { TimeLog } from '@/lib/types/database'
 import { TimerEntry } from './TimerEntry'
 import { TimerForm } from './TimerForm'
 
@@ -22,196 +35,274 @@ function isTypingTarget(target: EventTarget | null) {
   )
 }
 
-export function TimeTracker() {
-  const timers = useTimerStore((state) => state.timers)
-  const activeTimerId = useTimerStore((state) => state.activeTimerId)
-  const pauseTimer = useTimerStore((state) => state.pauseTimer)
-  const resumeTimer = useTimerStore((state) => state.resumeTimer)
-  const stopTimer = useTimerStore((state) => state.stopTimer)
-  const deleteTimer = useTimerStore((state) => state.deleteTimer)
-  const clearCompleted = useTimerStore((state) => state.clearCompleted)
+interface TimeTrackerProps {
+  variant?: 'dashboard' | 'page'
+  onCollapse?: () => void
+}
 
-  const [now, setNow] = useState(Date.now())
-  const [formMode, setFormMode] = useState<'start' | 'manual'>('start')
+export function TimeTracker({ variant = 'page', onCollapse }: TimeTrackerProps) {
+  const formTransitionMs = 220
+  const { data: timeLogs = [], isLoading, error } = useTimeLogs()
+  const { data: activeTimer } = useActiveTimeLog()
+  const { data: clients = [] } = useClients()
+  const pauseTimeLog = usePauseTimeLog()
+  const resumeTimeLog = useResumeTimeLog()
+  const stopTimeLog = useStopTimeLog()
+
+  const now = useCurrentTime()
+  const [formMode, setFormMode] = useState<'start' | 'manual' | 'edit'>('start')
   const [isFormOpen, setIsFormOpen] = useState(false)
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setNow(Date.now())
-    }, 1000)
-
-    return () => window.clearInterval(interval)
-  }, [])
-
-  const activeTimer = timers.find((timer) => timer.id === activeTimerId) ?? null
+  const [isFormMounted, setIsFormMounted] = useState(false)
+  const [isFormVisible, setIsFormVisible] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [editingEntry, setEditingEntry] = useState<TimeLog | null>(null)
 
   const displayedTimers = useMemo(() => {
-    return [...timers].sort((left, right) => right.createdAt - left.createdAt)
-  }, [timers])
+    return [...timeLogs].sort(
+      (left, right) =>
+        new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+    )
+  }, [timeLogs])
+
+  const clientsById = useMemo(
+    () => new Map(clients.map((client) => [client.id, client.name])),
+    [clients]
+  )
 
   const dailyTotal = useMemo(() => {
-    return timers.reduce((sum, timer) => {
-      if (!isSameDay(timer.createdAt, now)) {
+    return timeLogs.reduce((sum, timeLog) => {
+      const referenceTime = new Date(timeLog.start_time).getTime()
+
+      if (!isSameDay(referenceTime, now)) {
         return sum
       }
 
-      return sum + getElapsedMilliseconds(timer.elapsedMs, timer.startedAt, now)
+      return sum + getTimeLogElapsedMilliseconds(timeLog, now)
     }, 0)
-  }, [now, timers])
+  }, [now, timeLogs])
 
   const weeklyTotal = useMemo(() => {
-    return timers.reduce((sum, timer) => {
-      if (!isSameWeek(timer.createdAt, now)) {
+    return timeLogs.reduce((sum, timeLog) => {
+      const referenceTime = new Date(timeLog.start_time).getTime()
+
+      if (!isSameWeek(referenceTime, now)) {
         return sum
       }
 
-      return sum + getElapsedMilliseconds(timer.elapsedMs, timer.startedAt, now)
+      return sum + getTimeLogElapsedMilliseconds(timeLog, now)
     }, 0)
-  }, [now, timers])
+  }, [now, timeLogs])
 
   const pausedTimer = useMemo(() => {
-    return displayedTimers.find((timer) => timer.status === 'paused') ?? null
+    return displayedTimers.find((timer) => getTimeLogStatus(timer) === 'paused') ?? null
   }, [displayedTimers])
 
-  const heroTimer = activeTimer ?? pausedTimer
-  const heroElapsed = heroTimer
-    ? getElapsedMilliseconds(heroTimer.elapsedMs, heroTimer.startedAt, now)
-    : 0
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
+  React.useEffect(() => {
+    const handleKeyDown = async (event: KeyboardEvent) => {
       if (isFormOpen || isTypingTarget(event.target)) {
         return
       }
 
-      if (event.code === 'Space') {
-        event.preventDefault()
+      try {
+        if (event.code === 'Space') {
+          event.preventDefault()
 
-        if (activeTimer) {
-          pauseTimer(activeTimer.id)
-          return
+          if (activeTimer) {
+            await pauseTimeLog.mutateAsync(activeTimer.id)
+            return
+          }
+
+          if (pausedTimer) {
+            await resumeTimeLog.mutateAsync(pausedTimer.id)
+          }
         }
 
-        if (pausedTimer) {
-          resumeTimer(pausedTimer.id)
-          return
+        if (event.key === 'Escape' && activeTimer) {
+          event.preventDefault()
+          await stopTimeLog.mutateAsync(activeTimer.id)
         }
-
-        setFormMode('start')
-        setIsFormOpen(true)
-      }
-
-      if (event.key === 'Escape' && activeTimer) {
-        event.preventDefault()
-        stopTimer(activeTimer.id)
+      } catch (action) {
+        setActionError(action instanceof Error ? action.message : 'Timer action failed.')
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [activeTimer, isFormOpen, pauseTimer, pausedTimer, resumeTimer, stopTimer])
+  }, [activeTimer, isFormOpen, pauseTimeLog, pausedTimer, resumeTimeLog, stopTimeLog])
+
+  React.useEffect(() => {
+    if (isFormOpen) {
+      setIsFormMounted(true)
+      const frameId = window.requestAnimationFrame(() => {
+        setIsFormVisible(true)
+      })
+
+      return () => window.cancelAnimationFrame(frameId)
+    }
+
+    setIsFormVisible(false)
+    if (!isFormMounted) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsFormMounted(false)
+      setEditingEntry(null)
+    }, formTransitionMs)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [isFormMounted, isFormOpen])
+
+  const runAction = async (action: () => Promise<unknown>) => {
+    setActionError(null)
+    try {
+      await action()
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'Timer action failed.')
+    }
+  }
+
+  const isMutating =
+    pauseTimeLog.isPending || resumeTimeLog.isPending || stopTimeLog.isPending
+  const isTrackerFormExpanded = isFormOpen || isFormMounted
+  const shouldShowList = !isFormMounted
+
+  const trackerIcon = isTrackerFormExpanded ? AddCircleBold : Timer1Bold
+  const trackerTitle = isTrackerFormExpanded ? 'Add Task' : 'Time Tracker'
+  const TrackerIcon = trackerIcon
+
+  const trackerLabel = onCollapse ? (
+    <button
+      type="button"
+      onClick={onCollapse}
+      className="inline-flex h-8 items-center gap-1 rounded-[8px] bg-[#f3e8ff] px-2 text-[#2f2493]"
+      aria-label={isTrackerFormExpanded ? 'Collapse Add Task' : 'Collapse Time Tracker'}
+    >
+      <TrackerIcon size={16} />
+      <span className="text-[14px] font-medium">{trackerTitle}</span>
+    </button>
+  ) : (
+    <div className="inline-flex h-8 items-center gap-1 rounded-[8px] bg-[#f3e8ff] px-2 text-[#2f2493]">
+      <TrackerIcon size={16} />
+      <span className="text-[14px] font-medium">{trackerTitle}</span>
+    </div>
+  )
 
   return (
     <>
-      <div className="flex h-full flex-col gap-lg">
-        <div className="rounded-lg border border-border-muted bg-background-highlight/40 p-lg shadow-sm">
-          <div className="flex items-start justify-between gap-md">
-            <div>
-              <p className="text-xs uppercase tracking-[0.16em] text-text-muted">Current Focus</p>
-              <p className="mt-sm text-sm font-medium text-text-base">
-                {heroTimer ? heroTimer.taskName : 'No running timer'}
-              </p>
-              {heroTimer?.clientName && <p className="mt-xs text-xs text-text-muted">{heroTimer.clientName}</p>}
-            </div>
+      <div
+        className={
+          variant === 'page'
+            ? 'mx-auto flex max-w-[820px] flex-col items-center gap-[9px]'
+            : 'flex w-full flex-col items-center transition-[width,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]'
+        }
+      >
+        <div
+          className={`flex w-full flex-col rounded-[14px] border border-[#e2e2e2] bg-white p-4 shadow-[0_4px_6px_0_rgba(0,0,0,0.1),0_2px_4px_0_rgba(0,0,0,0.06)] transition-[height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            variant === 'dashboard' ? 'h-[341px]' : 'min-h-[520px]'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            {trackerLabel}
+            <button
+              type="button"
+              aria-label={isTrackerFormExpanded ? 'Close add task form' : 'Add time entry'}
+              onClick={() => {
+                if (isFormOpen) {
+                  setIsFormOpen(false)
+                  return
+                }
 
-            <ClockBold className="h-5 w-5 text-text-muted" />
+                setEditingEntry(null)
+                setFormMode('start')
+                setIsFormOpen(true)
+              }}
+              className="text-[#2f2493]"
+            >
+              {isTrackerFormExpanded ? <CloseCircleBold size={24} /> : <AddCircleBold size={24} />}
+            </button>
           </div>
 
-          <p className="mt-lg font-mono text-3xl font-semibold text-text-base">{formatDuration(heroElapsed)}</p>
-          <p className="mt-xs text-sm text-text-muted">
-            Today: {formatHoursAndMinutes(dailyTotal)}
-            <span className="mx-sm">•</span>
-            This week: {formatHoursAndMinutes(weeklyTotal)}
-          </p>
+          <div className="mt-[10px] h-px w-full bg-[#d8d8d8]" />
 
-          {activeTimer && heroElapsed >= 8 * 60 * 60 * 1000 && (
-            <div className="mt-md flex items-start gap-sm rounded-md border border-feedback-warning-base/30 bg-feedback-warning-base/10 p-md text-sm text-feedback-warning-text">
-              <DangerBold className="mt-[2px] h-4 w-4 flex-shrink-0" />
-              This timer has been running for more than 8 hours.
+          {error && (
+            <div className="mt-4 rounded-[10px] bg-[#fff1f1] px-3 py-2 text-[13px] text-[#b93838]">
+              {error instanceof Error ? error.message : 'Failed to load time entries.'}
             </div>
           )}
-        </div>
 
-        <div className="grid gap-md sm:grid-cols-2">
-          <Button
-            type="button"
-            onClick={() => {
-              setFormMode('start')
-              setIsFormOpen(true)
-            }}
-            className="justify-center"
-          >
-            <AddBold className="h-4 w-4" />
-            Start Timer
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setFormMode('manual')
-              setIsFormOpen(true)
-            }}
-            className="justify-center"
-          >
-            <EditBold className="h-4 w-4" />
-            Log Time
-          </Button>
-        </div>
-
-        <div className="rounded-md border border-border-muted bg-background-highlight/30 p-md text-xs text-text-muted">
-          <div className="flex items-center gap-sm font-medium text-text-base">
-            <KeyboardBold className="h-4 w-4" />
-            Shortcuts
-          </div>
-          <p className="mt-sm">{KEYBOARD_SHORTCUTS.timer.start_pause}: start or pause the current timer</p>
-          <p className="mt-xs">{KEYBOARD_SHORTCUTS.timer.stop}: stop the active timer</p>
-        </div>
-
-        <div className="flex items-center justify-between gap-md">
-          <div>
-            <p className="text-sm font-semibold text-text-base">Recent Entries</p>
-            <p className="text-xs text-text-muted">Running, paused, and completed time entries</p>
-          </div>
-
-          <Button type="button" size="sm" variant="ghost" onClick={clearCompleted}>
-            Clear Completed
-          </Button>
-        </div>
-
-        <div className="space-y-md overflow-y-auto pr-xs">
-          {displayedTimers.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-border-muted bg-background-highlight/30 p-xl text-center">
-              <p className="text-base font-medium text-text-base">No time entries yet</p>
-              <p className="mt-xs text-sm text-text-muted">Start a timer or log time manually to populate this module.</p>
+          {actionError && (
+            <div className="mt-4 rounded-[10px] bg-[#fff1f1] px-3 py-2 text-[13px] text-[#b93838]">
+              {actionError}
             </div>
-          ) : (
-            displayedTimers.map((timer) => (
-              <TimerEntry
-                key={timer.id}
-                entry={timer}
-                now={now}
-                isActive={timer.id === activeTimerId}
-                onPause={() => pauseTimer(timer.id)}
-                onResume={() => resumeTimer(timer.id)}
-                onStop={() => stopTimer(timer.id)}
-                onDelete={() => deleteTimer(timer.id)}
-              />
-            ))
           )}
+
+          <div className="theme-scrollbar mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
+            {isFormMounted ? (
+              <div
+                className={`transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                  isFormVisible
+                    ? 'translate-y-0 opacity-100'
+                    : 'pointer-events-none -translate-y-1 opacity-0'
+                }`}
+                style={{ transitionDuration: `${formTransitionMs}ms` }}
+              >
+                <TimerForm
+                  isOpen={isFormMounted}
+                  onClose={() => {
+                    setIsFormOpen(false)
+                  }}
+                  mode={formMode}
+                  entry={editingEntry}
+                  renderMode="inline"
+                />
+              </div>
+            ) : isLoading ? (
+              <div className="rounded-[10px] bg-[#f3e8ff]/40 p-3 text-[13px] text-[#7c7288]">
+                Loading time entries...
+              </div>
+            ) : shouldShowList && displayedTimers.length === 0 ? (
+              <div className="rounded-[10px] bg-[#f3e8ff]/40 p-3 text-[13px] text-[#7c7288]">
+                No time entries yet. Click + to start your first timer.
+              </div>
+            ) : shouldShowList ? (
+              <div className="flex flex-col gap-[8px]">
+                {displayedTimers.map((timer) => (
+                  <TimerEntry
+                    key={timer.id}
+                    entry={timer}
+                    clientName={timer.client_id ? clientsById.get(timer.client_id) ?? null : null}
+                    now={now}
+                    onEdit={() => {
+                      setEditingEntry(timer)
+                      setFormMode('edit')
+                      setIsFormOpen(true)
+                    }}
+                    onPause={() => void runAction(() => pauseTimeLog.mutateAsync(timer.id))}
+                    onResume={() => void runAction(() => resumeTimeLog.mutateAsync(timer.id))}
+                    onStop={() => void runAction(() => stopTimeLog.mutateAsync(timer.id))}
+                    isPending={isMutating}
+                  />
+                ))}
+              </div>
+            ) : null}
+          </div>
         </div>
+
+        {variant === 'page' && (
+          <div className="inline-flex items-center gap-[2px] rounded-[8px] border border-[#e2e2e2] bg-white px-1">
+            <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[#7c7288]">
+              <span>Today:</span>
+              <span>{formatHoursAndMinutes(dailyTotal)}</span>
+            </div>
+            <div className="h-6 w-px bg-[#d8d8d8]" />
+            <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[#7c7288]">
+              <span>This Week:</span>
+              <span>{formatHoursAndMinutes(weeklyTotal)}</span>
+            </div>
+          </div>
+        )}
       </div>
-
-      <TimerForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} mode={formMode} />
     </>
   )
 }

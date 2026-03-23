@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { useCreateClient, useUpdateClient } from '@/hooks/useClients'
 import { clientSchema, updateClientSchema } from '@/lib/validations/client'
+import type { ClientFormData, UpdateClientFormData } from '@/lib/validations/client'
 import type { Client } from '@/lib/types/database'
 
 interface ClientFormProps {
@@ -151,7 +152,6 @@ export function ClientForm({
     setErrors({})
     
     try {
-      const schema = mode === 'create' ? clientSchema : updateClientSchema
       const requiredFields: Array<{ key: keyof ClientFormState; message: string }> = [
         { key: 'name', message: 'Client name is required' },
         { key: 'email', message: 'Email is required' },
@@ -201,9 +201,6 @@ export function ClientForm({
         tags: asOptional(formData.tags),
         last_contacted_at: asOptional(formData.last_contacted_at),
       }
-
-      const parseResult = schema.safeParse(payloadInput)
-
       const nonBlockingOptionalFields = new Set([
         'company_name',
         'company_type',
@@ -212,11 +209,10 @@ export function ClientForm({
         'tax_id',
       ])
 
-      let payload: z.infer<typeof schema>
-      if (!parseResult.success) {
+      const handleParseFailure = (issues: z.ZodIssue[]) => {
         const fieldErrors: Record<string, string> = {}
 
-        for (const issue of parseResult.error.issues) {
+        for (const issue of issues) {
           const path = issue.path[0]
           if (typeof path !== 'string') {
             continue
@@ -231,17 +227,33 @@ export function ClientForm({
 
         if (Object.keys(fieldErrors).length > 0) {
           setErrors(fieldErrors)
-          return
+          return true
         }
 
-        payload = payloadInput as z.infer<typeof schema>
-      } else {
-        payload = parseResult.data
+        return false
       }
 
       if (mode === 'create') {
+        const parseResult = clientSchema.safeParse(payloadInput)
+
+        if (!parseResult.success) {
+          if (handleParseFailure(parseResult.error.issues)) {
+            return
+          }
+        }
+
+        const payload = (parseResult.success ? parseResult.data : payloadInput) as ClientFormData
         await createMutation.mutateAsync(payload)
       } else if (client) {
+        const parseResult = updateClientSchema.safeParse(payloadInput)
+
+        if (!parseResult.success) {
+          if (handleParseFailure(parseResult.error.issues)) {
+            return
+          }
+        }
+
+        const payload = (parseResult.success ? parseResult.data : payloadInput) as UpdateClientFormData
         await updateMutation.mutateAsync({ id: client.id, data: payload })
       }
       

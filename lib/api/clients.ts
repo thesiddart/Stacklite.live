@@ -103,6 +103,7 @@ export async function createClient(formData: ClientFormData): Promise<Client> {
   const insertData: ClientInsert = {
     user_id: user.id,
     ...validated,
+    metadata: validated.metadata as ClientInsert['metadata'],
   }
   
   const { data, error } = await supabase
@@ -133,6 +134,7 @@ export async function updateClient(
   
   const updateData: ClientUpdate = {
     ...validated,
+    metadata: validated.metadata as ClientUpdate['metadata'],
   }
   
   const { data, error } = await supabase

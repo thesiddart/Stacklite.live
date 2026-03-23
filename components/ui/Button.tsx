@@ -1,45 +1,55 @@
 import React from 'react'
+import { Slot } from '@radix-ui/react-slot'
+import { cva, type VariantProps } from 'class-variance-authority'
+import { cn } from '@/lib/utils/cn'
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'outline' | 'danger'
-  size?: 'sm' | 'md' | 'lg'
+const buttonVariants = cva(
+  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background-base disabled:cursor-not-allowed disabled:border-border-disabled disabled:bg-background-disabled disabled:text-text-disabled',
+  {
+    variants: {
+      variant: {
+        primary: 'bg-button-primary text-button-primary-fg hover:bg-link-hover',
+        secondary: 'bg-button-secondary text-button-secondary-fg hover:bg-background-muted',
+        ghost: 'border border-transparent bg-transparent text-button-ghost-fg hover:bg-background-highlight',
+        outline: 'border border-border-base bg-background-base text-text-base hover:bg-background-highlight',
+        danger: 'bg-feedback-error-base text-text-inverse hover:bg-feedback-error-text',
+      },
+      size: {
+        sm: 'h-8 px-3 text-sm',
+        md: 'h-10 px-4 text-sm',
+        lg: 'h-12 px-5 text-base',
+      },
+    },
+    defaultVariants: {
+      variant: 'primary',
+      size: 'md',
+    },
+  }
+)
+
+interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
   isLoading?: boolean
+  asChild?: boolean
   children: React.ReactNode
 }
 
 export function Button({
-  variant = 'primary',
-  size = 'md',
+  variant,
+  size,
   isLoading = false,
+  asChild = false,
   disabled,
   children,
   className = '',
   ...props
 }: ButtonProps) {
-  const baseStyles =
-    'inline-flex items-center justify-center gap-md font-medium rounded-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-text-brand disabled:opacity-50 disabled:cursor-not-allowed'
-
-  const variantStyles = {
-    primary:
-      'bg-button-primary text-button-primary-fg hover:opacity-90 active:opacity-80',
-    secondary:
-      'bg-button-secondary text-button-secondary-fg hover:opacity-90 active:opacity-80',
-    ghost: 'text-button-ghost-fg hover:bg-background-muted',
-    outline:
-      'border-2 border-border-base text-text-base hover:bg-background-highlight',
-    danger:
-      'bg-feedback-error-base text-text-inverse hover:opacity-90 active:opacity-80',
-  }
-
-  const sizeStyles = {
-    sm: 'px-lg py-sm text-sm h-8',
-    md: 'px-lg py-md text-base h-10',
-    lg: 'px-xl py-lg text-base h-12',
-  }
+  const Component = asChild ? Slot : 'button'
 
   return (
-    <button
-      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+    <Component
+      className={cn(buttonVariants({ variant, size }), className)}
       disabled={disabled || isLoading}
       {...props}
     >
@@ -67,9 +77,27 @@ export function Button({
           </svg>
           Loading...
         </>
-      ) : (
-        children
-      )}
-    </button>
+      ) : children}
+    </Component>
+  )
+}
+
+interface IconButtonProps extends Omit<ButtonProps, 'children'> {
+  icon: React.ReactNode
+  label: string
+}
+
+export function IconButton({ icon, label, size = 'md', ...props }: IconButtonProps) {
+  const sizeClass = size === 'sm' ? 'w-8' : size === 'lg' ? 'w-12' : 'w-10'
+
+  return (
+    <Button
+      {...props}
+      size={size}
+      className={cn('px-0', sizeClass, props.className)}
+      aria-label={label}
+    >
+      {icon}
+    </Button>
   )
 }

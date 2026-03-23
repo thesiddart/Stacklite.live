@@ -1,3 +1,5 @@
+import type { TimeLog } from '@/lib/types/database'
+
 export function getElapsedMilliseconds(elapsedMs: number, startedAt: number | null, now: number) {
   if (startedAt === null) {
     return elapsedMs
@@ -60,4 +62,30 @@ export function formatTimestamp(timestamp: number) {
     month: 'short',
     day: 'numeric',
   }).format(timestamp)
+}
+
+export function getTimeLogStatus(timeLog: Pick<TimeLog, 'is_running' | 'end_time'>) {
+  if (timeLog.is_running) {
+    return 'running' as const
+  }
+
+  if (timeLog.end_time) {
+    return 'completed' as const
+  }
+
+  return 'paused' as const
+}
+
+export function getTimeLogElapsedMilliseconds(
+  timeLog: Pick<TimeLog, 'duration_seconds' | 'is_running' | 'start_time'>,
+  now: number
+) {
+  const persistedMs = (timeLog.duration_seconds ?? 0) * 1000
+
+  if (!timeLog.is_running) {
+    return persistedMs
+  }
+
+  const startedAt = new Date(timeLog.start_time).getTime()
+  return persistedMs + Math.max(0, now - startedAt)
 }

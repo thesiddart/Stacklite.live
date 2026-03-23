@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type FormEvent } from 'react'
+import { Suspense, useEffect, useState, type FormEvent } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -11,7 +11,7 @@ function normalizeEmail(value: string): string {
   return value.trim().toLowerCase()
 }
 
-export default function SignupPage() {
+function SignupPageContent() {
   const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -136,10 +136,13 @@ export default function SignupPage() {
   const handleGoogleSignup = async () => {
     setError('')
     try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || window.location.origin
+      const callbackUrl = `${appUrl}/auth/callback?next=/dashboard`
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: callbackUrl,
         },
       })
 
@@ -149,19 +152,22 @@ export default function SignupPage() {
     }
   }
 
-  const handleAppleSignup = async () => {
+  const handleGithubSignup = async () => {
     setError('')
     try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || window.location.origin
+      const callbackUrl = `${appUrl}/auth/callback?next=/dashboard`
+
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
+        provider: 'github',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: callbackUrl,
         },
       })
 
       if (error) throw error
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'An error occurred with Apple sign up')
+      setError(err instanceof Error ? err.message : 'An error occurred with GitHub sign up')
     }
   }
 
@@ -204,7 +210,7 @@ export default function SignupPage() {
                 <path d="M13.5998 14C13.5998 11.79 11.0798 10 7.9998 10C4.9198 10 2.3998 11.79 2.3998 14" stroke="var(--tertiary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             )}
-            <p className="text-sm font-medium text-[#251F7B]" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+            <p className="text-sm font-medium text-[#251F7B]">
               {needsEmailVerification ? 'verify your email' : 'Sign Up'}
             </p>
           </div>
@@ -222,10 +228,10 @@ export default function SignupPage() {
 
             {needsEmailVerification ? (
               <div className="flex flex-col gap-4">
-                <h2 className="text-3xl font-semibold text-[#1f1f1f]" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                <h2 className="text-3xl font-semibold text-[#1f1f1f]">
                   Verify your email
                 </h2>
-                <p className="text-lg text-[#5c5c5c] leading-8" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                <p className="text-lg text-[#5c5c5c] leading-8">
                   We just sent an email to{' '}
                   <span className="font-medium text-[#251F7B]">{normalizeEmail(email)}</span>. Click the
                   link in that email to verify your account.
@@ -250,7 +256,6 @@ export default function SignupPage() {
                   }}
                   disabled={isResending}
                   className="h-10 px-8 py-2 bg-[#7962F4] text-white rounded-full font-medium text-sm hover:opacity-90 disabled:opacity-50 transition-all"
-                  style={{ fontFamily: 'Satoshi, sans-serif' }}
                 >
                   {isResending ? 'Resending email...' : 'Resend email'}
                 </button>
@@ -259,7 +264,6 @@ export default function SignupPage() {
                   type="button"
                   onClick={handleUpdateEmail}
                   className="h-10 px-8 py-2 border border-[#7962F4] text-[#5c5c5c] rounded-full font-medium text-xs hover:bg-white/50 transition-all"
-                  style={{ fontFamily: 'Satoshi, sans-serif' }}
                 >
                   Update email address
                 </button>
@@ -272,7 +276,6 @@ export default function SignupPage() {
                     target="_blank"
                     rel="noreferrer"
                     className="h-10 px-8 py-2 border border-[#5c5c5c] rounded-full flex items-center justify-center text-xs font-medium text-[#5c5c5c] hover:bg-white/50 transition-all"
-                    style={{ fontFamily: 'Satoshi, sans-serif' }}
                   >
                     Open Gmail
                   </a>
@@ -281,7 +284,6 @@ export default function SignupPage() {
                     target="_blank"
                     rel="noreferrer"
                     className="h-10 px-8 py-2 border border-[#5c5c5c] rounded-full flex items-center justify-center text-xs font-medium text-[#5c5c5c] hover:bg-white/50 transition-all"
-                    style={{ fontFamily: 'Satoshi, sans-serif' }}
                   >
                     Open Outlook
                   </a>
@@ -290,7 +292,6 @@ export default function SignupPage() {
                 <Link
                   href="/login"
                   className="text-sm text-[#5c5c5c] underline text-center"
-                  style={{ fontFamily: 'Satoshi, sans-serif' }}
                 >
                   Already verified? Sign in
                 </Link>
@@ -306,20 +307,20 @@ export default function SignupPage() {
                     disabled={isLoading}
                   >
                     <Image src="/icons/social/google-original.svg" alt="Google" width={16} height={16} />
-                    <span className="text-xs font-medium text-[#5c5c5c]" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                    <span className="text-xs font-medium text-[#5c5c5c]">
                       Google
                     </span>
                   </button>
 
                   <button
-                    onClick={handleAppleSignup}
+                    onClick={handleGithubSignup}
                     type="button"
                     className="flex-1 h-10 px-8 py-2 border border-[#5c5c5c] rounded-full flex items-center justify-center gap-1 hover:bg-white/50 transition-colors"
                     disabled={isLoading}
                   >
-                    <Image src="/icons/social/apple-original.svg" alt="Apple" width={16} height={16} />
-                    <span className="text-xs font-medium text-[#5c5c5c]" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-                      Apple
+                    <Image src="/icons/social/github-original.svg" alt="GitHub" width={16} height={16} />
+                    <span className="text-xs font-medium text-[#5c5c5c]">
+                      Github
                     </span>
                   </button>
                 </div>
@@ -327,7 +328,7 @@ export default function SignupPage() {
                 {/* Divider */}
                 <div className="flex items-center gap-2">
                   <div className="flex-1 border-t border-[#5c5c5c]" />
-                  <p className="text-sm text-[#333]" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                  <p className="text-sm text-[#333]">
                     or sign up with email
                   </p>
                   <div className="flex-1 border-t border-[#5c5c5c]" />
@@ -338,7 +339,7 @@ export default function SignupPage() {
                   {/* Full Name Input */}
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-0.5">
-                      <label htmlFor="fullName" className="text-sm font-medium text-[#333]" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                      <label htmlFor="fullName" className="text-sm font-medium text-[#333]">
                         Full Name
                       </label>
                       <span className="text-sm font-medium text-[#fb3748]">*</span>
@@ -350,7 +351,6 @@ export default function SignupPage() {
                       onChange={(e) => setFullName(e.target.value)}
                       required
                       className="h-9 px-3 py-1 bg-white border border-[#ebebeb] rounded-md shadow-sm text-sm text-[#5c5c5c] focus:outline-none focus:ring-2 focus:ring-[#7962F4] transition-all"
-                      style={{ fontFamily: 'Satoshi, sans-serif' }}
                       placeholder=" "
                       disabled={isLoading}
                     />
@@ -359,7 +359,7 @@ export default function SignupPage() {
                   {/* Email Input */}
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-0.5">
-                      <label htmlFor="email" className="text-sm font-medium text-[#333]" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                      <label htmlFor="email" className="text-sm font-medium text-[#333]">
                         Your email
                       </label>
                       <span className="text-sm font-medium text-[#fb3748]">*</span>
@@ -371,7 +371,6 @@ export default function SignupPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       className="h-9 px-3 py-1 bg-white border border-[#ebebeb] rounded-md shadow-sm text-sm text-[#5c5c5c] focus:outline-none focus:ring-2 focus:ring-[#7962F4] transition-all"
-                      style={{ fontFamily: 'Satoshi, sans-serif' }}
                       placeholder=" "
                       disabled={isLoading}
                     />
@@ -380,7 +379,7 @@ export default function SignupPage() {
                   {/* Password Input */}
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-0.5">
-                      <label htmlFor="password" className="text-sm font-medium text-[#333]" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                      <label htmlFor="password" className="text-sm font-medium text-[#333]">
                         Password
                       </label>
                       <span className="text-sm font-medium text-[#fb3748]">*</span>
@@ -392,7 +391,6 @@ export default function SignupPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       className="h-9 px-3 py-1 bg-white border border-[#ebebeb] rounded-md shadow-sm text-sm text-[#5c5c5c] focus:outline-none focus:ring-2 focus:ring-[#7962F4] transition-all"
-                      style={{ fontFamily: 'Satoshi, sans-serif' }}
                       placeholder=" "
                       disabled={isLoading}
                     />
@@ -401,7 +399,7 @@ export default function SignupPage() {
                   {/* Confirm Password Input */}
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-0.5">
-                      <label htmlFor="confirmPassword" className="text-sm font-medium text-[#333]" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                      <label htmlFor="confirmPassword" className="text-sm font-medium text-[#333]">
                         Confirm Password
                       </label>
                       <span className="text-sm font-medium text-[#fb3748]">*</span>
@@ -413,7 +411,6 @@ export default function SignupPage() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                       className="h-9 px-3 py-1 bg-white border border-[#ebebeb] rounded-md shadow-sm text-sm text-[#5c5c5c] focus:outline-none focus:ring-2 focus:ring-[#7962F4] transition-all"
-                      style={{ fontFamily: 'Satoshi, sans-serif' }}
                       placeholder=" "
                       disabled={isLoading}
                     />
@@ -425,7 +422,6 @@ export default function SignupPage() {
                       type="submit"
                       disabled={isLoading}
                       className="h-10 px-8 py-2 bg-[#7962F4] text-white rounded-full font-medium text-sm hover:opacity-90 disabled:opacity-50 transition-all"
-                      style={{ fontFamily: 'Satoshi, sans-serif' }}
                     >
                       {isLoading ? 'Creating account...' : 'Create Account'}
                     </button>
@@ -433,7 +429,6 @@ export default function SignupPage() {
                     <Link
                       href="/login"
                       className="h-10 px-8 py-2 border border-[#7962F4] text-[#5c5c5c] rounded-full font-medium text-xs hover:bg-white/50 transition-all flex items-center justify-center"
-                      style={{ fontFamily: 'Satoshi, sans-serif' }}
                     >
                       Already have an account? Sign In
                     </Link>
@@ -445,5 +440,13 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupPageContent />
+    </Suspense>
   )
 }

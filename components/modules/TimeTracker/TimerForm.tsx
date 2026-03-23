@@ -1,23 +1,38 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { Textarea } from '@/components/ui/Textarea'
 import { useClients } from '@/hooks/useClients'
-import { useTimerStore } from '@/stores/timerStore'
+import { useCreateManualTimeLog, useCreateRunningTimeLog, useUpdateTimeLog } from '@/hooks/useTimeLogs'
+import type { TimeLog } from '@/lib/types/database'
 
 interface TimerFormProps {
   isOpen: boolean
   onClose: () => void
-  mode: 'start' | 'manual'
+  mode: 'start' | 'manual' | 'edit'
+  entry?: TimeLog | null
+  renderMode?: 'modal' | 'inline'
 }
 
-export function TimerForm({ isOpen, onClose, mode }: TimerFormProps) {
+export function TimerForm({
+  isOpen,
+  onClose,
+  mode,
+  entry = null,
+  renderMode = 'modal',
+}: TimerFormProps) {
+  const inlineInputClassName =
+    'h-9 w-full rounded-[6px] border border-[#ebebeb] bg-white px-3 py-1 text-[14px] leading-5 text-[#333333] shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] outline-none focus-visible:border-[var(--primary,#7962f4)]'
+  const inlineSelectClassName =
+    'h-9 w-full appearance-none rounded-[6px] border border-[#ebebeb] bg-white px-3 py-1 pr-10 text-[14px] leading-5 text-[#333333] shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] outline-none focus-visible:border-[var(--primary,#7962f4)]'
+
   const { data: clients = [] } = useClients()
-  const startTimer = useTimerStore((state) => state.startTimer)
-  const addManualEntry = useTimerStore((state) => state.addManualEntry)
+  const createRunningTimeLog = useCreateRunningTimeLog()
+  const createManualTimeLog = useCreateManualTimeLog()
+  const updateTimeLog = useUpdateTimeLog()
 
   const [taskName, setTaskName] = useState('')
   const [clientId, setClientId] = useState('')
@@ -25,17 +40,19 @@ export function TimerForm({ isOpen, onClose, mode }: TimerFormProps) {
   const [durationMinutes, setDurationMinutes] = useState('30')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isOpen) {
-      setTaskName('')
-      setClientId('')
-      setNotes('')
-      setDurationMinutes('30')
-      setErrors({})
+      return
     }
-  }, [isOpen])
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    setErrors({})
+    setTaskName(entry?.task_name ?? '')
+    setClientId(entry?.client_id ?? '')
+    setNotes(entry?.notes ?? '')
+    setDurationMinutes('30')
+  }, [entry, isOpen, mode])
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     const nextErrors: Record<string, string> = {}
@@ -57,91 +74,212 @@ export function TimerForm({ isOpen, onClose, mode }: TimerFormProps) {
     const payload = {
       taskName: taskName.trim(),
       clientId: selectedClient?.id ?? null,
-      clientName: selectedClient?.name ?? null,
       notes: notes.trim() ? notes.trim() : null,
     }
 
-    if (mode === 'start') {
-      startTimer(payload)
-    } else {
-      addManualEntry({
-        ...payload,
-        durationMinutes: parsedDuration,
+    try {
+      if (mode === 'start') {
+        await createRunningTimeLog.mutateAsync(payload)
+      } else if (mode === 'manual') {
+        await createManualTimeLog.mutateAsync({
+          ...payload,
+          durationMinutes: parsedDuration,
+        })
+      } else if (entry) {
+        await updateTimeLog.mutateAsync({
+          id: entry.id,
+          ...payload,
+        })
+      }
+
+      onClose()
+    } catch (error: unknown) {
+      setErrors({
+        submit: error instanceof Error ? error.message : 'Failed to save time entry.',
       })
     }
+  }
 
-    onClose()
+  const isPending =
+    createRunningTimeLog.isPending || createManualTimeLog.isPending || updateTimeLog.isPending
+
+  const title =
+    mode === 'start' ? 'Add Task' : mode === 'manual' ? 'Log Time Manually' : 'Edit Task'
+
+  const formContent = (
+    <form onSubmit={handleSubmit} className={renderMode === 'inline' ? 'space-y-[10px]' : 'space-y-lg'}>
+      {renderMode === 'inline' ? (
+        <>
+          <Input
+            name="taskName"
+            placeholder="What are you working on?"
+            value={taskName}
+            onChange={(event) => setTaskName(event.target.value)}
+            error={errors.taskName}
+            className={inlineInputClassName}
+            required
+          />
+
+          <div className="w-full">
+            <input
+              id="timer-inline-notes"
+              name="notes"
+              type="text"
+              placeholder="Add notes"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              className={inlineInputClassName}
+            />
+          </div>
+
+          <div className="relative">
+            <select
+              id="timer-client"
+              value={clientId}
+              onChange={(event) => setClientId(event.target.value)}
+              className={inlineSelectClassName}
+            >
+              <option value="">Clients</option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name}
+                </option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[var(--primary,#7962f4)]" aria-hidden>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" fill="currentColor" />
+                <path d="M8 10L12 14L16 10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+          </div>
+
+          {mode === 'manual' && (
+            <Input
+              name="durationMinutes"
+              type="number"
+              min="1"
+              step="1"
+              placeholder="Duration in minutes"
+              value={durationMinutes}
+              onChange={(event) => setDurationMinutes(event.target.value)}
+              error={errors.durationMinutes}
+              className={inlineInputClassName}
+              required
+            />
+          )}
+        </>
+      ) : (
+        <section className="space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-[#333333]">Task</h3>
+          <Input
+            label="Task Name"
+            name="taskName"
+            placeholder="Homepage redesign, discovery call, QA review..."
+            value={taskName}
+            onChange={(event) => setTaskName(event.target.value)}
+            error={errors.taskName}
+            required
+          />
+        </section>
+      )}
+
+      {renderMode !== 'inline' && (
+        <section className="space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-[#333333]">Details</h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label htmlFor="timer-client" className="mb-2 block text-sm font-medium text-[#333333]">
+                Client
+              </label>
+              <div className="relative">
+                <select
+                  id="timer-client"
+                  value={clientId}
+                  onChange={(event) => setClientId(event.target.value)}
+                  className="w-full rounded-md border-2 border-border-base bg-background-base px-lg py-md text-text-base transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-text-brand"
+                >
+                  <option value="">Unassigned</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {mode === 'manual' && (
+              <Input
+                label="Duration (minutes)"
+                name="durationMinutes"
+                type="number"
+                min="1"
+                step="1"
+                value={durationMinutes}
+                onChange={(event) => setDurationMinutes(event.target.value)}
+                error={errors.durationMinutes}
+                required
+              />
+            )}
+          </div>
+
+          <Textarea
+            label="Notes"
+            name="notes"
+            placeholder="Optional context for this time entry"
+            value={notes}
+            onChange={(event) => setNotes(event.target.value)}
+            rows={4}
+          />
+        </section>
+      )}
+
+      {errors.submit && (
+        <div className="rounded-md border border-feedback-error-base/40 bg-feedback-error-base/10 p-md text-sm text-feedback-error-text">
+          {errors.submit}
+        </div>
+      )}
+
+      {renderMode === 'inline' ? (
+        <div className="flex items-center gap-[10px] pt-1">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onClose}
+            disabled={isPending}
+            className="h-10 rounded-full border border-[var(--primary,#7962f4)] px-8 py-2 text-[12px] font-medium leading-[12px] text-[#5c5c5c] transition-all hover:bg-white/50"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            isLoading={isPending}
+            className="h-10 rounded-full bg-[var(--primary,#7962f4)] px-8 py-2 text-[14px] font-medium leading-4 text-[var(--base-white,#fefefe)] transition-all hover:opacity-90"
+          >
+            {mode === 'start' ? 'Create' : mode === 'manual' ? 'Save Entry' : 'Save Changes'}
+          </Button>
+        </div>
+      ) : (
+        <div className="flex justify-end gap-md pt-md">
+          <Button type="button" variant="ghost" onClick={onClose} disabled={isPending}>
+            Cancel
+          </Button>
+          <Button type="submit" isLoading={isPending}>
+            {mode === 'start' ? 'Start Timer' : mode === 'manual' ? 'Save Entry' : 'Save Changes'}
+          </Button>
+        </div>
+      )}
+    </form>
+  )
+
+  if (renderMode === 'inline') {
+    return formContent
   }
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={mode === 'start' ? 'Start Time Entry' : 'Log Time Manually'}
-      size="md"
-    >
-      <form onSubmit={handleSubmit} className="space-y-lg">
-        <Input
-          label="Task"
-          name="taskName"
-          placeholder="Homepage redesign, discovery call, QA review..."
-          value={taskName}
-          onChange={(event) => setTaskName(event.target.value)}
-          error={errors.taskName}
-          required
-        />
-
-        <div className="space-y-sm">
-          <label htmlFor="timer-client" className="block text-sm font-medium text-text-base">
-            Client
-          </label>
-          <select
-            id="timer-client"
-            value={clientId}
-            onChange={(event) => setClientId(event.target.value)}
-            className="w-full rounded-md border-2 border-border-base bg-background-base px-lg py-md text-text-base transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-text-brand"
-          >
-            <option value="">Unassigned</option>
-            {clients.map((client) => (
-              <option key={client.id} value={client.id}>
-                {client.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {mode === 'manual' && (
-          <Input
-            label="Duration (minutes)"
-            name="durationMinutes"
-            type="number"
-            min="1"
-            step="1"
-            value={durationMinutes}
-            onChange={(event) => setDurationMinutes(event.target.value)}
-            error={errors.durationMinutes}
-            required
-          />
-        )}
-
-        <Textarea
-          label="Notes"
-          name="notes"
-          placeholder="Optional context for this time entry"
-          value={notes}
-          onChange={(event) => setNotes(event.target.value)}
-          rows={4}
-        />
-
-        <div className="flex justify-end gap-md pt-md">
-          <Button type="button" variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit">
-            {mode === 'start' ? 'Start Timer' : 'Save Entry'}
-          </Button>
-        </div>
-      </form>
+    <Modal isOpen={isOpen} onClose={onClose} title={title} size="md">
+      {formContent}
     </Modal>
   )
 }

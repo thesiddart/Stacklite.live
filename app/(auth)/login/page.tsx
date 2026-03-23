@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { Suspense, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -12,15 +12,11 @@ function GoogleIcon() {
   return <Image src="/icons/social/google-original.svg" alt="Google" width={16} height={16} />
 }
 
-function AppleIcon() {
-  return <Image src="/icons/social/apple-original.svg" alt="Apple" width={16} height={16} />
-}
-
 function GithubIcon() {
   return <Image src="/icons/social/github-original.svg" alt="GitHub" width={16} height={16} />
 }
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -29,9 +25,9 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [needsVerificationHelp, setNeedsVerificationHelp] = useState(false)
-  const [oauthLoadingProvider, setOauthLoadingProvider] = useState<
-    'google' | 'apple' | 'github' | null
-  >(null)
+  const [oauthLoadingProvider, setOauthLoadingProvider] = useState<'google' | 'github' | null>(
+    null
+  )
 
   const callbackError = searchParams.get('error')
 
@@ -68,7 +64,7 @@ export default function LoginPage() {
     }
   }
 
-  const handleOAuthSignIn = async (provider: 'google' | 'apple' | 'github') => {
+  const handleOAuthSignIn = async (provider: 'google' | 'github') => {
     setError('')
     setOauthLoadingProvider(provider)
 
@@ -127,12 +123,12 @@ export default function LoginPage() {
 
         <section className="w-full rounded-[14px] border border-[var(--primary,#7962f4)] bg-[#f3e8ff] px-4 py-[59px] shadow-[0_4px_6px_0_rgba(0,0,0,0.1),0_2px_4px_0_rgba(0,0,0,0.06)]">
           <div className="mx-auto flex w-[510px] max-w-full flex-col gap-6">
-            <div className="grid w-full grid-cols-1 gap-2 md:grid-cols-3">
+            <div className="grid w-full grid-cols-1 gap-2 md:grid-cols-2">
               <button
                 type="button"
                 onClick={() => handleOAuthSignIn('google')}
                 disabled={oauthLoadingProvider !== null}
-                className="flex h-10 min-w-0 items-center justify-center gap-1 rounded-full border border-[#5c5c5c] px-8 py-2 text-[12px] font-medium leading-[12px] text-[#5c5c5c] disabled:opacity-60"
+                className="flex h-10 min-w-0 items-center justify-center gap-1 rounded-full border border-[#5c5c5c] px-8 py-2 text-[12px] font-medium leading-[12px] text-[#5c5c5c] hover:bg-white/50 transition-colors disabled:opacity-60"
               >
                 <GoogleIcon />
                 <span>{oauthLoadingProvider === 'google' ? 'Connecting...' : 'Google'}</span>
@@ -140,19 +136,9 @@ export default function LoginPage() {
 
               <button
                 type="button"
-                onClick={() => handleOAuthSignIn('apple')}
-                disabled={oauthLoadingProvider !== null}
-                className="flex h-10 min-w-0 items-center justify-center gap-1 rounded-full border border-[#5c5c5c] px-8 py-2 text-[12px] font-medium leading-[12px] text-[#5c5c5c] disabled:opacity-60"
-              >
-                <AppleIcon />
-                <span>Apple</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={() => handleOAuthSignIn('github')}
                 disabled={oauthLoadingProvider !== null}
-                className="flex h-10 min-w-0 items-center justify-center gap-1 rounded-full border border-[#5c5c5c] px-8 py-2 text-[12px] font-medium leading-[12px] text-[#5c5c5c] disabled:opacity-60"
+                className="flex h-10 min-w-0 items-center justify-center gap-1 rounded-full border border-[#5c5c5c] px-8 py-2 text-[12px] font-medium leading-[12px] text-[#5c5c5c] hover:bg-white/50 transition-colors disabled:opacity-60"
               >
                 <GithubIcon />
                 <span>Github</span>
@@ -234,7 +220,7 @@ export default function LoginPage() {
                 type="submit"
                 form="login-form"
                 disabled={isLoading}
-                className="flex h-10 w-full items-center justify-center rounded-full bg-[var(--primary,#7962f4)] px-8 py-2 text-[14px] font-medium leading-4 text-[var(--base-white,#fefefe)] disabled:opacity-60"
+                className="flex h-10 w-full items-center justify-center rounded-full bg-[var(--primary,#7962f4)] px-8 py-2 text-[14px] font-medium leading-4 text-[var(--base-white,#fefefe)] hover:opacity-90 transition-all disabled:opacity-60"
               >
                 {isLoading ? 'Signing In...' : 'Sign In'}
               </button>
@@ -242,7 +228,7 @@ export default function LoginPage() {
               <Link href="/signup" className="block">
                 <button
                   type="button"
-                  className="flex h-10 w-full items-center justify-center rounded-full border border-[var(--primary,#7962f4)] px-8 py-2 text-[12px] font-medium leading-[12px] text-[#5c5c5c]"
+                  className="flex h-10 w-full items-center justify-center rounded-full border border-[var(--primary,#7962f4)] px-8 py-2 text-[12px] font-medium leading-[12px] text-[#5c5c5c] hover:bg-white/50 transition-all"
                 >
                   Create New Account
                 </button>
@@ -252,5 +238,13 @@ export default function LoginPage() {
         </section>
       </main>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent />
+    </Suspense>
   )
 }

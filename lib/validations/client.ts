@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { Json } from '@/lib/types/database'
 
 /**
  * Client validation schemas
@@ -27,6 +28,16 @@ const emptyToNull = (value: string | null | undefined) => {
   return trimmed === '' ? null : trimmed
 }
 
+const capitalizeFirstLetter = (value: string) => {
+  const trimmed = value.trim()
+
+  if (trimmed === '') {
+    return trimmed
+  }
+
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1)
+}
+
 const optionalTrimmedString = (max: number, message: string) =>
   z
     .union([
@@ -38,7 +49,7 @@ const optionalTrimmedString = (max: number, message: string) =>
 
 const nullableMetadataSchema = z
   .union([
-    z.record(z.unknown()),
+    z.record(z.string(), z.unknown()),
     z
       .string()
       .optional()
@@ -56,7 +67,7 @@ const nullableMetadataSchema = z
       .transform((value) => {
         const parsed = emptyToNull(value)
         if (!parsed) return null
-        return JSON.parse(parsed) as Record<string, unknown>
+        return JSON.parse(parsed) as Json
       }),
   ])
   .nullable()
@@ -68,7 +79,7 @@ export const clientSchema = z.object({
     .string()
     .min(1, 'Client name is required')
     .max(255, 'Client name must be less than 255 characters')
-    .transform((value) => value.trim()),
+    .transform((value) => capitalizeFirstLetter(value)),
   
   email: z
     .union([
@@ -121,7 +132,7 @@ export const clientSchema = z.object({
     .optional()
     .or(z.literal(''))
     .transform((value) => {
-      const trimmed = value.trim().toUpperCase()
+      const trimmed = (value ?? '').trim().toUpperCase()
       return trimmed === '' ? 'USD' : trimmed
     })
     .pipe(z.string().regex(/^[A-Z]{3}$/, 'Payment currency must be a 3-letter currency code')),
