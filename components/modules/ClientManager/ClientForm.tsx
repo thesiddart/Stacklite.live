@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
@@ -124,8 +124,16 @@ export function ClientForm({
   const createMutation = useCreateClient()
   const updateMutation = useUpdateClient()
   const [formData, setFormData] = useState<ClientFormState>(() => getInitialFormData(mode, client))
-  
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (!isOpen) {
+      return
+    }
+
+    setFormData(getInitialFormData(mode, client))
+    setErrors({})
+  }, [client, isOpen, mode])
   
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>

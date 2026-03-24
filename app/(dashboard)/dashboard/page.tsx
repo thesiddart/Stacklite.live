@@ -8,7 +8,6 @@ import {
   DocumentText1Bold,
   EditBold,
   PeopleBold,
-  ProfileAddBold,
   Timer1Bold,
   WalletBold,
 } from 'sicons'
@@ -86,19 +85,16 @@ export default function DashboardPage() {
     }, 0)
   }, [now, timeLogs])
 
+  const isClientFormOpen = isCreateClientOpen || editingClient !== null
   const isEditingClientOpen = editingClient !== null
-  const isClientPanelExpanded = isCreateClientOpen || isClientFormMounted
-  const shouldShowCenterPanel = !isCreateClientOpen && (isEditingClientOpen || activeDockTab !== null)
-  const centerPanelTitle = editingClient
-      ? 'Edit Client'
-      : activeDockTab === 'invoice'
+  const isClientPanelExpanded = isClientFormOpen || isClientFormMounted
+  const shouldShowCenterPanel = !isClientFormOpen && activeDockTab !== null
+  const centerPanelTitle = activeDockTab === 'invoice'
         ? 'Invoice Generator'
         : activeDockTab === 'income'
           ? 'Income Tracker'
           : 'Contract Generator'
-  const CenterPanelIcon = isEditingClientOpen
-    ? ProfileAddBold
-    : activeDockTab === 'invoice'
+  const CenterPanelIcon = activeDockTab === 'invoice'
       ? WalletBold
       : activeDockTab === 'income'
         ? Chart2Bold
@@ -108,7 +104,7 @@ export default function DashboardPage() {
   }
 
   React.useEffect(() => {
-    if (isCreateClientOpen) {
+    if (isClientFormOpen) {
       setIsClientFormMounted(true)
       const frameId = window.requestAnimationFrame(() => {
         setIsClientFormVisible(true)
@@ -127,7 +123,7 @@ export default function DashboardPage() {
     }, formTransitionMs)
 
     return () => window.clearTimeout(timeoutId)
-  }, [isClientFormMounted, isCreateClientOpen])
+  }, [formTransitionMs, isClientFormMounted, isClientFormOpen])
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#f4f4f4]">
@@ -166,8 +162,8 @@ export default function DashboardPage() {
         ) : (
           <>
             <div
-              className={`flex w-full flex-col gap-[10px] rounded-[14px] border border-[#e2e2e2] bg-white p-4 shadow-[0_4px_6px_0_rgba(0,0,0,0.1),0_2px_4px_0_rgba(0,0,0,0.06)] transition-[height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                isClientPanelExpanded ? 'h-[640px]' : 'h-[264px]'
+              className={`flex w-full flex-col gap-[10px] overflow-hidden rounded-[14px] border border-[#e2e2e2] bg-white p-4 shadow-[0_4px_6px_0_rgba(0,0,0,0.1),0_2px_4px_0_rgba(0,0,0,0.06)] transition-[height,max-height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                isClientPanelExpanded ? 'h-[640px]' : 'max-h-[600px]'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -182,10 +178,11 @@ export default function DashboardPage() {
                 </button>
                 <button
                   type="button"
-                  aria-label={isClientPanelExpanded ? 'Close add client' : 'Add client'}
+                  aria-label={isClientPanelExpanded ? 'Close client form' : 'Add client'}
                   onClick={() => {
-                    if (isCreateClientOpen) {
+                    if (isClientFormOpen) {
                       setIsCreateClientOpen(false)
+                      setEditingClient(null)
                       return
                     }
 
@@ -201,7 +198,7 @@ export default function DashboardPage() {
               <div className="flex-1 min-h-0 overflow-hidden rounded-[10px]">
                 {isClientFormMounted ? (
                   <div
-                    className={`transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                    className={`h-full min-h-0 overflow-hidden transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                       isClientFormVisible
                         ? 'translate-y-0 opacity-100'
                         : 'pointer-events-none -translate-y-1 opacity-0'
@@ -210,13 +207,17 @@ export default function DashboardPage() {
                   >
                     <ClientForm
                       isOpen={isClientFormMounted}
-                      onClose={() => setIsCreateClientOpen(false)}
-                      mode="create"
+                      onClose={() => {
+                        setIsCreateClientOpen(false)
+                        setEditingClient(null)
+                      }}
+                      client={editingClient}
+                      mode={isEditingClientOpen ? 'edit' : 'create'}
                       renderMode="inline"
                     />
                   </div>
                 ) : (
-                  <div className="h-full space-y-2 overflow-y-auto">
+                  <div className="space-y-2 overflow-y-auto">
                     {isClientsLoading ? (
                       <div className="rounded-[10px] bg-[#f3e8ff]/40 p-3 text-[13px] text-[#7c7288]">
                         Loading clients...
@@ -233,7 +234,7 @@ export default function DashboardPage() {
                         >
                           <div className="flex flex-col gap-[10px]">
                             <div className="flex w-full items-center justify-between gap-[10px]">
-                              <h3 className="min-w-0 flex-1 truncate text-[18px] font-medium leading-none text-[#1a163d]">
+                              <h3 className="min-w-0 flex-1 truncate text-[16px] font-medium leading-none text-[#1a163d]">
                                 {client.name}
                               </h3>
                               <button
@@ -250,7 +251,7 @@ export default function DashboardPage() {
                             </div>
 
                             <div className="w-full">
-                              <p className="truncate text-[15px] leading-none text-[#7c7288]">
+                              <p className="truncate text-[14px] leading-none text-[#7c7288]">
                                 {client.email || 'No email added'}
                               </p>
                             </div>
@@ -304,7 +305,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div className="inline-flex w-fit items-center gap-1">
               <div className="inline-flex h-8 w-8 items-center justify-center rounded-[3px] border border-[var(--primary,#7962f4)] bg-[rgba(121,98,244,0.46)] text-[var(--tertairy,#251f7b)] transition-colors duration-200">
-                <CenterPanelIcon size={isEditingClientOpen ? 18 : 16} />
+                <CenterPanelIcon size={16} />
               </div>
               <div className="inline-flex h-8 items-center rounded-[4px] border border-[var(--primary,#7962f4)] bg-[rgba(121,98,244,0.46)] px-4 transition-all duration-200">
                 <span className="text-[14px] font-medium text-[var(--tertairy,#251f7b)]">
@@ -313,39 +314,16 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {isEditingClientOpen && (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsCreateClientOpen(false)
-                  setEditingClient(null)
-                }}
-                aria-label="Close client panel"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-[3px] border border-[var(--primary,#7962f4)] bg-[rgba(121,98,244,0.46)] text-[var(--tertairy,#251f7b)] transition-all duration-200 hover:bg-[rgba(121,98,244,0.6)]"
-              >
-                <CloseCircleBold size={16} />
-              </button>
-            )}
           </div>
           <div className="relative flex-1 min-h-0 overflow-visible rounded-[14px] border border-[var(--primary,#7962f4)] bg-[#f3e8ff] shadow-[0_4px_6px_0_rgba(0,0,0,0.1),0_2px_4px_0_rgba(0,0,0,0.06)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]">
             <div className="h-full min-h-0 overflow-hidden rounded-[14px]">
-              {editingClient ? (
-                <ClientForm
-                  isOpen={Boolean(editingClient)}
-                  onClose={() => setEditingClient(null)}
-                  client={editingClient}
-                  mode="edit"
-                  renderMode="inline"
-                />
-              ) : (
-                <div className="flex h-full flex-col items-center justify-center rounded-[10px] border border-[#d8d8d8] bg-white/60 text-center">
-                  <CenterPanelIcon size={28} className="text-[var(--tertairy,#251f7b)]" />
-                  <p className="mt-2 text-sm font-medium text-[var(--tertairy,#251f7b)]">{centerPanelTitle}</p>
-                  <p className="mt-1 max-w-[280px] text-xs text-[#5c5c5c]">
-                    Select a module from the dock or click Add Client to start client onboarding here.
-                  </p>
-                </div>
-              )}
+              <div className="flex h-full flex-col items-center justify-center rounded-[10px] border border-[#d8d8d8] bg-white/60 text-center">
+                <CenterPanelIcon size={28} className="text-[var(--tertairy,#251f7b)]" />
+                <p className="mt-2 text-sm font-medium text-[var(--tertairy,#251f7b)]">{centerPanelTitle}</p>
+                <p className="mt-1 max-w-[280px] text-xs text-[#5c5c5c]">
+                  Select a module from the dock or click Add Client to start client onboarding here.
+                </p>
+              </div>
             </div>
           </div>
       </section>
