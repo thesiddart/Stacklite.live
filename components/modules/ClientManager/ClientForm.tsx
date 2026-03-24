@@ -115,11 +115,11 @@ export function ClientForm({
   renderMode = 'modal',
 }: ClientFormProps) {
   const authInputClassName =
-    'h-9 rounded-[6px] border border-[#ebebeb] bg-white pl-4 pr-4 py-1 text-[14px] leading-5 text-[#333333] shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] focus-visible:border-[var(--primary,#7962f4)] focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-none'
+    'theme-shell-field h-9 rounded-[6px] pl-4 pr-4 py-1 text-[14px] leading-5 focus-visible:border-[var(--primary)] focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-none'
   const authSelectClassName =
-    'h-9 w-full appearance-none rounded-[6px] border border-[#ebebeb] bg-white pl-4 pr-10 py-1 text-[14px] leading-5 text-[#333333] shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] focus-visible:border-[var(--primary,#7962f4)] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-none'
+    'theme-shell-field h-9 w-full appearance-none rounded-[6px] pl-4 pr-10 py-1 text-[14px] leading-5 focus-visible:border-[var(--primary)] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-none'
   const authTextareaClassName =
-    'rounded-[6px] border border-[#ebebeb] bg-white pl-4 pr-4 py-2 text-[14px] leading-5 text-[#333333] shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] focus-visible:border-[var(--primary,#7962f4)] focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-none'
+    'theme-shell-field rounded-[6px] pl-4 pr-4 py-2 text-[14px] leading-5 focus-visible:border-[var(--primary)] focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-none'
 
   const createMutation = useCreateClient()
   const updateMutation = useUpdateClient()
@@ -278,7 +278,7 @@ export function ClientForm({
   const formContent = (
     <form onSubmit={handleSubmit} className="space-y-6 px-4 pb-4 pt-3">
         <section className="space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-[#333333]">Identity</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-text-base">Identity</h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <Input
               label="Client Name"
@@ -303,10 +303,10 @@ export function ClientForm({
         </section>
 
         <section className="space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-[#333333]">Company</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-text-base">Company</h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium text-[#333333]">Company Type</label>
+              <label className="mb-2 block text-sm font-medium text-text-base">Company Type</label>
               <div className="relative">
                 <select
                   name="company_type"
@@ -324,7 +324,7 @@ export function ClientForm({
                   <option value="agency">Agency</option>
                   <option value="other">Other</option>
                 </select>
-                <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[#333333]" aria-hidden>
+                <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-text-base" aria-hidden>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
@@ -366,7 +366,7 @@ export function ClientForm({
         </section>
 
         <section className="space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-[#333333]">Contact</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-text-base">Contact</h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <Input
               label="Email"
@@ -427,7 +427,7 @@ export function ClientForm({
         </section>
 
         <section className="space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-[#333333]">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-text-base">
             Billing and Preferences
           </h3>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -454,7 +454,7 @@ export function ClientForm({
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium text-[#333333]">
+              <label className="mb-2 block text-sm font-medium text-text-base">
                 Tags <span className="text-feedback-error-base">*</span>
               </label>
               <div className="relative">
@@ -470,7 +470,7 @@ export function ClientForm({
                   <option value="devlopment">devlopment</option>
                   <option value="custom">custom</option>
                 </select>
-                <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[#333333]" aria-hidden>
+                <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-text-base" aria-hidden>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
@@ -489,13 +489,13 @@ export function ClientForm({
               required
             />
           </div>
-          <label className="flex items-center gap-2 text-sm text-[#333333]">
+          <label className="flex items-center gap-2 text-sm text-text-base">
             <input
               type="checkbox"
               name="is_active"
               checked={formData.is_active}
               onChange={handleChange}
-              className="h-4 w-4 rounded border border-[#ebebeb] bg-white text-[var(--primary,#7962f4)] focus:ring-[var(--primary,#7962f4)]"
+              className="h-4 w-4 rounded border border-[var(--surface-input-border)] bg-[var(--surface-input)] text-[var(--primary)] focus:ring-[var(--primary)]"
             />
             Active client
           </label>
@@ -512,7 +512,7 @@ export function ClientForm({
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="h-10 rounded-full border border-[var(--primary,#7962f4)] bg-transparent px-4 text-sm font-medium text-[#5c5c5c] transition-all hover:bg-white/40 disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-10 rounded-full border border-[var(--primary)] bg-transparent px-4 text-sm font-medium text-[var(--text-soft-subtle)] transition-all hover:bg-[var(--surface-overlay)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             Cancel
           </button>
@@ -520,7 +520,7 @@ export function ClientForm({
           <button
             type="submit"
             disabled={isLoading}
-            className="h-10 rounded-full bg-[var(--primary,#7962f4)] px-4 text-sm font-medium text-[var(--base-white,#fefefe)] transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-10 rounded-full bg-[var(--primary)] px-4 text-sm font-medium text-[var(--base-white)] transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isLoading ? 'Saving...' : mode === 'create' ? 'Add Client' : 'Save Changes'}
           </button>

@@ -6,7 +6,7 @@ import { AppNavbar } from '@/components/layout/AppNavbar'
 
 export default function ClientsPage() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#f4f4f4]">
+    <div className="theme-page-shell">
       <div className="dots-background" />
       <AppNavbar
         topClassName="top-8"

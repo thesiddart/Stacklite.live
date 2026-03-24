@@ -175,14 +175,14 @@ export function TimeTracker({ variant = 'page', onCollapse }: TimeTrackerProps) 
     <button
       type="button"
       onClick={onCollapse}
-      className="inline-flex h-8 items-center gap-1 rounded-[8px] bg-[#f3e8ff] px-2 text-[#2f2493]"
+      className="theme-shell-chip inline-flex h-8 items-center gap-1 rounded-[8px] px-2"
       aria-label={isTrackerFormExpanded ? 'Collapse Add Task' : 'Collapse Time Tracker'}
     >
       <TrackerIcon size={16} />
       <span className="text-[14px] font-medium">{trackerTitle}</span>
     </button>
   ) : (
-    <div className="inline-flex h-8 items-center gap-1 rounded-[8px] bg-[#f3e8ff] px-2 text-[#2f2493]">
+    <div className="theme-shell-chip inline-flex h-8 items-center gap-1 rounded-[8px] px-2">
       <TrackerIcon size={16} />
       <span className="text-[14px] font-medium">{trackerTitle}</span>
     </div>
@@ -198,7 +198,7 @@ export function TimeTracker({ variant = 'page', onCollapse }: TimeTrackerProps) 
         }
       >
         <div
-          className={`flex w-full flex-col rounded-[14px] border border-[#e2e2e2] bg-white p-4 shadow-[0_4px_6px_0_rgba(0,0,0,0.1),0_2px_4px_0_rgba(0,0,0,0.06)] transition-[height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          className={`theme-shell-card flex w-full flex-col rounded-[14px] p-4 transition-[height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
             variant === 'dashboard' ? 'h-[341px]' : 'min-h-[520px]'
           }`}
         >
@@ -217,22 +217,22 @@ export function TimeTracker({ variant = 'page', onCollapse }: TimeTrackerProps) 
                 setFormMode('start')
                 setIsFormOpen(true)
               }}
-              className="text-[#2f2493]"
+              className="text-[var(--tertiary)]"
             >
               {isTrackerFormExpanded ? <CloseCircleBold size={24} /> : <AddCircleBold size={24} />}
             </button>
           </div>
 
-          <div className="mt-[10px] h-px w-full bg-[#d8d8d8]" />
+          <div className="theme-shell-divider mt-[10px] h-px w-full" />
 
           {error && (
-            <div className="mt-4 rounded-[10px] bg-[#fff1f1] px-3 py-2 text-[13px] text-[#b93838]">
+            <div className="mt-4 rounded-[10px] bg-[var(--surface-danger-soft)] px-3 py-2 text-[13px] text-[var(--text-danger-soft)]">
               {error instanceof Error ? error.message : 'Failed to load time entries.'}
             </div>
           )}
 
           {actionError && (
-            <div className="mt-4 rounded-[10px] bg-[#fff1f1] px-3 py-2 text-[13px] text-[#b93838]">
+            <div className="mt-4 rounded-[10px] bg-[var(--surface-danger-soft)] px-3 py-2 text-[13px] text-[var(--text-danger-soft)]">
               {actionError}
             </div>
           )}
@@ -258,11 +258,11 @@ export function TimeTracker({ variant = 'page', onCollapse }: TimeTrackerProps) 
                 />
               </div>
             ) : isLoading ? (
-              <div className="rounded-[10px] bg-[#f3e8ff]/40 p-3 text-[13px] text-[#7c7288]">
+              <div className="rounded-[10px] bg-[var(--surface-card-subtle)] p-3 text-[13px] text-[var(--text-soft-muted)]">
                 Loading time entries...
               </div>
             ) : shouldShowList && displayedTimers.length === 0 ? (
-              <div className="rounded-[10px] bg-[#f3e8ff]/40 p-3 text-[13px] text-[#7c7288]">
+              <div className="rounded-[10px] bg-[var(--surface-card-subtle)] p-3 text-[13px] text-[var(--text-soft-muted)]">
                 No time entries yet. Click + to start your first timer.
               </div>
             ) : shouldShowList ? (
@@ -290,13 +290,13 @@ export function TimeTracker({ variant = 'page', onCollapse }: TimeTrackerProps) 
         </div>
 
         {variant === 'page' && (
-          <div className="inline-flex items-center gap-[2px] rounded-[8px] border border-[#e2e2e2] bg-white px-1">
-            <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[#7c7288]">
+          <div className="theme-shell-card inline-flex items-center gap-[2px] rounded-[8px] px-1">
+            <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[var(--text-soft-muted)]">
               <span>Today:</span>
               <span>{formatHoursAndMinutes(dailyTotal)}</span>
             </div>
-            <div className="h-6 w-px bg-[#d8d8d8]" />
-            <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[#7c7288]">
+            <div className="theme-shell-divider h-6 w-px" />
+            <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[var(--text-soft-muted)]">
               <span>This Week:</span>
               <span>{formatHoursAndMinutes(weeklyTotal)}</span>
             </div>

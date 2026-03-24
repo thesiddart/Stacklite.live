@@ -126,7 +126,7 @@ export default function DashboardPage() {
   }, [formTransitionMs, isClientFormMounted, isClientFormOpen])
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#f4f4f4]">
+    <div className="theme-page-shell">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(0,0,0,0.12)_1px,transparent_1px)] bg-[length:16px_16px]" />
 
       <AppNavbar
@@ -153,7 +153,7 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => setIsClientsCollapsed(false)}
-            className="inline-flex h-8 w-fit items-center gap-1 rounded-[8px] bg-[#f3e8ff] px-2 text-[var(--tertairy,#251f7b)]"
+            className="theme-shell-chip inline-flex h-8 w-fit items-center gap-1 rounded-[8px] px-2"
             aria-label="Expand Manage Clients"
           >
             <PeopleBold size={16} />
@@ -162,7 +162,7 @@ export default function DashboardPage() {
         ) : (
           <>
             <div
-              className={`flex w-full flex-col gap-[10px] overflow-hidden rounded-[14px] border border-[#e2e2e2] bg-white p-4 shadow-[0_4px_6px_0_rgba(0,0,0,0.1),0_2px_4px_0_rgba(0,0,0,0.06)] transition-[height,max-height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              className={`theme-shell-card flex w-full flex-col gap-[10px] overflow-hidden rounded-[14px] p-4 transition-[height,max-height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                 isClientPanelExpanded ? 'h-[640px]' : 'max-h-[600px]'
               }`}
             >
@@ -170,7 +170,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => setIsClientsCollapsed(true)}
-                  className="inline-flex h-8 items-center gap-1 rounded-[8px] bg-[#f3e8ff] px-2 text-[var(--tertairy,#251f7b)]"
+                  className="theme-shell-chip inline-flex h-8 items-center gap-1 rounded-[8px] px-2"
                   aria-label={isClientPanelExpanded ? 'Collapse Add Clients' : 'Collapse Manage Clients'}
                 >
                   {isClientPanelExpanded ? <AddCircleBold size={16} /> : <PeopleBold size={16} />}
@@ -189,12 +189,12 @@ export default function DashboardPage() {
                     setEditingClient(null)
                     setIsCreateClientOpen(true)
                   }}
-                  className="text-[var(--tertairy,#251f7b)]"
+                  className="text-[var(--tertiary)]"
                 >
                   {isClientPanelExpanded ? <CloseCircleBold size={24} /> : <AddCircleBold size={24} />}
                 </button>
               </div>
-              <div className="h-px w-full bg-[#d8d8d8]" />
+              <div className="theme-shell-divider h-px w-full" />
               <div className="flex-1 min-h-0 overflow-hidden rounded-[10px]">
                 {isClientFormMounted ? (
                   <div
@@ -219,22 +219,22 @@ export default function DashboardPage() {
                 ) : (
                   <div className="space-y-2 overflow-y-auto">
                     {isClientsLoading ? (
-                      <div className="rounded-[10px] bg-[#f3e8ff]/40 p-3 text-[13px] text-[#7c7288]">
+                      <div className="rounded-[10px] bg-[var(--surface-card-subtle)] p-3 text-[13px] text-[var(--text-soft-muted)]">
                         Loading clients...
                       </div>
                     ) : clients.length === 0 ? (
-                      <div className="rounded-[10px] bg-[#f3e8ff]/40 p-3 text-[13px] text-[#7c7288]">
+                      <div className="rounded-[10px] bg-[var(--surface-card-subtle)] p-3 text-[13px] text-[var(--text-soft-muted)]">
                         No clients yet. Click + to add your first client.
                       </div>
                     ) : (
                       clients.map((client) => (
                         <article
                           key={client.id}
-                          className="rounded-[10px] border border-[rgba(121,98,244,0.35)] bg-[#f3e8ff]/45 p-3"
+                          className="rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-panel-strong)] p-3"
                         >
                           <div className="flex flex-col gap-[10px]">
                             <div className="flex w-full items-center justify-between gap-[10px]">
-                              <h3 className="min-w-0 flex-1 truncate text-[16px] font-medium leading-none text-[#1a163d]">
+                              <h3 className="min-w-0 flex-1 truncate text-[16px] font-medium leading-none text-[var(--text-soft-strong)]">
                                 {client.name}
                               </h3>
                               <button
@@ -244,21 +244,21 @@ export default function DashboardPage() {
                                   setIsCreateClientOpen(false)
                                   setEditingClient(client)
                                 }}
-                                className="inline-flex shrink-0 items-center justify-center text-[#1a163d] transition-colors hover:text-[#2a245e]"
+                                className="inline-flex shrink-0 items-center justify-center text-[var(--text-soft-strong)] transition-colors hover:text-[var(--tertiary)]"
                               >
                                 <EditBold size={16} />
                               </button>
                             </div>
 
                             <div className="w-full">
-                              <p className="truncate text-[14px] leading-none text-[#7c7288]">
+                              <p className="truncate text-[14px] leading-none text-[var(--text-soft-muted)]">
                                 {client.email || 'No email added'}
                               </p>
                             </div>
 
                             <div className="flex w-full items-center justify-between gap-[10px]">
                               {client.tags && client.tags.length > 0 ? (
-                                <span className="inline-flex h-fit w-fit items-center justify-center rounded-[4px] bg-[var(--primary,#7962f4)] pl-[8px] pr-[8px] pt-[4px] pb-[4px] text-[14px] font-medium leading-none text-white">
+                                <span className="inline-flex h-fit w-fit items-center justify-center rounded-[4px] bg-[var(--primary)] pl-[8px] pr-[8px] pt-[4px] pb-[4px] text-[14px] font-medium leading-none text-white">
                                   {client.tags[0].charAt(0).toUpperCase() + client.tags[0].slice(1)}
                                 </span>
                               ) : (
@@ -266,7 +266,7 @@ export default function DashboardPage() {
                                   Placeholder
                                 </span>
                               )}
-                              <span className="truncate text-[12px] leading-none text-[#7c7288]">
+                              <span className="truncate text-[12px] leading-none text-[var(--text-soft-muted)]">
                                 Tasks: {taskCountByClientId.get(client.id) ?? 0}
                               </span>
                             </div>
@@ -281,13 +281,13 @@ export default function DashboardPage() {
           </>
         )}
 
-        <div className="inline-flex items-center gap-[2px] rounded-[8px] border border-[#e2e2e2] bg-white px-1">
-          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[#7c7288]">
+        <div className="theme-shell-card inline-flex items-center gap-[2px] rounded-[8px] px-1">
+          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[var(--text-soft-muted)]">
             <span>Total Clients:</span>
             <span>{clients.length}</span>
           </div>
-          <div className="h-6 w-px bg-[#d8d8d8]" />
-          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[#7c7288]">
+          <div className="theme-shell-divider h-6 w-px" />
+          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[var(--text-soft-muted)]">
             <span>New Clients:</span>
             <span>{newClientsCount}</span>
           </div>
@@ -304,23 +304,23 @@ export default function DashboardPage() {
       >
           <div className="flex items-center justify-between">
             <div className="inline-flex w-fit items-center gap-1">
-              <div className="inline-flex h-8 w-8 items-center justify-center rounded-[3px] border border-[var(--primary,#7962f4)] bg-[rgba(121,98,244,0.46)] text-[var(--tertairy,#251f7b)] transition-colors duration-200">
+              <div className="theme-shell-chip-strong inline-flex h-8 w-8 items-center justify-center rounded-[3px] transition-colors duration-200">
                 <CenterPanelIcon size={16} />
               </div>
-              <div className="inline-flex h-8 items-center rounded-[4px] border border-[var(--primary,#7962f4)] bg-[rgba(121,98,244,0.46)] px-4 transition-all duration-200">
-                <span className="text-[14px] font-medium text-[var(--tertairy,#251f7b)]">
+              <div className="theme-shell-chip-strong inline-flex h-8 items-center rounded-[4px] px-4 transition-all duration-200">
+                <span className="text-[14px] font-medium">
                   {centerPanelTitle}
                 </span>
               </div>
             </div>
 
           </div>
-          <div className="relative flex-1 min-h-0 overflow-visible rounded-[14px] border border-[var(--primary,#7962f4)] bg-[#f3e8ff] shadow-[0_4px_6px_0_rgba(0,0,0,0.1),0_2px_4px_0_rgba(0,0,0,0.06)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]">
+          <div className="theme-shell-panel relative flex-1 min-h-0 overflow-visible rounded-[14px] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]">
             <div className="h-full min-h-0 overflow-hidden rounded-[14px]">
-              <div className="flex h-full flex-col items-center justify-center rounded-[10px] border border-[#d8d8d8] bg-white/60 text-center">
-                <CenterPanelIcon size={28} className="text-[var(--tertairy,#251f7b)]" />
-                <p className="mt-2 text-sm font-medium text-[var(--tertairy,#251f7b)]">{centerPanelTitle}</p>
-                <p className="mt-1 max-w-[280px] text-xs text-[#5c5c5c]">
+              <div className="flex h-full flex-col items-center justify-center rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] text-center">
+                <CenterPanelIcon size={28} className="text-[var(--tertiary)]" />
+                <p className="mt-2 text-sm font-medium text-[var(--tertiary)]">{centerPanelTitle}</p>
+                <p className="mt-1 max-w-[280px] text-xs text-[var(--text-soft-subtle)]">
                   Select a module from the dock or click Add Client to start client onboarding here.
                 </p>
               </div>
@@ -339,7 +339,7 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => setIsTimeTrackerCollapsed(false)}
-            className="inline-flex h-8 w-fit items-center gap-1 rounded-[8px] bg-[#f3e8ff] px-2 text-[var(--tertairy,#251f7b)]"
+            className="theme-shell-chip inline-flex h-8 w-fit items-center gap-1 rounded-[8px] px-2"
             aria-label="Expand Time Tracker"
           >
             <Timer1Bold size={16} />
@@ -354,27 +354,27 @@ export default function DashboardPage() {
           </>
         )}
 
-        <div className="inline-flex items-center gap-[2px] rounded-[8px] border border-[#e2e2e2] bg-white px-1">
-          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[#7c7288]">
+        <div className="theme-shell-card inline-flex items-center gap-[2px] rounded-[8px] px-1">
+          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[var(--text-soft-muted)]">
             <span>Today:</span>
             <span>{formatHoursAndMinutes(dailyTotal)}</span>
           </div>
-          <div className="h-6 w-px bg-[#d8d8d8]" />
-          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[#7c7288]">
+          <div className="theme-shell-divider h-6 w-px" />
+          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[var(--text-soft-muted)]">
             <span>This Week:</span>
             <span>{formatHoursAndMinutes(weeklyTotal)}</span>
           </div>
         </div>
       </section>
 
-      <footer className="absolute bottom-8 left-1/2 z-10 flex h-12 -translate-x-1/2 items-center gap-[10px] rounded-[14px] bg-white p-2 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)]">
+      <footer className="theme-shell-card absolute bottom-8 left-1/2 z-10 flex h-12 -translate-x-1/2 items-center gap-[10px] rounded-[14px] p-2">
         <button
           type="button"
           onClick={() => toggleDockTab('contract')}
           aria-pressed={activeDockTab === 'contract'}
-          className={`inline-flex h-8 items-center justify-center overflow-hidden whitespace-nowrap text-[var(--tertairy,#251f7b)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          className={`inline-flex h-8 items-center justify-center overflow-hidden whitespace-nowrap text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
             activeDockTab === 'contract'
-              ? 'gap-1 rounded-[8px] bg-[#f3e8ff] px-2 text-[14px] font-medium'
+              ? 'theme-shell-chip gap-1 rounded-[8px] px-2 text-[14px] font-medium'
               : 'w-8'
           }`}
         >
@@ -382,15 +382,15 @@ export default function DashboardPage() {
           {activeDockTab === 'contract' && 'Contract Generator'}
         </button>
 
-        <div className="h-8 w-px bg-[#d8d8d8]" />
+        <div className="theme-shell-divider h-8 w-px" />
 
         <button
           type="button"
           onClick={() => toggleDockTab('invoice')}
           aria-pressed={activeDockTab === 'invoice'}
-          className={`inline-flex h-8 items-center justify-center overflow-hidden whitespace-nowrap text-[var(--tertairy,#251f7b)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          className={`inline-flex h-8 items-center justify-center overflow-hidden whitespace-nowrap text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
             activeDockTab === 'invoice'
-              ? 'gap-1 rounded-[8px] bg-[#f3e8ff] px-2 text-[14px] font-medium'
+              ? 'theme-shell-chip gap-1 rounded-[8px] px-2 text-[14px] font-medium'
               : 'w-8'
           }`}
         >
@@ -398,15 +398,15 @@ export default function DashboardPage() {
           {activeDockTab === 'invoice' && 'Invoice Generator'}
         </button>
 
-        <div className="h-8 w-px bg-[#d8d8d8]" />
+        <div className="theme-shell-divider h-8 w-px" />
 
         <button
           type="button"
           onClick={() => toggleDockTab('income')}
           aria-pressed={activeDockTab === 'income'}
-          className={`inline-flex h-8 items-center justify-center overflow-hidden whitespace-nowrap text-[var(--tertairy,#251f7b)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          className={`inline-flex h-8 items-center justify-center overflow-hidden whitespace-nowrap text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
             activeDockTab === 'income'
-              ? 'gap-1 rounded-[8px] bg-[#f3e8ff] px-2 text-[14px] font-medium'
+              ? 'theme-shell-chip gap-1 rounded-[8px] px-2 text-[14px] font-medium'
               : 'w-8'
           }`}
         >

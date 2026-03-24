@@ -6,7 +6,7 @@ import { TimeTracker } from '@/components/modules/TimeTracker'
 
 export default function TimePage() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#f4f4f4]">
+    <div className="theme-page-shell">
       <div className="dots-background" />
       <AppNavbar
         topClassName="top-8"

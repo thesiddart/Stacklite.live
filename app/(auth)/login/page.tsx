@@ -94,7 +94,7 @@ function LoginPageContent() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#f4f4f4] text-text-base">
+    <div className="theme-page-shell">
       <div className="dots-background" />
 
       <AppNavbar
@@ -115,20 +115,20 @@ function LoginPageContent() {
 
       <main className="absolute left-1/2 top-1/2 z-10 flex w-[693px] max-w-[calc(100%-32px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-2">
         <div className="flex w-full items-center">
-          <div className="inline-flex h-8 items-center justify-center gap-1 rounded-[8px] bg-[#f3e8ff] px-2 py-4 text-[var(--tertairy,#251f7b)]">
+          <div className="theme-shell-chip inline-flex h-8 items-center justify-center gap-1 rounded-[8px] px-2 py-4">
             <LoginBold size={16} />
             <span className="text-[14px] font-medium leading-none">Sign In</span>
           </div>
         </div>
 
-        <section className="w-full rounded-[14px] border border-[var(--primary,#7962f4)] bg-[#f3e8ff] px-4 py-[59px] shadow-[0_4px_6px_0_rgba(0,0,0,0.1),0_2px_4px_0_rgba(0,0,0,0.06)]">
+        <section className="theme-shell-panel w-full rounded-[14px] px-4 py-[59px]">
           <div className="mx-auto flex w-[510px] max-w-full flex-col gap-6">
             <div className="grid w-full grid-cols-1 gap-2 md:grid-cols-2">
               <button
                 type="button"
                 onClick={() => handleOAuthSignIn('google')}
                 disabled={oauthLoadingProvider !== null}
-                className="flex h-10 min-w-0 items-center justify-center gap-1 rounded-full border border-[#5c5c5c] px-8 py-2 text-[12px] font-medium leading-[12px] text-[#5c5c5c] hover:bg-white/50 transition-colors disabled:opacity-60"
+                className="flex h-10 min-w-0 items-center justify-center gap-1 rounded-full border border-[var(--text-soft-subtle)] px-8 py-2 text-[12px] font-medium leading-[12px] text-[var(--text-soft-subtle)] transition-colors hover:bg-[var(--surface-overlay)] disabled:opacity-60"
               >
                 <GoogleIcon />
                 <span>{oauthLoadingProvider === 'google' ? 'Connecting...' : 'Google'}</span>
@@ -138,7 +138,7 @@ function LoginPageContent() {
                 type="button"
                 onClick={() => handleOAuthSignIn('github')}
                 disabled={oauthLoadingProvider !== null}
-                className="flex h-10 min-w-0 items-center justify-center gap-1 rounded-full border border-[#5c5c5c] px-8 py-2 text-[12px] font-medium leading-[12px] text-[#5c5c5c] hover:bg-white/50 transition-colors disabled:opacity-60"
+                className="flex h-10 min-w-0 items-center justify-center gap-1 rounded-full border border-[var(--text-soft-subtle)] px-8 py-2 text-[12px] font-medium leading-[12px] text-[var(--text-soft-subtle)] transition-colors hover:bg-[var(--surface-overlay)] disabled:opacity-60"
               >
                 <GithubIcon />
                 <span>Github</span>
@@ -146,9 +146,9 @@ function LoginPageContent() {
             </div>
 
             <div className="flex items-center justify-center gap-2">
-              <hr className="h-px flex-1 border-0 bg-[#5c5c5c]" />
-              <span className="text-[14px] leading-5 text-[#333333]">or sign in with email</span>
-              <hr className="h-px flex-1 border-0 bg-[#5c5c5c]" />
+              <hr className="h-px flex-1 border-0 bg-[var(--text-soft-subtle)]" />
+              <span className="text-[14px] leading-5 text-text-base">or sign in with email</span>
+              <hr className="h-px flex-1 border-0 bg-[var(--text-soft-subtle)]" />
             </div>
 
             <form id="login-form" onSubmit={handleEmailSignIn} className="flex flex-col gap-4">
@@ -165,8 +165,8 @@ function LoginPageContent() {
               )}
 
               {needsVerificationHelp && (
-                <div className="rounded-md border border-[var(--primary,#7962f4)]/40 bg-[var(--primary,#7962f4)]/10 p-md">
-                  <p className="text-sm text-[#251f7b]">
+                <div className="rounded-md border border-[var(--primary)]/40 bg-[var(--primary)]/10 p-md">
+                  <p className="text-sm text-[var(--tertiary)]">
                     Need a new verification email?{' '}
                     <Link
                       href={
@@ -184,7 +184,7 @@ function LoginPageContent() {
               )}
 
               <div className="flex flex-col gap-2">
-                <label className="text-[14px] font-medium leading-4 text-[#333333]">
+                <label className="text-[14px] font-medium leading-4 text-text-base">
                   Your email<span className="text-feedback-error-base">*</span>
                 </label>
                 <input
@@ -192,16 +192,16 @@ function LoginPageContent() {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   required
-                  className="h-9 w-full rounded-[6px] border border-[#ebebeb] bg-white px-3 py-1 text-[14px] leading-5 text-[#333333] shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] outline-none focus-visible:border-[var(--primary,#7962f4)]"
+                  className="theme-shell-field h-9 w-full rounded-[6px] px-3 py-1 text-[14px] leading-5 outline-none focus-visible:border-[var(--primary)]"
                 />
               </div>
 
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-[14px] font-medium leading-4 text-[#333333]">
+                  <label className="text-[14px] font-medium leading-4 text-text-base">
                     Password<span className="text-feedback-error-base">*</span>
                   </label>
-                  <Link href="#" className="text-[14px] leading-none text-[#71717a] underline">
+                  <Link href="#" className="text-[14px] leading-none text-text-muted underline">
                     Forgot your password?
                   </Link>
                 </div>
@@ -210,7 +210,7 @@ function LoginPageContent() {
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   required
-                  className="h-9 w-full rounded-[6px] border border-[#ebebeb] bg-white px-3 py-1 text-[14px] leading-5 text-[#333333] shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] outline-none focus-visible:border-[var(--primary,#7962f4)]"
+                  className="theme-shell-field h-9 w-full rounded-[6px] px-3 py-1 text-[14px] leading-5 outline-none focus-visible:border-[var(--primary)]"
                 />
               </div>
             </form>
@@ -220,7 +220,7 @@ function LoginPageContent() {
                 type="submit"
                 form="login-form"
                 disabled={isLoading}
-                className="flex h-10 w-full items-center justify-center rounded-full bg-[var(--primary,#7962f4)] px-8 py-2 text-[14px] font-medium leading-4 text-[var(--base-white,#fefefe)] hover:opacity-90 transition-all disabled:opacity-60"
+                className="flex h-10 w-full items-center justify-center rounded-full bg-[var(--primary)] px-8 py-2 text-[14px] font-medium leading-4 text-[var(--base-white)] transition-all hover:opacity-90 disabled:opacity-60"
               >
                 {isLoading ? 'Signing In...' : 'Sign In'}
               </button>
@@ -228,7 +228,7 @@ function LoginPageContent() {
               <Link href="/signup" className="block">
                 <button
                   type="button"
-                  className="flex h-10 w-full items-center justify-center rounded-full border border-[var(--primary,#7962f4)] px-8 py-2 text-[12px] font-medium leading-[12px] text-[#5c5c5c] hover:bg-white/50 transition-all"
+                  className="flex h-10 w-full items-center justify-center rounded-full border border-[var(--primary)] px-8 py-2 text-[12px] font-medium leading-[12px] text-[var(--text-soft-subtle)] transition-all hover:bg-[var(--surface-overlay)]"
                 >
                   Create New Account
                 </button>

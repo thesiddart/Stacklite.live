@@ -33,10 +33,10 @@ export function TimerEntry({
   const isPaused = status === 'paused'
 
   return (
-    <article className="rounded-[10px] border border-[rgba(121,98,244,0.35)] bg-[#f3e8ff]/45 p-3">
+    <article className="rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-panel-strong)] p-3">
       <div className="flex flex-col items-start gap-2">
         <div className="flex w-full items-center justify-center gap-[10px]">
-          <h3 className="min-w-0 flex-1 text-[14px] font-medium leading-normal text-[#010102]">
+          <h3 className="min-w-0 flex-1 text-[14px] font-medium leading-normal text-text-base">
             <span className="block truncate">{entry.task_name}</span>
           </h3>
 
@@ -45,7 +45,7 @@ export function TimerEntry({
             aria-label={`Edit ${entry.task_name}`}
             onClick={onEdit}
             disabled={isPending}
-            className="inline-flex shrink-0 items-center justify-center text-[#1a163d] transition-colors hover:text-[#2a245e] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex shrink-0 items-center justify-center text-[var(--text-soft-strong)] transition-colors hover:text-[var(--tertiary)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <EditBold size={16} />
           </button>
@@ -53,8 +53,8 @@ export function TimerEntry({
 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-px">
-            <WatchBold className="h-4 w-4 flex-shrink-0 text-[#7c7288]" />
-            <span className="font-medium leading-normal text-[#7c7288] text-[12px] whitespace-nowrap">
+            <WatchBold className="h-4 w-4 flex-shrink-0 text-[var(--text-soft-muted)]" />
+            <span className="text-[12px] font-medium leading-normal whitespace-nowrap text-[var(--text-soft-muted)]">
               {formatDuration(elapsed)}
             </span>
           </div>
@@ -67,7 +67,7 @@ export function TimerEntry({
                   size="sm"
                   onClick={onPause}
                   isLoading={isPending}
-                  className="h-auto rounded-[4px] bg-[#f3e8ff] pl-[8px] pr-[8px] pt-[4px] pb-[4px] text-[12px] font-normal leading-[12px] text-[#251f7b] hover:bg-[#ead8ff]"
+                  className="h-auto rounded-[4px] bg-[var(--surface-chip)] pl-[8px] pr-[8px] pt-[4px] pb-[4px] text-[12px] font-normal leading-[12px] text-[var(--tertiary)] hover:bg-[var(--surface-chip-strong)]"
                 >
                   <PauseCircleBold className="h-4 w-4" />
                   Pause
@@ -77,7 +77,7 @@ export function TimerEntry({
                   aria-label={`Complete ${entry.task_name}`}
                   onClick={onStop}
                   disabled={isPending}
-                  className="inline-flex items-center justify-center text-[#8b819d] transition-colors hover:text-[#7c7288] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center text-[var(--text-soft-muted)] transition-colors hover:text-[var(--text-soft-subtle)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <TickCircleBold size={16} />
                 </button>
@@ -89,7 +89,7 @@ export function TimerEntry({
                   size="sm"
                   onClick={onResume}
                   isLoading={isPending}
-                  className="h-auto rounded-[4px] bg-[#f3e8ff] pl-[8px] pr-[8px] pt-[4px] pb-[4px] text-[12px] font-normal leading-[12px] text-[#251f7b] hover:bg-[#ead8ff]"
+                  className="h-auto rounded-[4px] bg-[var(--surface-chip)] pl-[8px] pr-[8px] pt-[4px] pb-[4px] text-[12px] font-normal leading-[12px] text-[var(--tertiary)] hover:bg-[var(--surface-chip-strong)]"
                 >
                   <PlayBold className="h-4 w-4" />
                   Resume
@@ -99,13 +99,13 @@ export function TimerEntry({
                   aria-label={`Complete ${entry.task_name}`}
                   onClick={onStop}
                   disabled={isPending}
-                  className="inline-flex items-center justify-center text-[#8b819d] transition-colors hover:text-[#7c7288] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center text-[var(--text-soft-muted)] transition-colors hover:text-[var(--text-soft-subtle)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <TickCircleBold size={16} />
                 </button>
               </>
             ) : (
-              <span className="inline-flex items-center justify-center rounded-[4px] bg-[#22c55e] pl-[8px] pr-[8px] pt-[4px] pb-[4px] text-[12px] font-normal leading-[12px] text-white">
+              <span className="inline-flex items-center justify-center rounded-[4px] bg-[var(--status-success-bg)] pl-[8px] pr-[8px] pt-[4px] pb-[4px] text-[12px] font-normal leading-[12px] text-white">
                 Completed
               </span>
             )}
@@ -113,13 +113,13 @@ export function TimerEntry({
         </div>
 
         {clientName && (
-          <span className="inline-flex h-fit w-fit items-center justify-center rounded-[4px] bg-[var(--primary,#7962f4)] pl-[8px] pr-[8px] pt-[4px] pb-[4px] text-[14px] font-medium leading-none text-white">
+          <span className="inline-flex h-fit w-fit items-center justify-center rounded-[4px] bg-[var(--primary)] pl-[8px] pr-[8px] pt-[4px] pb-[4px] text-[14px] font-medium leading-none text-white">
             {clientName}
           </span>
         )}
 
         {entry.notes && !clientName && (
-          <p className="line-clamp-2 text-[12px] leading-normal text-[#7c7288]">
+          <p className="line-clamp-2 text-[12px] leading-normal text-[var(--text-soft-muted)]">
             {entry.notes}
           </p>
         )}

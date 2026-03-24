@@ -25,9 +25,9 @@ export function TimerForm({
   renderMode = 'modal',
 }: TimerFormProps) {
   const inlineInputClassName =
-    'h-9 w-full rounded-[6px] border border-[#ebebeb] bg-white px-3 py-1 text-[14px] leading-5 text-[#333333] shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] outline-none focus-visible:border-[var(--primary,#7962f4)]'
+    'theme-shell-field h-9 w-full rounded-[6px] px-3 py-1 text-[14px] leading-5 outline-none focus-visible:border-[var(--primary)]'
   const inlineSelectClassName =
-    'h-9 w-full appearance-none rounded-[6px] border border-[#ebebeb] bg-white px-3 py-1 pr-10 text-[14px] leading-5 text-[#333333] shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] outline-none focus-visible:border-[var(--primary,#7962f4)]'
+    'theme-shell-field h-9 w-full appearance-none rounded-[6px] px-3 py-1 pr-10 text-[14px] leading-5 outline-none focus-visible:border-[var(--primary)]'
 
   const { data: clients = [] } = useClients()
   const createRunningTimeLog = useCreateRunningTimeLog()
@@ -146,7 +146,7 @@ export function TimerForm({
                 </option>
               ))}
             </select>
-            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[var(--primary,#7962f4)]" aria-hidden>
+            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[var(--primary)]" aria-hidden>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="12" cy="12" r="10" fill="currentColor" />
                 <path d="M8 10L12 14L16 10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -171,7 +171,7 @@ export function TimerForm({
         </>
       ) : (
         <section className="space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-[#333333]">Task</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-text-base">Task</h3>
           <Input
             label="Task Name"
             name="taskName"
@@ -186,10 +186,10 @@ export function TimerForm({
 
       {renderMode !== 'inline' && (
         <section className="space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-[#333333]">Details</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-text-base">Details</h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label htmlFor="timer-client" className="mb-2 block text-sm font-medium text-[#333333]">
+              <label htmlFor="timer-client" className="mb-2 block text-sm font-medium text-text-base">
                 Client
               </label>
               <div className="relative">
@@ -248,14 +248,14 @@ export function TimerForm({
             variant="ghost"
             onClick={onClose}
             disabled={isPending}
-            className="h-10 rounded-full border border-[var(--primary,#7962f4)] px-8 py-2 text-[12px] font-medium leading-[12px] text-[#5c5c5c] transition-all hover:bg-white/50"
+            className="h-10 rounded-full border border-[var(--primary)] px-8 py-2 text-[12px] font-medium leading-[12px] text-[var(--text-soft-subtle)] transition-all hover:bg-[var(--surface-overlay)]"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             isLoading={isPending}
-            className="h-10 rounded-full bg-[var(--primary,#7962f4)] px-8 py-2 text-[14px] font-medium leading-4 text-[var(--base-white,#fefefe)] transition-all hover:opacity-90"
+            className="h-10 rounded-full bg-[var(--primary)] px-8 py-2 text-[14px] font-medium leading-4 text-[var(--base-white)] transition-all hover:opacity-90"
           >
             {mode === 'start' ? 'Create' : mode === 'manual' ? 'Save Entry' : 'Save Changes'}
           </Button>

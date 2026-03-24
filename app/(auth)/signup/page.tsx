@@ -172,7 +172,7 @@ function SignupPageContent() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#f4f4f4]">
+    <div className="theme-page-shell">
       {/* Dots Background */}
       <div className="dots-background" />
 
@@ -188,7 +188,7 @@ function SignupPageContent() {
       <div className="absolute left-1/2 top-1/2 z-10 w-[693px] max-w-[calc(100%-32px)] -translate-x-1/2 -translate-y-1/2">
         {/* Sign Up Tab */}
         <div className="flex items-center mb-2">
-          <div className="h-8 px-2 bg-[#f3e8ff] rounded-lg flex items-center gap-1">
+          <div className="theme-shell-chip flex h-8 items-center gap-1 rounded-lg px-2">
             {needsEmailVerification ? (
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path
@@ -210,14 +210,14 @@ function SignupPageContent() {
                 <path d="M13.5998 14C13.5998 11.79 11.0798 10 7.9998 10C4.9198 10 2.3998 11.79 2.3998 14" stroke="var(--tertiary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             )}
-            <p className="text-sm font-medium text-[#251F7B]">
+            <p className="text-sm font-medium text-[var(--tertiary)]">
               {needsEmailVerification ? 'verify your email' : 'Sign Up'}
             </p>
           </div>
         </div>
 
         {/* Form Card */}
-        <div className="bg-[#f3e8ff] border border-[#7962F4] rounded-[14px] shadow-md px-4 py-[59px]">
+        <div className="theme-shell-panel rounded-[14px] px-4 py-[59px]">
           <div className="w-[510px] max-w-full mx-auto flex flex-col gap-6">
             {/* Error Message */}
             {error && (
@@ -228,12 +228,12 @@ function SignupPageContent() {
 
             {needsEmailVerification ? (
               <div className="flex flex-col gap-4">
-                <h2 className="text-3xl font-semibold text-[#1f1f1f]">
+                <h2 className="text-3xl font-semibold text-text-base">
                   Verify your email
                 </h2>
-                <p className="text-lg text-[#5c5c5c] leading-8">
+                <p className="text-lg leading-8 text-[var(--text-soft-subtle)]">
                   We just sent an email to{' '}
-                  <span className="font-medium text-[#251F7B]">{normalizeEmail(email)}</span>. Click the
+                  <span className="font-medium text-[var(--tertiary)]">{normalizeEmail(email)}</span>. Click the
                   link in that email to verify your account.
                 </p>
 
@@ -255,7 +255,7 @@ function SignupPageContent() {
                     void handleResendVerification()
                   }}
                   disabled={isResending}
-                  className="h-10 px-8 py-2 bg-[#7962F4] text-white rounded-full font-medium text-sm hover:opacity-90 disabled:opacity-50 transition-all"
+                  className="h-10 rounded-full bg-[var(--primary)] px-8 py-2 text-sm font-medium text-white transition-all hover:opacity-90 disabled:opacity-50"
                 >
                   {isResending ? 'Resending email...' : 'Resend email'}
                 </button>
@@ -263,19 +263,19 @@ function SignupPageContent() {
                 <button
                   type="button"
                   onClick={handleUpdateEmail}
-                  className="h-10 px-8 py-2 border border-[#7962F4] text-[#5c5c5c] rounded-full font-medium text-xs hover:bg-white/50 transition-all"
+                  className="h-10 rounded-full border border-[var(--primary)] px-8 py-2 text-xs font-medium text-[var(--text-soft-subtle)] transition-all hover:bg-[var(--surface-overlay)]"
                 >
                   Update email address
                 </button>
 
-                <div className="h-px bg-[#c8c8d2] my-2" />
+                <div className="my-2 h-px bg-[var(--surface-divider)]" />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <a
                     href="https://mail.google.com"
                     target="_blank"
                     rel="noreferrer"
-                    className="h-10 px-8 py-2 border border-[#5c5c5c] rounded-full flex items-center justify-center text-xs font-medium text-[#5c5c5c] hover:bg-white/50 transition-all"
+                    className="flex h-10 items-center justify-center rounded-full border border-[var(--text-soft-subtle)] px-8 py-2 text-xs font-medium text-[var(--text-soft-subtle)] transition-all hover:bg-[var(--surface-overlay)]"
                   >
                     Open Gmail
                   </a>
@@ -283,7 +283,7 @@ function SignupPageContent() {
                     href="https://outlook.live.com/mail"
                     target="_blank"
                     rel="noreferrer"
-                    className="h-10 px-8 py-2 border border-[#5c5c5c] rounded-full flex items-center justify-center text-xs font-medium text-[#5c5c5c] hover:bg-white/50 transition-all"
+                    className="flex h-10 items-center justify-center rounded-full border border-[var(--text-soft-subtle)] px-8 py-2 text-xs font-medium text-[var(--text-soft-subtle)] transition-all hover:bg-[var(--surface-overlay)]"
                   >
                     Open Outlook
                   </a>
@@ -291,7 +291,7 @@ function SignupPageContent() {
 
                 <Link
                   href="/login"
-                  className="text-sm text-[#5c5c5c] underline text-center"
+                  className="text-center text-sm text-[var(--text-soft-subtle)] underline"
                 >
                   Already verified? Sign in
                 </Link>
@@ -303,11 +303,11 @@ function SignupPageContent() {
                   <button
                     onClick={handleGoogleSignup}
                     type="button"
-                    className="flex-1 h-10 px-8 py-2 border border-[#5c5c5c] rounded-full flex items-center justify-center gap-1 hover:bg-white/50 transition-colors"
+                    className="flex h-10 flex-1 items-center justify-center gap-1 rounded-full border border-[var(--text-soft-subtle)] px-8 py-2 transition-colors hover:bg-[var(--surface-overlay)]"
                     disabled={isLoading}
                   >
                     <Image src="/icons/social/google-original.svg" alt="Google" width={16} height={16} />
-                    <span className="text-xs font-medium text-[#5c5c5c]">
+                    <span className="text-xs font-medium text-[var(--text-soft-subtle)]">
                       Google
                     </span>
                   </button>
@@ -315,11 +315,11 @@ function SignupPageContent() {
                   <button
                     onClick={handleGithubSignup}
                     type="button"
-                    className="flex-1 h-10 px-8 py-2 border border-[#5c5c5c] rounded-full flex items-center justify-center gap-1 hover:bg-white/50 transition-colors"
+                    className="flex h-10 flex-1 items-center justify-center gap-1 rounded-full border border-[var(--text-soft-subtle)] px-8 py-2 transition-colors hover:bg-[var(--surface-overlay)]"
                     disabled={isLoading}
                   >
                     <Image src="/icons/social/github-original.svg" alt="GitHub" width={16} height={16} />
-                    <span className="text-xs font-medium text-[#5c5c5c]">
+                    <span className="text-xs font-medium text-[var(--text-soft-subtle)]">
                       Github
                     </span>
                   </button>
@@ -327,11 +327,11 @@ function SignupPageContent() {
 
                 {/* Divider */}
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 border-t border-[#5c5c5c]" />
-                  <p className="text-sm text-[#333]">
+                  <div className="flex-1 border-t border-[var(--text-soft-subtle)]" />
+                  <p className="text-sm text-text-base">
                     or sign up with email
                   </p>
-                  <div className="flex-1 border-t border-[#5c5c5c]" />
+                  <div className="flex-1 border-t border-[var(--text-soft-subtle)]" />
                 </div>
 
                 {/* Signup Form */}
@@ -339,7 +339,7 @@ function SignupPageContent() {
                   {/* Full Name Input */}
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-0.5">
-                      <label htmlFor="fullName" className="text-sm font-medium text-[#333]">
+                      <label htmlFor="fullName" className="text-sm font-medium text-text-base">
                         Full Name
                       </label>
                       <span className="text-sm font-medium text-[#fb3748]">*</span>
@@ -350,7 +350,7 @@ function SignupPageContent() {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       required
-                      className="h-9 px-3 py-1 bg-white border border-[#ebebeb] rounded-md shadow-sm text-sm text-[#5c5c5c] focus:outline-none focus:ring-2 focus:ring-[#7962F4] transition-all"
+                      className="theme-shell-field h-9 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
                       placeholder=" "
                       disabled={isLoading}
                     />
@@ -359,7 +359,7 @@ function SignupPageContent() {
                   {/* Email Input */}
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-0.5">
-                      <label htmlFor="email" className="text-sm font-medium text-[#333]">
+                      <label htmlFor="email" className="text-sm font-medium text-text-base">
                         Your email
                       </label>
                       <span className="text-sm font-medium text-[#fb3748]">*</span>
@@ -370,7 +370,7 @@ function SignupPageContent() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="h-9 px-3 py-1 bg-white border border-[#ebebeb] rounded-md shadow-sm text-sm text-[#5c5c5c] focus:outline-none focus:ring-2 focus:ring-[#7962F4] transition-all"
+                      className="theme-shell-field h-9 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
                       placeholder=" "
                       disabled={isLoading}
                     />
@@ -379,7 +379,7 @@ function SignupPageContent() {
                   {/* Password Input */}
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-0.5">
-                      <label htmlFor="password" className="text-sm font-medium text-[#333]">
+                      <label htmlFor="password" className="text-sm font-medium text-text-base">
                         Password
                       </label>
                       <span className="text-sm font-medium text-[#fb3748]">*</span>
@@ -390,7 +390,7 @@ function SignupPageContent() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="h-9 px-3 py-1 bg-white border border-[#ebebeb] rounded-md shadow-sm text-sm text-[#5c5c5c] focus:outline-none focus:ring-2 focus:ring-[#7962F4] transition-all"
+                      className="theme-shell-field h-9 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
                       placeholder=" "
                       disabled={isLoading}
                     />
@@ -399,7 +399,7 @@ function SignupPageContent() {
                   {/* Confirm Password Input */}
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-0.5">
-                      <label htmlFor="confirmPassword" className="text-sm font-medium text-[#333]">
+                      <label htmlFor="confirmPassword" className="text-sm font-medium text-text-base">
                         Confirm Password
                       </label>
                       <span className="text-sm font-medium text-[#fb3748]">*</span>
@@ -410,7 +410,7 @@ function SignupPageContent() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
-                      className="h-9 px-3 py-1 bg-white border border-[#ebebeb] rounded-md shadow-sm text-sm text-[#5c5c5c] focus:outline-none focus:ring-2 focus:ring-[#7962F4] transition-all"
+                      className="theme-shell-field h-9 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
                       placeholder=" "
                       disabled={isLoading}
                     />
@@ -421,14 +421,14 @@ function SignupPageContent() {
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="h-10 px-8 py-2 bg-[#7962F4] text-white rounded-full font-medium text-sm hover:opacity-90 disabled:opacity-50 transition-all"
+                      className="h-10 rounded-full bg-[var(--primary)] px-8 py-2 text-sm font-medium text-white transition-all hover:opacity-90 disabled:opacity-50"
                     >
                       {isLoading ? 'Creating account...' : 'Create Account'}
                     </button>
 
                     <Link
                       href="/login"
-                      className="h-10 px-8 py-2 border border-[#7962F4] text-[#5c5c5c] rounded-full font-medium text-xs hover:bg-white/50 transition-all flex items-center justify-center"
+                      className="flex h-10 items-center justify-center rounded-full border border-[var(--primary)] px-8 py-2 text-xs font-medium text-[var(--text-soft-subtle)] transition-all hover:bg-[var(--surface-overlay)]"
                     >
                       Already have an account? Sign In
                     </Link>
