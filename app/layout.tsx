@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { QueryProvider } from "@/components/QueryProvider";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "Stacklite - Freelancer Operating System",
@@ -21,6 +22,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <QueryProvider>{children}</QueryProvider>
+        <Analytics />
       </body>
     </html>
   );
