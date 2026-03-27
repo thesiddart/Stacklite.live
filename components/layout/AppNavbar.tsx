@@ -57,7 +57,7 @@ export function AppNavbar({
   const { user } = useAuth()
   const { data: profile } = useProfile(Boolean(user))
   const updateProfileMutation = useUpdateProfile()
-  const [currentTime, setCurrentTime] = useState(formatWorkspaceTime(new Date()))
+  const [currentTime, setCurrentTime] = useState<string | null>(null)
   const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark'>('light')
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false)
   const [isMusicMenuOpen, setIsMusicMenuOpen] = useState(false)
@@ -99,6 +99,8 @@ export function AppNavbar({
   }, [])
 
   useEffect(() => {
+    setCurrentTime(formatWorkspaceTime(new Date()))
+
     const timer = setInterval(() => {
       setCurrentTime(formatWorkspaceTime(new Date()))
     }, 1000)
@@ -230,8 +232,12 @@ export function AppNavbar({
       <div className="theme-shell-card relative flex h-12 items-center gap-2 rounded-[14px] p-2">
         <div className="theme-shell-subtle flex h-8 items-center justify-center gap-1 rounded-[8px] px-2">
           <WatchBold size={16} />
-          <span className="text-[14px] font-medium leading-none">{currentTime.split(' ')[0]}</span>
-          <span className="text-[14px] font-medium leading-none">{currentTime.split(' ')[1]}</span>
+          <span className="text-[14px] font-medium leading-none">
+            {currentTime?.split(' ')[0] ?? '--:--:--'}
+          </span>
+          <span className="text-[14px] font-medium leading-none">
+            {currentTime?.split(' ')[1] ?? '--'}
+          </span>
         </div>
 
         {showThemeButton && (

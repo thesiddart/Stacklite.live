@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState, type FormEvent } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getSupabaseEnv, SUPABASE_ENV_ERROR_MESSAGE } from '@/lib/supabase/env'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -24,7 +25,14 @@ function SignupPageContent() {
   const [verificationError, setVerificationError] = useState('')
   const [isResending, setIsResending] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+
+  function getSupabaseClient() {
+    if (!getSupabaseEnv().isConfigured) {
+      throw new Error(SUPABASE_ENV_ERROR_MESSAGE)
+    }
+
+    return createClient()
+  }
 
   useEffect(() => {
     const emailFromQuery = searchParams.get('email')
@@ -54,6 +62,7 @@ function SignupPageContent() {
     }
 
     try {
+      const supabase = getSupabaseClient()
       const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || window.location.origin
       const callbackUrl = `${appUrl}/auth/callback?next=/dashboard`
 
@@ -100,6 +109,7 @@ function SignupPageContent() {
     setIsResending(true)
 
     try {
+      const supabase = getSupabaseClient()
       const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || window.location.origin
       const callbackUrl = `${appUrl}/auth/callback?next=/dashboard`
 
@@ -136,6 +146,7 @@ function SignupPageContent() {
   const handleGoogleSignup = async () => {
     setError('')
     try {
+      const supabase = getSupabaseClient()
       const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || window.location.origin
       const callbackUrl = `${appUrl}/auth/callback?next=/dashboard`
 
@@ -155,6 +166,7 @@ function SignupPageContent() {
   const handleGithubSignup = async () => {
     setError('')
     try {
+      const supabase = getSupabaseClient()
       const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || window.location.origin
       const callbackUrl = `${appUrl}/auth/callback?next=/dashboard`
 
