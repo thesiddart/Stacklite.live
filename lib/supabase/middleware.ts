@@ -1,13 +1,17 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { assertSupabaseEnv } from '@/lib/supabase/env'
+import { getSupabaseEnv } from '@/lib/supabase/env'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   })
 
-  const { supabaseUrl, supabaseAnonKey } = assertSupabaseEnv()
+  const { supabaseUrl, supabaseAnonKey, isConfigured } = getSupabaseEnv()
+
+  if (!isConfigured || !supabaseUrl || !supabaseAnonKey) {
+    return supabaseResponse
+  }
 
   const supabase = createServerClient(
     supabaseUrl,
