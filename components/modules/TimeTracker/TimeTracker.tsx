@@ -21,7 +21,7 @@ import {
 import type { TimeLog } from '@/lib/types/database'
 import { TimerEntry } from './TimerEntry'
 import { TimerForm } from './TimerForm'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 function isTypingTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) {
@@ -190,7 +190,7 @@ export function TimeTracker({ variant = 'page', onCollapse }: TimeTrackerProps) 
   )
 
   return (
-    <>
+    <TooltipProvider delayDuration={180}>
       <div
         className={
           variant === 'page'
@@ -317,6 +317,6 @@ export function TimeTracker({ variant = 'page', onCollapse }: TimeTrackerProps) 
           </div>
         )}
       </div>
-    </>
+    </TooltipProvider>
   )
 }
