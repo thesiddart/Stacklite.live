@@ -2,10 +2,12 @@
 
 import React, { useEffect, useId, useRef, useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { CloseCircleBold, ColorfilterBold, EditBold, LoginBold, MusicCircleBold, TrashBold, UserBold, WatchBold } from 'sicons'
 import { useAuth } from '@/hooks/useAuth'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
-import { GuestIndicator } from '@/components/layout/GuestIndicator'
+import { SignInButton } from '@/components/layout/SignInButton'
 import { SavePromptModal } from '@/components/layout/SavePromptModal'
 
 function GoogleIcon() {
@@ -56,6 +58,7 @@ export function AppNavbar({
   onConnectGoogle,
   onConnectGithub,
 }: AppNavbarProps) {
+  const pathname = usePathname()
   const { user } = useAuth()
   const { data: profile } = useProfile(Boolean(user))
   const updateProfileMutation = useUpdateProfile()
@@ -91,6 +94,12 @@ export function AppNavbar({
   const profileEmail = profile?.email || user?.email || ''
   const profilePhoto = photoPreview || user?.user_metadata?.avatar_url || null
   const profileInitial = profileName.charAt(0).toUpperCase()
+  const logoSrc = selectedTheme === 'dark' ? '/logo-dark.svg' : '/logo-light.svg'
+  const isAuthOrPublicSharePage =
+    pathname === '/login'
+    || pathname === '/signup'
+    || pathname.startsWith('/c/')
+    || pathname.startsWith('/i/')
 
   useEffect(() => {
     const storedTheme = window.localStorage.getItem('stacklite-theme')
@@ -228,12 +237,16 @@ export function AppNavbar({
     <header
       className={`absolute left-0 right-0 ${topClassName} ${zClassName} flex w-full items-center justify-between px-6 sm:px-10 lg:px-[50px]`}
     >
-      <div className="theme-shell-card flex h-12 items-center gap-[5.94px] rounded-[14px] p-2">
-        <Image src="/logo.svg" alt="Stacklite" width={161} height={44} className="h-8 w-auto" priority />
+      <div className="flex items-center gap-3">
+        <Link href="/dashboard" aria-label="Go to dashboard" className="focus-visible:outline-none">
+          <div className="theme-shell-card flex h-12 items-center gap-[5.94px] rounded-[14px] p-2 transition-opacity hover:opacity-90">
+            <Image src={logoSrc} alt="Stacklite" width={161} height={44} className="h-8 w-auto" priority />
+          </div>
+        </Link>
+        <span className="text-[14px] font-medium leading-none text-text-base">Beta</span>
       </div>
 
       <div className="theme-shell-card relative flex h-12 items-center gap-2 rounded-[14px] p-2">
-        <GuestIndicator />
         <div className="theme-shell-subtle flex h-8 items-center justify-center gap-1 rounded-[8px] px-2">
           <WatchBold size={16} />
           <span className="text-[14px] font-medium leading-none">
@@ -347,7 +360,9 @@ export function AppNavbar({
           </div>
         )}
 
-        {showProfileButton && (
+        {!user && !isAuthOrPublicSharePage && <SignInButton />}
+
+        {showProfileButton && user && (
           <div ref={profileMenuRef} className="relative">
             <button
               type="button"

@@ -2,24 +2,25 @@
 
 import React, { useCallback, useEffect, useRef } from 'react'
 import { CloseCircleBold } from 'sicons'
-import { useContractStore, DEFAULT_CLAUSES } from '@/stores/contractStore'
-import { useCreateContract, useUpdateContract } from '@/hooks/useContracts'
-import { ContractForm } from './ContractForm'
-import { ContractPreview } from './ContractPreview'
+import { useInvoiceStore } from '@/stores/invoiceStore'
+import { useCreateInvoice, useUpdateInvoice } from '@/hooks/useInvoices'
+import { InvoiceForm } from './InvoiceForm'
+import { InvoicePreview } from './InvoicePreview'
+import type { InvoiceLineItem } from '@/lib/utils/invoiceCalculations'
 
-export function ContractEditor() {
+export function InvoiceEditor() {
   const {
-    activeContractId,
+    activeInvoiceId,
     formData,
     isDirty,
     saveStatus,
     setView,
     resetForm,
     setSaveStatus,
-  } = useContractStore()
+  } = useInvoiceStore()
 
-  const createMutation = useCreateContract()
-  const updateMutation = useUpdateContract()
+  const createMutation = useCreateInvoice()
+  const updateMutation = useUpdateInvoice()
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleSave = useCallback(async () => {
@@ -28,37 +29,41 @@ export function ContractEditor() {
     setSaveStatus('saving')
 
     try {
-      if (activeContractId) {
+      const items = (formData.line_items || []) as InvoiceLineItem[]
+
+      if (activeInvoiceId) {
         await updateMutation.mutateAsync({
-          id: activeContractId,
+          id: activeInvoiceId,
           data: formData,
         })
       } else {
         const created = await createMutation.mutateAsync({
           client_id: formData.client_id || null,
-          template_type: formData.template_type || null,
-          project_name: formData.project_name || null,
-          scope: formData.scope || null,
-          deliverables: formData.deliverables || [],
-          exclusions: formData.exclusions || null,
-          start_date: formData.start_date || null,
-          end_date: formData.end_date || null,
-          milestones: formData.milestones || [],
-          total_fee: formData.total_fee || null,
+          contract_id: formData.contract_id || null,
+          invoice_number: formData.invoice_number || 'INV-000',
+          issue_date: formData.issue_date || new Date().toISOString().slice(0, 10),
+          due_date: formData.due_date || new Date().toISOString().slice(0, 10),
+          line_items: items,
           currency: formData.currency || 'USD',
-          payment_structure: formData.payment_structure || null,
+          tax_rate: formData.tax_rate ?? null,
+          discount_type: formData.discount_type ?? null,
+          discount_value: formData.discount_value ?? null,
+          subtotal: formData.subtotal || 0,
+          total: formData.total || 0,
           payment_method: formData.payment_method || null,
-          clauses: formData.clauses || DEFAULT_CLAUSES,
-          status: formData.status || 'sent',
+          payment_instructions: formData.payment_instructions || null,
+          notes_to_client: formData.notes_to_client || null,
+          internal_notes: formData.internal_notes || null,
+          status: formData.status || 'unpaid',
         })
-        useContractStore.getState().setActiveContract(created.id)
+        useInvoiceStore.getState().setActiveInvoice(created.id)
       }
       setSaveStatus('saved')
-      useContractStore.setState({ isDirty: false })
+      useInvoiceStore.setState({ isDirty: false })
     } catch {
       setSaveStatus('error')
     }
-  }, [activeContractId, createMutation, formData, isDirty, saveStatus, setSaveStatus, updateMutation])
+  }, [activeInvoiceId, createMutation, formData, isDirty, saveStatus, setSaveStatus, updateMutation])
 
   // Auto-save every 30 seconds when dirty
   useEffect(() => {
@@ -89,7 +94,7 @@ export function ContractEditor() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h3 className="text-[14px] font-semibold text-[var(--text-soft-strong)]">
-            {activeContractId ? 'Edit Contract' : 'New Contract'}
+            {activeInvoiceId ? 'Edit Invoice' : 'New Invoice'}
           </h3>
           <span
             className={`text-[11px] font-medium transition-opacity duration-300 ${
@@ -136,12 +141,12 @@ export function ContractEditor() {
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden lg:grid-cols-2">
         {/* Left: Form */}
         <div className="min-h-0 overflow-hidden rounded-[14px] border border-[var(--surface-panel-border)] bg-[var(--surface-panel-strong)] p-4">
-          <ContractForm onSave={handleSave} />
+          <InvoiceForm />
         </div>
 
         {/* Right: Preview */}
         <div className="hidden min-h-0 overflow-hidden lg:block">
-          <ContractPreview />
+          <InvoicePreview />
         </div>
       </div>
     </div>

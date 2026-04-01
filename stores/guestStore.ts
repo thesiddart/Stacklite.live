@@ -6,12 +6,13 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { GuestClient, GuestContract, GuestTimeEntry } from '@/lib/types/guest'
+import type { GuestClient, GuestContract, GuestInvoice, GuestTimeEntry } from '@/lib/types/guest'
 
 interface GuestState {
   // Data
   clients: GuestClient[]
   contracts: GuestContract[]
+  invoices: GuestInvoice[]
   timeEntries: GuestTimeEntry[]
 
   // Clients
@@ -23,6 +24,11 @@ interface GuestState {
   addContract: (contract: GuestContract) => void
   updateContract: (id: string, data: Partial<GuestContract>) => void
   deleteContract: (id: string) => void
+
+  // Invoices
+  addInvoice: (invoice: GuestInvoice) => void
+  updateInvoice: (id: string, data: Partial<GuestInvoice>) => void
+  deleteInvoice: (id: string) => void
 
   // Time Entries
   addTimeEntry: (entry: GuestTimeEntry) => void
@@ -38,6 +44,7 @@ export const useGuestStore = create<GuestState>()(
     (set) => ({
       clients: [],
       contracts: [],
+      invoices: [],
       timeEntries: [],
 
       // Clients
@@ -64,6 +71,18 @@ export const useGuestStore = create<GuestState>()(
       deleteContract: (id) =>
         set((s) => ({ contracts: s.contracts.filter((c) => c.id !== id) })),
 
+      // Invoices
+      addInvoice: (invoice) =>
+        set((s) => ({ invoices: [...s.invoices, invoice] })),
+      updateInvoice: (id, data) =>
+        set((s) => ({
+          invoices: s.invoices.map((i) =>
+            i.id === id ? { ...i, ...data, updated_at: new Date().toISOString() } : i
+          ),
+        })),
+      deleteInvoice: (id) =>
+        set((s) => ({ invoices: s.invoices.filter((i) => i.id !== id) })),
+
       // Time Entries
       addTimeEntry: (entry) =>
         set((s) => ({ timeEntries: [...s.timeEntries, entry] })),
@@ -77,7 +96,7 @@ export const useGuestStore = create<GuestState>()(
         set((s) => ({ timeEntries: s.timeEntries.filter((e) => e.id !== id) })),
 
       // Clear all
-      clearAll: () => set({ clients: [], contracts: [], timeEntries: [] }),
+      clearAll: () => set({ clients: [], contracts: [], invoices: [], timeEntries: [] }),
     }),
     { name: 'stacklite-guest-data' }
   )

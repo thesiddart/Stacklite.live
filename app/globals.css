@@ -88,68 +88,69 @@
 
 :root {
   /* Background Colors (Light Mode) */
-  --background-base: #cee1f1;
-  --background-highlight: #99acbb;
-  --background-muted: #7a8c9a;
+  --background-base: #f3f7f1;
+  --background-highlight: #e3eee8;
+  --background-muted: #cddfd4;
   --background-emphasis: #000711;
-  --background-disabled: #60717f;
+  --background-disabled: #97aa9f;
 
   /* Text Colors (Light Mode) */
   --text-base: #000711;
   --text-muted: #253440;
   --text-disabled: #4a5b68;
-  --text-inverse: #cee1f1;
-  --text-brand: #4a00b3;
+  --text-inverse: #f3f7f1;
+  --text-brand: #2d8a64;
 
   /* Border Colors (Light Mode) */
-  --border-base: #60717f;
-  --border-muted: #7a8c9a;
-  --border-disabled: #99acbb;
+  --border-base: #97aa9f;
+  --border-muted: #b8ccc1;
+  --border-disabled: #d5e4db;
 
   /* Button Colors (Light Mode) */
-  --button-primary: #5a00cc;
-  --button-primary-fg: #cee1f1;
-  --button-secondary: #7a8c9a;
+  --button-primary: #2d8a64;
+  --button-primary-fg: #f3f7f1;
+  --button-secondary: #c7d8ce;
   --button-secondary-fg: #000711;
-  --button-ghost-fg: #15242f;
+  --button-ghost-fg: #1f6f51;
 
   /* Link Colors (Light Mode) */
-  --link-base: #4a00b3;
-  --link-hover: #3d009c;
+  --link-base: #2d8a64;
+  --link-hover: #1f6f51;
 
   /* Legacy aliases used across older UI shells */
-  --primary: #7962f4;
-  --tertiary: #251f7b;
-  --tertairy: #251f7b;
+  --primary: #2d8a64;
+  --tertiary: #1f6f51;
+  --tertairy: #1f6f51;
   --base-white: #fefefe;
 
   /* Shared legacy surfaces */
-  --surface-page: #f4f4f4;
+  --surface-page: #f3f7f1;
   --surface-card: #ffffff;
-  --surface-card-subtle: rgba(243, 232, 255, 0.4);
-  --surface-panel: #f3e8ff;
-  --surface-panel-strong: rgba(243, 232, 255, 0.45);
-  --surface-panel-border: rgba(121, 98, 244, 0.35);
-  --surface-chip: #f3e8ff;
-  --surface-chip-strong: rgba(121, 98, 244, 0.46);
-  --surface-divider: #d8d8d8;
+  --surface-card-subtle: rgba(227, 238, 232, 0.55);
+  --surface-panel: #e6f0ea;
+  --surface-panel-strong: rgba(205, 223, 212, 0.55);
+  --surface-panel-border: rgba(45, 138, 100, 0.24);
+  --surface-chip: #e3eee8;
+  --surface-chip-strong: rgba(45, 138, 100, 0.2);
+  --surface-divider: #cddfd4;
   --surface-input: #ffffff;
-  --surface-input-border: #ebebeb;
+  --surface-input-border: #d5e4db;
   --surface-disabled: #f8f8f8;
   --surface-overlay: rgba(255, 255, 255, 0.6);
   --surface-danger-soft: #fff1f1;
   --text-soft-strong: #1a163d;
-  --text-soft-muted: #7c7288;
-  --text-soft-subtle: #5c5c5c;
-  --text-soft-disabled: #7f7f7f;
+  --text-soft-muted: #5d6f66;
+  --text-soft-subtle: #6f8178;
+  --text-soft-disabled: #8a9a92;
   --text-danger-soft: #b93838;
-  --status-success-bg: #22c55e;
+  --status-success-bg: #2d8a64;
+  --grid-dot-color: rgba(45, 138, 100, 0.18);
 
   /* Feedback Colors */
   --feedback-error-base: #c40066;
   --feedback-error-text: #780033;
-  --feedback-success-base: #007e00;
-  --feedback-success-text: #004600;
+  --feedback-success-base: #2d8a64;
+  --feedback-success-text: #1f6f51;
   --feedback-warning-base: #a35600;
   --feedback-warning-text: #400d00;
   --feedback-info-base: #0077c3;
@@ -193,7 +194,7 @@
   --text-muted: #4a5b68;
   --text-disabled: #364653;
   --text-inverse: #000711;
-  --text-brand: #6c00e6;
+  --text-brand: #58b389;
 
   /* Border Colors (Dark Mode) */
   --border-base: #253440;
@@ -201,20 +202,20 @@
   --border-disabled: #07151f;
 
   /* Button Colors (Dark Mode) */
-  --button-primary: #5a00cc;
+  --button-primary: #2d8a64;
   --button-primary-fg: #cee1f1;
   --button-secondary: #15242f;
   --button-secondary-fg: #cee1f1;
-  --button-ghost-fg: #60717f;
+  --button-ghost-fg: #8fc7ae;
 
   /* Link Colors (Dark Mode) */
-  --link-base: #6c00e6;
-  --link-hover: #8114ff;
+  --link-base: #58b389;
+  --link-hover: #7dccaa;
 
   /* Legacy aliases used across older UI shells */
-  --primary: #7962f4;
-  --tertiary: #d7ccff;
-  --tertairy: #d7ccff;
+  --primary: #2d8a64;
+  --tertiary: #9ed3bc;
+  --tertairy: #9ed3bc;
   --base-white: #fefefe;
 
   /* Shared legacy surfaces */
@@ -222,10 +223,10 @@
   --surface-card: #07151f;
   --surface-card-subtle: rgba(21, 36, 47, 0.92);
   --surface-panel: #15242f;
-  --surface-panel-strong: rgba(90, 0, 204, 0.16);
-  --surface-panel-border: rgba(121, 98, 244, 0.45);
-  --surface-chip: rgba(90, 0, 204, 0.18);
-  --surface-chip-strong: rgba(121, 98, 244, 0.22);
+  --surface-panel-strong: rgba(45, 138, 100, 0.2);
+  --surface-panel-border: rgba(88, 179, 137, 0.35);
+  --surface-chip: rgba(45, 138, 100, 0.16);
+  --surface-chip-strong: rgba(88, 179, 137, 0.24);
   --surface-divider: #253440;
   --surface-input: #07151f;
   --surface-input-border: #253440;
@@ -237,13 +238,14 @@
   --text-soft-subtle: #99acbb;
   --text-soft-disabled: #60717f;
   --text-danger-soft: #ff84b3;
-  --status-success-bg: #16a34a;
+  --status-success-bg: #2d8a64;
+  --grid-dot-color: rgba(88, 179, 137, 0.24);
 
   /* Feedback Colors (Dark Mode - converted for readability) */
   --feedback-error-base: #c40066;
   --feedback-error-text: #ff619e;
-  --feedback-success-base: #007e00;
-  --feedback-success-text: #59b550;
+  --feedback-success-base: #2d8a64;
+  --feedback-success-text: #7dccaa;
   --feedback-warning-base: #a35600;
   --feedback-warning-text: #f3b500;
   --feedback-info-base: #0077c3;
@@ -369,7 +371,7 @@ a {
 
 .theme-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #7962f4 #e9ddff;
+  scrollbar-color: var(--button-primary) var(--surface-chip);
 }
 
 .theme-scrollbar::-webkit-scrollbar {
@@ -377,18 +379,18 @@ a {
 }
 
 .theme-scrollbar::-webkit-scrollbar-track {
-  background: #e9ddff;
+  background: var(--surface-chip);
   border-radius: 9999px;
 }
 
 .theme-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #8b78ff 0%, #6b54ed 100%);
+  background: var(--button-primary);
   border-radius: 9999px;
-  border: 2px solid #e9ddff;
+  border: 2px solid var(--surface-chip);
 }
 
 .theme-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #7f6af7 0%, #5f4cdb 100%);
+  background: var(--link-hover);
 }
 
 /* Animation Classes */

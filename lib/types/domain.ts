@@ -62,7 +62,7 @@ export interface Contract {
   paymentTerms: string
   deliverables: string | null
   clauses: string | null
-  status: 'draft' | 'sent' | 'signed' | 'archived'
+  status: 'sent' | 'signed' | 'archived'
   pdfUrl: string | null
   createdAt: string
   updatedAt: string
@@ -84,7 +84,7 @@ export interface Invoice {
   subtotal: number
   tax: number
   total: number
-  status: 'draft' | 'sent' | 'paid' | 'overdue'
+  status: 'unpaid' | 'paid' | 'overdue'
   notes: string | null
   terms: string | null
   pdfUrl: string | null

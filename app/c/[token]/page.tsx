@@ -1,5 +1,5 @@
 import React from 'react'
-import Image from 'next/image'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import type { Contract as ContractRow } from '@/lib/types/database'
 
@@ -84,7 +84,13 @@ export default async function SharedContractPage({
       <div className="mx-auto max-w-[680px] px-6 py-12">
         {/* Logo */}
         <div className="mb-8">
-          <Image src="/logo.svg" alt="Stacklite" width={120} height={32} className="h-6 w-auto opacity-40" />
+          <Link href="/" aria-label="Go to Stacklite home" className="inline-flex">
+            <picture>
+              <source media="(prefers-color-scheme: dark)" srcSet="/logo-dark.svg" />
+              <source media="(prefers-color-scheme: light)" srcSet="/logo-light.svg" />
+              <img src="/logo-light.svg" alt="Stacklite" className="h-6 w-auto opacity-40 transition-opacity hover:opacity-70" />
+            </picture>
+          </Link>
         </div>
 
         {/* Document */}

@@ -15,7 +15,7 @@ export const templateTypes = [
 
 export type TemplateType = (typeof templateTypes)[number]
 
-const statusValues = ['draft', 'sent', 'signed', 'archived'] as const
+const statusValues = ['sent', 'signed', 'archived'] as const
 const paymentStructureValues = ['full', 'split', 'milestone', 'custom'] as const
 
 const emptyToNull = (value: string | null | undefined) => {
@@ -115,7 +115,7 @@ export const contractSchema = z.object({
   status: z
     .enum(statusValues)
     .optional()
-    .default('draft'),
+    .default('sent'),
 })
 
 export const updateContractSchema = contractSchema.partial()

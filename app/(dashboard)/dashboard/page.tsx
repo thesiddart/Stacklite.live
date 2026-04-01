@@ -13,12 +13,15 @@ import {
   WalletBold,
 } from 'sicons'
 import { AppNavbar } from '@/components/layout/AppNavbar'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ClientForm } from '@/components/modules/ClientManager/ClientForm'
 import { ContractGenerator } from '@/components/modules/ContractGenerator'
+import { InvoiceGenerator } from '@/components/modules/InvoiceGenerator'
 import { TimeTracker } from '@/components/modules/TimeTracker'
 import { useClients } from '@/hooks/useClients'
 import { useTimeLogs } from '@/hooks/useTimeLogs'
 import { useAuth } from '@/hooks/useAuth'
+import { useSessionStore } from '@/stores/sessionStore'
 import type { Client } from '@/lib/types/database'
 import { migrateGuestData } from '@/lib/migration/migrateGuestData'
 import {
@@ -37,10 +40,19 @@ function DashboardContent() {
   const [isClientFormMounted, setIsClientFormMounted] = useState(false)
   const [isClientFormVisible, setIsClientFormVisible] = useState(false)
   const [editingClient, setEditingClient] = useState<Client | null>(null)
+  const initSession = useSessionStore((s) => s.initSession)
   const { data: clients = [], isLoading: isClientsLoading } = useClients()
   const { data: timeLogs = [] } = useTimeLogs()
-  const { user } = useAuth()
+  const { user, isLoading: isAuthLoading } = useAuth()
   const searchParams = useSearchParams()
+
+  useEffect(() => {
+    if (isAuthLoading) {
+      return
+    }
+
+    initSession(Boolean(user))
+  }, [initSession, isAuthLoading, user])
 
   // Migrate guest data on sign-up (triggered by auth callback ?migration=pending)
   useEffect(() => {
@@ -144,6 +156,7 @@ function DashboardContent() {
   }, [formTransitionMs, isClientFormMounted, isClientFormOpen])
 
   return (
+    <TooltipProvider delayDuration={180}>
     <div className="theme-page-shell">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(0,0,0,0.12)_1px,transparent_1px)] bg-[length:16px_16px]" />
 
@@ -194,23 +207,36 @@ function DashboardContent() {
                   {isClientPanelExpanded ? <AddCircleBold size={16} /> : <PeopleBold size={16} />}
                   <span className="text-[14px] font-medium">{isClientPanelExpanded ? 'Add Clients' : 'Manage Clients'}</span>
                 </button>
-                <button
-                  type="button"
-                  aria-label={isClientPanelExpanded ? 'Close client form' : 'Add client'}
-                  onClick={() => {
-                    if (isClientFormOpen) {
+                {isClientPanelExpanded ? (
+                  <button
+                    type="button"
+                    aria-label="Close client form"
+                    onClick={() => {
                       setIsCreateClientOpen(false)
                       setEditingClient(null)
-                      return
-                    }
-
-                    setEditingClient(null)
-                    setIsCreateClientOpen(true)
-                  }}
-                  className="text-[var(--tertiary)]"
-                >
-                  {isClientPanelExpanded ? <CloseCircleBold size={24} /> : <AddCircleBold size={24} />}
-                </button>
+                    }}
+                    className="text-[var(--tertiary)]"
+                  >
+                    <CloseCircleBold size={24} />
+                  </button>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Add client"
+                        onClick={() => {
+                          setEditingClient(null)
+                          setIsCreateClientOpen(true)
+                        }}
+                        className="text-[var(--tertiary)]"
+                      >
+                        <AddCircleBold size={24} />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Add client</TooltipContent>
+                  </Tooltip>
+                )}
               </div>
               <div className="theme-shell-divider h-px w-full" />
               <div className="flex-1 min-h-0 overflow-hidden rounded-[10px]">
@@ -339,6 +365,10 @@ function DashboardContent() {
                 <div className="h-full overflow-y-auto rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] p-4 theme-scrollbar">
                   <ContractGenerator variant="dashboard" />
                 </div>
+              ) : activeDockTab === 'invoice' ? (
+                <div className="h-full overflow-y-auto rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] p-4 theme-scrollbar">
+                  <InvoiceGenerator variant="dashboard" />
+                </div>
               ) : (
                 <div className="flex h-full flex-col items-center justify-center rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] text-center">
                   <CenterPanelIcon size={28} className="text-[var(--tertiary)]" />
@@ -392,53 +422,90 @@ function DashboardContent() {
       </section>
 
       <footer className="theme-shell-card absolute bottom-8 left-1/2 z-10 flex h-12 -translate-x-1/2 items-center gap-[10px] rounded-[14px] p-2">
-        <button
-          type="button"
-          onClick={() => toggleDockTab('contract')}
-          aria-pressed={activeDockTab === 'contract'}
-          className={`inline-flex h-8 items-center justify-center overflow-hidden whitespace-nowrap text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-            activeDockTab === 'contract'
-              ? 'theme-shell-chip gap-1 rounded-[8px] px-2 text-[14px] font-medium'
-              : 'w-8'
-          }`}
-        >
-          <DocumentText1Bold size={16} />
-          {activeDockTab === 'contract' && 'Contract Generator'}
-        </button>
+        {activeDockTab === 'contract' ? (
+          <button
+            type="button"
+            onClick={() => toggleDockTab('contract')}
+            aria-pressed
+            className="theme-shell-chip inline-flex h-8 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-[8px] px-2 text-[14px] font-medium text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          >
+            <DocumentText1Bold size={16} />
+            Contract Generator
+          </button>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => toggleDockTab('contract')}
+                aria-pressed={false}
+                className="inline-flex h-8 w-8 items-center justify-center overflow-hidden whitespace-nowrap text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              >
+                <DocumentText1Bold size={16} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Contract Generator</TooltipContent>
+          </Tooltip>
+        )}
 
         <div className="theme-shell-divider h-8 w-px" />
 
-        <button
-          type="button"
-          onClick={() => toggleDockTab('invoice')}
-          aria-pressed={activeDockTab === 'invoice'}
-          className={`inline-flex h-8 items-center justify-center overflow-hidden whitespace-nowrap text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-            activeDockTab === 'invoice'
-              ? 'theme-shell-chip gap-1 rounded-[8px] px-2 text-[14px] font-medium'
-              : 'w-8'
-          }`}
-        >
-          <WalletBold size={16} />
-          {activeDockTab === 'invoice' && 'Invoice Generator'}
-        </button>
+        {activeDockTab === 'invoice' ? (
+          <button
+            type="button"
+            onClick={() => toggleDockTab('invoice')}
+            aria-pressed
+            className="theme-shell-chip inline-flex h-8 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-[8px] px-2 text-[14px] font-medium text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          >
+            <WalletBold size={16} />
+            Invoice Generator
+          </button>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => toggleDockTab('invoice')}
+                aria-pressed={false}
+                className="inline-flex h-8 w-8 items-center justify-center overflow-hidden whitespace-nowrap text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              >
+                <WalletBold size={16} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Invoice Generator</TooltipContent>
+          </Tooltip>
+        )}
 
         <div className="theme-shell-divider h-8 w-px" />
 
-        <button
-          type="button"
-          onClick={() => toggleDockTab('income')}
-          aria-pressed={activeDockTab === 'income'}
-          className={`inline-flex h-8 items-center justify-center overflow-hidden whitespace-nowrap text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-            activeDockTab === 'income'
-              ? 'theme-shell-chip gap-1 rounded-[8px] px-2 text-[14px] font-medium'
-              : 'w-8'
-          }`}
-        >
-          <Chart2Bold size={16} />
-          {activeDockTab === 'income' && 'Income Tracker'}
-        </button>
+        {activeDockTab === 'income' ? (
+          <button
+            type="button"
+            onClick={() => toggleDockTab('income')}
+            aria-pressed
+            className="theme-shell-chip inline-flex h-8 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-[8px] px-2 text-[14px] font-medium text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          >
+            <Chart2Bold size={16} />
+            Income Tracker
+          </button>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => toggleDockTab('income')}
+                aria-pressed={false}
+                className="inline-flex h-8 w-8 items-center justify-center overflow-hidden whitespace-nowrap text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              >
+                <Chart2Bold size={16} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Income Tracker</TooltipContent>
+          </Tooltip>
+        )}
       </footer>
     </div>
+    </TooltipProvider>
   )
 }
 

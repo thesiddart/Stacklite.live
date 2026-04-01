@@ -78,50 +78,50 @@ export function TermsSection() {
                   : 'border-[var(--surface-panel-border)] bg-[var(--surface-card)] opacity-60'
               }`}
             >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => updateClause(config.key, 'on', !isOn)}
-                      className={`relative h-5 w-9 rounded-full transition-colors duration-200 ${
-                        isOn ? 'bg-[var(--primary)]' : 'bg-[var(--surface-divider)]'
-                      }`}
-                      aria-label={`Toggle ${config.label}`}
-                    >
-                      <span
-                        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${
-                          isOn ? 'translate-x-4' : 'translate-x-0.5'
-                        }`}
-                      />
-                    </button>
-                    <p className="text-[13px] font-semibold text-[var(--text-soft-strong)]">
-                      {config.label}
-                    </p>
-                  </div>
-                  <p className="mt-0.5 pl-11 text-[11px] text-[var(--text-soft-muted)]">
-                    {config.description}
-                  </p>
-                </div>
-              </div>
+              <div className="grid grid-cols-[36px_1fr] items-start gap-x-2 gap-y-0.5">
+                <button
+                  type="button"
+                  onClick={() => updateClause(config.key, 'on', !isOn)}
+                  role="switch"
+                  aria-checked={isOn}
+                  className={`relative mt-0.5 inline-flex h-5 w-9 shrink-0 overflow-hidden rounded-full border border-transparent transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand ${
+                    isOn ? 'bg-button-primary' : 'bg-border-disabled'
+                  }`}
+                  aria-label={`Toggle ${config.label}`}
+                >
+                  <span
+                    className={`pointer-events-none absolute top-0.5 h-4 w-4 rounded-full bg-background-base shadow transition-transform duration-200 ${
+                      isOn ? 'translate-x-4' : 'translate-x-0.5'
+                    }`}
+                  />
+                </button>
 
-              {isOn && (
-                <div className="mt-2 pl-11">
-                  <div className="relative">
-                    <textarea
-                      value={text}
-                      onChange={(e) => updateClause(config.key, 'text', e.target.value)}
-                      rows={3}
-                      className="theme-shell-field w-full rounded-[6px] px-3 py-2 pr-8 text-[12px] leading-[18px] focus-visible:border-[var(--primary)] focus-visible:outline-none"
-                      placeholder={`Enter ${config.label.toLowerCase()} clause text...`}
-                    />
-                    <EditBold
-                      size={12}
-                      className="pointer-events-none absolute right-2 top-2 text-[var(--text-soft-muted)]"
-                    />
+                <p className="text-[13px] font-semibold text-[var(--text-soft-strong)]">
+                  {config.label}
+                </p>
+
+                <p className="col-start-2 text-[11px] text-[var(--text-soft-muted)]">
+                  {config.description}
+                </p>
+
+                {isOn && (
+                  <div className="col-start-2 mt-1">
+                    <div className="relative">
+                      <textarea
+                        value={text}
+                        onChange={(e) => updateClause(config.key, 'text', e.target.value)}
+                        rows={3}
+                        className="theme-shell-field w-full rounded-[6px] px-3 py-2 pr-8 text-[12px] leading-[18px] focus-visible:border-[var(--primary)] focus-visible:outline-none"
+                        placeholder={`Enter ${config.label.toLowerCase()} clause text...`}
+                      />
+                      <EditBold
+                        size={12}
+                        className="pointer-events-none absolute right-2 top-2 text-[var(--text-soft-muted)]"
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )
         })}

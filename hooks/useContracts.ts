@@ -126,7 +126,7 @@ export function useCreateContract() {
           payment_structure: data.payment_structure || null,
           payment_method: data.payment_method || null,
           clauses: data.clauses || {},
-          status: (data.status as GuestContract['status']) || 'draft',
+          status: (data.status as GuestContract['status']) || 'sent',
           created_at: now,
           updated_at: now,
         }
@@ -180,7 +180,7 @@ export function useUpdateContract() {
           status: (data.status as GuestContract['status']) ?? undefined,
         })
         const updated = useGuestStore.getState().contracts.find((c) => c.id === id)
-        return updated ? guestToContract(updated) : guestToContract({ id, client_id: null, template_type: null, project_name: null, scope: null, deliverables: [], exclusions: null, start_date: null, end_date: null, milestones: [], total_fee: null, currency: 'USD', payment_structure: null, payment_method: null, clauses: {}, status: 'draft', created_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        return updated ? guestToContract(updated) : guestToContract({ id, client_id: null, template_type: null, project_name: null, scope: null, deliverables: [], exclusions: null, start_date: null, end_date: null, milestones: [], total_fee: null, currency: 'USD', payment_structure: null, payment_method: null, clauses: {}, status: 'sent', created_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       }
       return updateContract(id, data)
     },

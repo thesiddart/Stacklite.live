@@ -1,42 +1,34 @@
 'use client'
 
 import React from 'react'
-import { useContractStore } from '@/stores/contractStore'
-import { PartiesSection } from './sections/PartiesSection'
-import { ProjectSection } from './sections/ProjectSection'
-import { TimelineSection } from './sections/TimelineSection'
-import { PaymentSection } from './sections/PaymentSection'
-import { TermsSection } from './sections/TermsSection'
+import { useInvoiceStore } from '@/stores/invoiceStore'
+import { ClientProjectSection } from './sections/ClientProjectSection'
+import { LineItemsSection } from './sections/LineItemsSection'
+import { PaymentDetailsSection } from './sections/PaymentDetailsSection'
+import { NotesSection } from './sections/NotesSection'
 
 const STEPS = [
-  { label: 'Parties', number: '①' },
-  { label: 'Project', number: '②' },
-  { label: 'Timeline', number: '③' },
-  { label: 'Payment', number: '④' },
-  { label: 'Terms', number: '⑤' },
+  { label: 'Client & Project', number: '①' },
+  { label: 'Line Items', number: '②' },
+  { label: 'Payment', number: '③' },
+  { label: 'Notes', number: '④' },
 ]
 
-interface ContractFormProps {
-  onSave: () => void
-}
-
-export function ContractForm({ onSave }: ContractFormProps) {
-  const { currentStep, setCurrentStep, nextStep, prevStep } = useContractStore()
+export function InvoiceForm() {
+  const { currentStep, setCurrentStep, nextStep, prevStep } = useInvoiceStore()
 
   const renderActiveSection = () => {
     switch (currentStep) {
       case 0:
-        return <PartiesSection />
+        return <ClientProjectSection />
       case 1:
-        return <ProjectSection />
+        return <LineItemsSection />
       case 2:
-        return <TimelineSection />
+        return <PaymentDetailsSection />
       case 3:
-        return <PaymentSection />
-      case 4:
-        return <TermsSection />
+        return <NotesSection />
       default:
-        return <PartiesSection />
+        return <ClientProjectSection />
     }
   }
 
@@ -85,10 +77,11 @@ export function ContractForm({ onSave }: ContractFormProps) {
 
         <button
           type="button"
-          onClick={currentStep === 4 ? onSave : nextStep}
-          className="rounded-[8px] bg-[var(--primary)] px-3 py-1.5 text-[13px] font-medium text-white transition-colors hover:opacity-90"
+          onClick={nextStep}
+          disabled={currentStep === 3}
+          className="rounded-[8px] bg-[var(--primary)] px-3 py-1.5 text-[13px] font-medium text-white transition-colors hover:opacity-90 disabled:opacity-40"
         >
-          {currentStep === 4 ? 'Save' : 'Next →'}
+          Next →
         </button>
       </div>
     </div>

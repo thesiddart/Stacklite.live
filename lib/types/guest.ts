@@ -34,7 +34,30 @@ export interface GuestContract {
   payment_structure: string | null
   payment_method: string | null
   clauses: Record<string, { on: boolean; text: string }>
-  status: 'draft' | 'sent' | 'signed' | 'archived'
+  status: 'sent' | 'signed' | 'archived'
+  created_at: string
+  updated_at: string
+}
+
+export interface GuestInvoice {
+  id: string
+  client_id: string | null
+  contract_id: string | null
+  invoice_number: string
+  issue_date: string
+  due_date: string
+  line_items: { id: string; description: string; qty: number; rate: number; amount: number; timeEntryId?: string }[]
+  currency: string
+  tax_rate: number | null
+  discount_type: string | null
+  discount_value: number | null
+  subtotal: number
+  total: number
+  payment_method: string | null
+  payment_instructions: string | null
+  notes_to_client: string | null
+  internal_notes: string | null
+  status: 'unpaid' | 'paid' | 'archived'
   created_at: string
   updated_at: string
 }

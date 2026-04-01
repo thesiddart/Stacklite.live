@@ -32,7 +32,11 @@ export function ModuleCard({
       {/* Header */}
       <div className="flex items-center justify-between px-lg py-md border-b border-border-muted">
         <div className="flex items-center gap-md">
-          {icon && <div className="flex-shrink-0 text-text-brand">{icon}</div>}
+          {icon && (
+            <div className="flex-shrink-0 rounded-md bg-background-highlight p-1 text-feedback-success-text">
+              {icon}
+            </div>
+          )}
           <h3 className="font-semibold text-text-base">{title}</h3>
         </div>
         {onClose && (

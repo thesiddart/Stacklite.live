@@ -17,7 +17,7 @@ export function ClientItem({ client, onClick, isSelected = false }: ClientItemPr
       clickable
       onClick={onClick}
       className={`w-full p-lg text-left ${
-        isSelected ? 'border-text-brand bg-background-highlight/40' : ''
+        isSelected ? 'border-feedback-success-base bg-background-highlight' : ''
       }`}
     >
       <div className="flex items-start justify-between">

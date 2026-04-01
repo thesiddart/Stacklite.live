@@ -35,34 +35,34 @@ export const COLORS = {
   // Light mode
   light: {
     background: {
-      base: '#cee1f1',
-      highlight: '#99acbb',
-      muted: '#7a8c9a',
+      base: '#f3f7f1',
+      highlight: '#e3eee8',
+      muted: '#cddfd4',
       emphasis: '#000711',
-      disabled: '#60717f',
+      disabled: '#97aa9f',
     },
     text: {
       base: '#000711',
       muted: '#253440',
       disabled: '#4a5b68',
-      inverse: '#cee1f1',
-      brand: '#4a00b3',
+      inverse: '#f3f7f1',
+      brand: '#2d8a64',
     },
     border: {
-      base: '#60717f',
-      muted: '#7a8c9a',
-      disabled: '#99acbb',
+      base: '#97aa9f',
+      muted: '#b8ccc1',
+      disabled: '#d5e4db',
     },
     button: {
-      primary: '#5a00cc',
-      primaryFg: '#cee1f1',
-      secondary: '#7a8c9a',
+      primary: '#2d8a64',
+      primaryFg: '#f3f7f1',
+      secondary: '#c7d8ce',
       secondaryFg: '#000711',
-      ghostFg: '#15242f',
+      ghostFg: '#1f6f51',
     },
     link: {
-      base: '#4a00b3',
-      hover: '#3d009c',
+      base: '#2d8a64',
+      hover: '#1f6f51',
     },
   },
   // Dark mode
@@ -79,7 +79,7 @@ export const COLORS = {
       muted: '#4a5b68',
       disabled: '#364653',
       inverse: '#000711',
-      brand: '#6c00e6',
+      brand: '#58b389',
     },
     border: {
       base: '#253440',
@@ -87,15 +87,15 @@ export const COLORS = {
       disabled: '#07151f',
     },
     button: {
-      primary: '#5a00cc',
+      primary: '#2d8a64',
       primaryFg: '#cee1f1',
       secondary: '#15242f',
       secondaryFg: '#cee1f1',
-      ghostFg: '#60717f',
+      ghostFg: '#8fc7ae',
     },
     link: {
-      base: '#6c00e6',
-      hover: '#8114ff',
+      base: '#58b389',
+      hover: '#7dccaa',
     },
   },
   // Feedback colors (consistent across modes)
@@ -105,8 +105,8 @@ export const COLORS = {
       text: '#780033',
     },
     success: {
-      base: '#007e00',
-      text: '#004600',
+      base: '#2d8a64',
+      text: '#1f6f51',
     },
     warning: {
       base: '#a35600',

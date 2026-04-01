@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   DocumentText1Bold,
   EditBold,
@@ -10,38 +10,29 @@ import {
   TickCircleBold,
 } from 'sicons'
 import {
-  useContracts,
-  useDeleteContract,
-  useGenerateShareLink,
-  useUpdateContract,
-} from '@/hooks/useContracts'
+  useInvoices,
+  useDeleteInvoice,
+  useGenerateInvoiceShareLink,
+  useMarkInvoicePaid,
+} from '@/hooks/useInvoices'
 import { useClients } from '@/hooks/useClients'
-import { useContractStore } from '@/stores/contractStore'
+import { useInvoiceStore } from '@/stores/invoiceStore'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useSavePromptStore } from '@/stores/savePromptStore'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import type { Contract } from '@/lib/types/database'
+import { getDisplayStatus, generateInvoiceNumber } from '@/lib/utils/invoiceCalculations'
+import type { Invoice } from '@/lib/types/database'
+import type { InvoiceLineItem } from '@/lib/utils/invoiceCalculations'
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  sent: {
-    bg: 'bg-[var(--surface-chip)]',
-    text: 'text-[var(--text-soft-muted)]',
-    label: 'Not Signed',
-  },
-  signed: {
-    bg: 'bg-[rgba(0,126,0,0.18)]',
-    text: 'text-[var(--feedback-success-text)]',
-    label: 'Signed',
-  },
-  archived: {
-    bg: 'bg-[var(--surface-disabled)]',
-    text: 'text-[var(--text-soft-disabled)]',
-    label: 'Archived',
-  },
+  unpaid: { bg: 'bg-[rgba(234,179,0,0.12)]', text: 'text-[var(--feedback-warning-text)]', label: 'Unpaid' },
+  paid: { bg: 'bg-feedback-success-base/12', text: 'text-feedback-success-text', label: 'Paid' },
+  overdue: { bg: 'bg-[rgba(220,38,38,0.12)]', text: 'text-[var(--feedback-error-text)]', label: 'Overdue' },
+  archived: { bg: 'bg-[var(--surface-disabled)]', text: 'text-[var(--text-soft-disabled)]', label: 'Archived' },
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const style = STATUS_STYLES[status] || STATUS_STYLES.sent
+  const style = STATUS_STYLES[status] || STATUS_STYLES.unpaid
   return (
     <span
       className={`inline-flex items-center rounded-[4px] px-2 py-0.5 text-[11px] font-semibold ${style.bg} ${style.text}`}
@@ -51,16 +42,24 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-export function ContractsList() {
+function formatCurrency(value: number, currency: string) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency || 'USD',
+    maximumFractionDigits: 2,
+  }).format(value)
+}
+
+export function InvoicesList() {
   const isGuest = useSessionStore((s) => s.isGuest)
   const openWithAction = useSavePromptStore((s) => s.openWithAction)
-  const { data: contracts = [], isLoading } = useContracts()
+  const { data: invoices = [], isLoading } = useInvoices()
   const { data: clients = [] } = useClients()
-  const deleteMutation = useDeleteContract()
-  const updateMutation = useUpdateContract()
-  const shareMutation = useGenerateShareLink()
-  const { setView, setActiveContract, updateFormData, resetForm } =
-    useContractStore()
+  const deleteMutation = useDeleteInvoice()
+  const shareMutation = useGenerateInvoiceShareLink()
+  const paidMutation = useMarkInvoicePaid()
+  const { setView, setActiveInvoice, updateFormData, resetForm, initNewInvoice } =
+    useInvoiceStore()
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const getClientName = (clientId: string | null) => {
@@ -68,42 +67,49 @@ export function ContractsList() {
     return clients.find((c) => c.id === clientId)?.name || null
   }
 
-  const handleEdit = (contract: Contract) => {
+  const handleEdit = (invoice: Invoice) => {
     resetForm()
-    setActiveContract(contract.id)
+    setActiveInvoice(invoice.id)
 
-    // Load contract data into the store
     updateFormData({
-      client_id: contract.client_id,
-      template_type: (contract.template_type as 'general' | 'design' | 'development' | 'retainer' | 'blank') || null,
-      project_name: contract.project_name,
-      scope: contract.scope,
-      deliverables: Array.isArray(contract.deliverables)
-        ? (contract.deliverables as { text: string }[])
+      client_id: invoice.client_id,
+      contract_id: invoice.contract_id,
+      invoice_number: invoice.invoice_number,
+      issue_date: invoice.issue_date,
+      due_date: invoice.due_date,
+      line_items: Array.isArray(invoice.line_items)
+        ? (invoice.line_items as unknown as InvoiceLineItem[])
         : [],
-      exclusions: contract.exclusions,
-      start_date: contract.start_date,
-      end_date: contract.end_date,
-      milestones: Array.isArray(contract.milestones)
-        ? (contract.milestones as { label: string; date: string }[])
-        : [],
-      total_fee: contract.total_fee,
-      currency: contract.currency,
-      payment_structure: (contract.payment_structure as 'full' | 'split' | 'milestone' | 'custom') || null,
-      payment_method: contract.payment_method,
-      clauses: contract.clauses as ContractClausesType || undefined,
-      status: (contract.status as 'sent' | 'signed' | 'archived') || 'sent',
+      currency: invoice.currency,
+      tax_rate: invoice.tax_rate || null,
+      discount_type: (invoice.discount_type as 'flat' | 'percent') || null,
+      discount_value: invoice.discount_value || null,
+      subtotal: invoice.subtotal,
+      total: invoice.total,
+      payment_method: invoice.payment_method,
+      payment_instructions: invoice.payment_instructions,
+      notes_to_client: invoice.notes_to_client,
+      internal_notes: invoice.internal_notes,
+      status: (invoice.status as 'unpaid' | 'paid' | 'archived') || 'unpaid',
     })
 
     setView('editor')
   }
 
-  const handleCopyLink = async (contract: Contract) => {
+  const handleCopyLink = async (invoice: Invoice) => {
     try {
-      const url = await shareMutation.mutateAsync(contract.id)
+      const url = await shareMutation.mutateAsync(invoice.id)
       await navigator.clipboard.writeText(url)
-      setCopiedId(contract.id)
+      setCopiedId(invoice.id)
       setTimeout(() => setCopiedId(null), 2000)
+    } catch {
+      // silently fail
+    }
+  }
+
+  const handleMarkPaid = async (id: string) => {
+    try {
+      await paidMutation.mutateAsync(id)
     } catch {
       // silently fail
     }
@@ -117,14 +123,6 @@ export function ContractsList() {
     }
   }
 
-  const handleMarkSigned = async (id: string) => {
-    try {
-      await updateMutation.mutateAsync({ id, data: { status: 'signed' } })
-    } catch {
-      // silently fail
-    }
-  }
-
   const escapeHtml = (value: string) =>
     value
       .replaceAll('&', '&amp;')
@@ -133,33 +131,54 @@ export function ContractsList() {
       .replaceAll('"', '&quot;')
       .replaceAll("'", '&#39;')
 
-  const openGuestContractPrint = (contract: Contract) => {
-    const clientName = getClientName(contract.client_id) || 'Client'
+  const openGuestInvoicePrint = (invoice: Invoice) => {
+    const clientName = getClientName(invoice.client_id) || 'Client'
+    const lineItems = Array.isArray(invoice.line_items)
+      ? (invoice.line_items as unknown as InvoiceLineItem[])
+      : []
+
+    const lineRows = lineItems
+      .map(
+        (item) => `
+          <tr>
+            <td style="padding:8px;border-bottom:1px solid #ddd;">${escapeHtml(item.description || 'Item')}</td>
+            <td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;">${item.qty}</td>
+            <td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;">${formatCurrency(item.rate, invoice.currency)}</td>
+            <td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;">${formatCurrency(item.amount, invoice.currency)}</td>
+          </tr>
+        `
+      )
+      .join('')
+
     const html = `
       <!doctype html>
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>${escapeHtml(contract.project_name)}.pdf</title>
+          <title>${escapeHtml(invoice.invoice_number)}.pdf</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 32px; color: #111; }
             h1 { margin: 0 0 8px 0; }
-            h2 { margin: 24px 0 8px; font-size: 16px; }
-            p { line-height: 1.5; }
             .muted { color: #666; font-size: 12px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+            .total { margin-top: 16px; text-align: right; font-size: 18px; font-weight: 700; }
           </style>
         </head>
         <body>
-          <h1>${escapeHtml(contract.project_name)}</h1>
-          <p class="muted">Client: ${escapeHtml(clientName)} | Status: ${escapeHtml(contract.status)}</p>
-          <h2>Scope of Work</h2>
-          <p>${escapeHtml(contract.scope || 'No scope provided.')}</p>
-          <h2>Deliverables</h2>
-          <p>${escapeHtml(contract.deliverables || 'No deliverables provided.')}</p>
-          <h2>Payment Terms</h2>
-          <p>${escapeHtml(contract.payment_terms || 'No payment terms provided.')}</p>
-          <h2>Timeline</h2>
-          <p>${escapeHtml(contract.timeline || 'No timeline provided.')}</p>
+          <h1>Invoice ${escapeHtml(invoice.invoice_number)}</h1>
+          <p class="muted">Client: ${escapeHtml(clientName)} | Due: ${escapeHtml(invoice.due_date)}</p>
+          <table>
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:8px;border-bottom:1px solid #ddd;">Description</th>
+                <th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">Qty</th>
+                <th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">Rate</th>
+                <th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>${lineRows}</tbody>
+          </table>
+          <p class="total">Total: ${formatCurrency(invoice.total, invoice.currency)}</p>
           <p class="muted">Generated with Stacklite</p>
           <script>window.print()</script>
         </body>
@@ -174,9 +193,9 @@ export function ContractsList() {
     popup.focus()
   }
 
-  const handleDownload = (contract: Contract) => {
+  const handleDownload = (invoice: Invoice) => {
     const action = () => {
-      openGuestContractPrint(contract)
+      openGuestInvoicePrint(invoice)
     }
 
     if (isGuest) {
@@ -187,15 +206,15 @@ export function ContractsList() {
     action()
   }
 
-  const handleNewContract = () => {
-    resetForm()
-    setView('templates')
+  const handleNewInvoice = () => {
+    const number = generateInvoiceNumber(invoices.length)
+    initNewInvoice(number)
   }
 
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-[13px] text-[var(--text-soft-muted)]">Loading contracts...</p>
+        <p className="text-[13px] text-[var(--text-soft-muted)]">Loading invoices...</p>
       </div>
     )
   }
@@ -206,11 +225,11 @@ export function ContractsList() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-[14px] font-semibold text-[var(--text-soft-strong)]">
-          Contracts
+          Invoices
         </h3>
         <button
           type="button"
-          onClick={handleNewContract}
+          onClick={handleNewInvoice}
           className="inline-flex items-center gap-1 rounded-[8px] bg-[var(--primary)] px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:opacity-90"
         >
           <AddCircleBold size={14} />
@@ -219,44 +238,44 @@ export function ContractsList() {
       </div>
 
       {/* List */}
-      {contracts.length === 0 ? (
+      {invoices.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
           <DocumentText1Bold size={28} className="text-[var(--text-soft-muted)]" />
-          <p className="text-[13px] text-[var(--text-soft-muted)]">No contracts yet</p>
+          <p className="text-[13px] text-[var(--text-soft-muted)]">No invoices yet</p>
           <button
             type="button"
-            onClick={handleNewContract}
+            onClick={handleNewInvoice}
             className="text-[12px] font-medium text-[var(--tertiary)] hover:text-[var(--primary)]"
           >
-            Create your first contract →
+            Create your first invoice →
           </button>
         </div>
       ) : (
         <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1 theme-scrollbar">
-          {contracts.map((contract) => {
-            const clientName = getClientName(contract.client_id)
-            const displayStatus = contract.status === 'signed'
-              ? 'signed'
-              : contract.status === 'archived'
-                ? 'archived'
-                : 'sent'
+          {invoices.map((invoice) => {
+            const clientName = getClientName(invoice.client_id)
+            const displayStatus = getDisplayStatus(invoice.status, invoice.due_date)
+            const isOverdue = displayStatus === 'overdue'
 
             return (
               <div
-                key={contract.id}
-                className="group flex items-center justify-between rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-3 transition-all duration-200 hover:border-[var(--primary)]"
+                key={invoice.id}
+                className={`group flex items-center justify-between rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-3 transition-all duration-200 hover:border-[var(--primary)] ${
+                  isOverdue ? 'border-l-2 border-l-[var(--feedback-error-text)]' : ''
+                }`}
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="truncate text-[13px] font-medium text-[var(--text-soft-strong)]">
-                      {clientName
-                        ? `${clientName} — ${contract.project_name || 'Untitled'}`
-                        : contract.project_name || 'Untitled Contract'}
+                      {invoice.invoice_number}
+                      {clientName ? ` · ${clientName}` : ''}
+                      {' · '}
+                      {formatCurrency(invoice.total, invoice.currency)}
                     </p>
                     <StatusBadge status={displayStatus} />
                   </div>
                   <p className="mt-0.5 text-[11px] text-[var(--text-soft-subtle)]">
-                    Updated {new Date(contract.updated_at).toLocaleDateString()}
+                    Due {invoice.due_date} · Updated {new Date(invoice.updated_at).toLocaleDateString()}
                   </p>
                 </div>
 
@@ -265,7 +284,7 @@ export function ContractsList() {
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        onClick={() => handleEdit(contract)}
+                        onClick={() => handleEdit(invoice)}
                         className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-[var(--surface-chip)] hover:text-[var(--tertiary)]"
                         aria-label="Edit"
                       >
@@ -279,11 +298,11 @@ export function ContractsList() {
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        onClick={() => handleCopyLink(contract)}
+                        onClick={() => handleCopyLink(invoice)}
                         className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-[var(--surface-chip)] hover:text-[var(--tertiary)]"
                         aria-label="Copy share link"
                       >
-                        {copiedId === contract.id ? (
+                        {copiedId === invoice.id ? (
                           <span className="text-[11px] font-medium text-[var(--feedback-success-text)]">
                             Copied!
                           </span>
@@ -299,7 +318,7 @@ export function ContractsList() {
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        onClick={() => handleDownload(contract)}
+                        onClick={() => handleDownload(invoice)}
                         className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-[var(--surface-chip)] hover:text-[var(--tertiary)]"
                         aria-label="Download PDF"
                       >
@@ -313,27 +332,26 @@ export function ContractsList() {
                     <TooltipContent>Download PDF</TooltipContent>
                   </Tooltip>
 
-                  {displayStatus !== 'signed' && displayStatus !== 'archived' && (
+                  {invoice.status !== 'paid' && (
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
                           type="button"
-                          onClick={() => handleMarkSigned(contract.id)}
+                          onClick={() => handleMarkPaid(invoice.id)}
                           className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-feedback-success-base/10 hover:text-feedback-success-text"
-                          aria-label="Mark as signed"
+                          aria-label="Mark as paid"
                         >
                           <TickCircleBold size={14} />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent>Mark as signed</TooltipContent>
+                      <TooltipContent>Mark as paid</TooltipContent>
                     </Tooltip>
                   )}
-
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        onClick={() => handleDelete(contract.id)}
+                        onClick={() => handleDelete(invoice.id)}
                         className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-[var(--surface-danger-soft)] hover:text-[var(--text-danger-soft)]"
                         aria-label="Delete"
                       >
@@ -351,13 +369,4 @@ export function ContractsList() {
     </div>
     </TooltipProvider>
   )
-}
-
-// Helper type for clause loading
-type ContractClausesType = {
-  revision: { on: boolean; text: string }
-  ip: { on: boolean; text: string }
-  termination: { on: boolean; text: string }
-  confidentiality: { on: boolean; text: string }
-  governingLaw: { on: boolean; text: string }
 }

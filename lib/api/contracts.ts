@@ -76,7 +76,6 @@ export async function getContractByToken(token: string): Promise<Contract | null
     .from('contracts')
     .select('*')
     .eq('share_token', token)
-    .neq('status', 'draft')
     .single()
 
   if (error) {
@@ -133,7 +132,7 @@ export async function createContract(formData: ContractFormData): Promise<Contra
     payment_method: validated.payment_method,
     payment_terms: validated.payment_method,
     clauses: JSON.parse(JSON.stringify(validated.clauses)),
-    status: validated.status || 'draft',
+    status: validated.status || 'sent',
   }
 
   const { data, error } = await supabase

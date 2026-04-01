@@ -13,7 +13,7 @@ export function Canvas({ children, className = '' }: CanvasProps) {
         bg-background-base
         relative
         /* Dotted grid background */
-        before:absolute before:inset-0 before:bg-[radial-gradient(circle,rgba(0,0,0,0.08)_1px,transparent_1px)]
+        before:absolute before:inset-0 before:bg-[radial-gradient(circle,var(--grid-dot-color)_1px,transparent_1px)]
         before:bg-[length:16px_16px]
         before:pointer-events-none
         ${className}

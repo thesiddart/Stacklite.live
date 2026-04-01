@@ -21,6 +21,7 @@ import {
 import type { TimeLog } from '@/lib/types/database'
 import { TimerEntry } from './TimerEntry'
 import { TimerForm } from './TimerForm'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 function isTypingTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) {
@@ -204,23 +205,36 @@ export function TimeTracker({ variant = 'page', onCollapse }: TimeTrackerProps) 
         >
           <div className="flex items-center justify-between">
             {trackerLabel}
-            <button
-              type="button"
-              aria-label={isTrackerFormExpanded ? 'Close add task form' : 'Add time entry'}
-              onClick={() => {
-                if (isFormOpen) {
+            {isTrackerFormExpanded ? (
+              <button
+                type="button"
+                aria-label="Close add task form"
+                onClick={() => {
                   setIsFormOpen(false)
-                  return
-                }
-
-                setEditingEntry(null)
-                setFormMode('start')
-                setIsFormOpen(true)
-              }}
-              className="text-[var(--tertiary)]"
-            >
-              {isTrackerFormExpanded ? <CloseCircleBold size={24} /> : <AddCircleBold size={24} />}
-            </button>
+                }}
+                className="text-[var(--tertiary)]"
+              >
+                <CloseCircleBold size={24} />
+              </button>
+            ) : (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Add time entry"
+                    onClick={() => {
+                      setEditingEntry(null)
+                      setFormMode('start')
+                      setIsFormOpen(true)
+                    }}
+                    className="text-[var(--tertiary)]"
+                  >
+                    <AddCircleBold size={24} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Add time entry</TooltipContent>
+              </Tooltip>
+            )}
           </div>
 
           <div className="theme-shell-divider mt-[10px] h-px w-full" />

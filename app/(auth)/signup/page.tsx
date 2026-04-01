@@ -191,7 +191,7 @@ function SignupPageContent() {
       {/* Navbar */}
       <AppNavbar
         topClassName="top-[50px]"
-        zClassName="z-10"
+        zClassName="z-50"
         showThemeButton
         showProfileButton
       />

@@ -43,7 +43,7 @@ export function ContractGenerator({ variant = 'dashboard' }: ContractGeneratorPr
         <div className="mb-4">
           <h1 className="text-2xl font-semibold text-text-base">Contract Generator</h1>
           <p className="mt-1 text-sm text-text-muted">
-            Draft agreements with the right client, scope, timeline, and pricing.
+              Create agreements with the right client, scope, timeline, and pricing.
           </p>
         </div>
       )}

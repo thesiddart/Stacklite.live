@@ -47,8 +47,8 @@ export function SavePromptModal() {
             Save your work permanently
           </h2>
           <p className="mt-2 text-[13px] leading-relaxed text-[var(--text-soft-muted)]">
-            Create a free Stacklite account to save this and access your workspace
-            from anywhere. Takes 30 seconds.
+            You&apos;re working in guest mode — your work is saved in this browser.
+            Create a free account to access it from anywhere, anytime.
           </p>
         </div>
 
@@ -70,7 +70,7 @@ export function SavePromptModal() {
         </div>
 
         <p className="mt-4 text-center text-[11px] text-[var(--text-soft-disabled)]">
-          Your current work is safe in your browser until you clear it.
+          Your current work stays safe until you close this browser.
         </p>
       </div>
     </div>

@@ -80,7 +80,7 @@ export function PaymentSection() {
           />
           {/* NPR conversion hint */}
           {nprAmount && (
-            <p className="mt-1 text-[11px] text-[var(--text-soft-subtle)]">
+            <p className="mt-1 text-[11px] text-feedback-success-text/85">
               ≈ NPR {nprAmount} at today&apos;s rate
             </p>
           )}

@@ -213,19 +213,28 @@ export interface Database {
           id: string
           user_id: string
           client_id: string | null
+          contract_id: string | null
           invoice_number: string
           issue_date: string
           due_date: string
+          line_items: Json
           subtotal: number
           tax_rate: number
           tax_amount: number
+          discount_type: string | null
+          discount_value: number | null
           total: number
           currency: string
+          payment_method: string | null
+          payment_instructions: string | null
           notes: string | null
+          notes_to_client: string | null
+          internal_notes: string | null
           terms: string | null
           status: string
           paid_at: string | null
           pdf_url: string | null
+          share_token: string
           created_at: string
           updated_at: string
         }
@@ -233,15 +242,23 @@ export interface Database {
           id?: string
           user_id: string
           client_id?: string | null
+          contract_id?: string | null
           invoice_number: string
           issue_date: string
           due_date: string
+          line_items?: Json
           subtotal?: number
           tax_rate?: number
           tax_amount?: number
+          discount_type?: string | null
+          discount_value?: number | null
           total: number
           currency?: string
+          payment_method?: string | null
+          payment_instructions?: string | null
           notes?: string | null
+          notes_to_client?: string | null
+          internal_notes?: string | null
           terms?: string | null
           status?: string
           paid_at?: string | null
@@ -253,15 +270,23 @@ export interface Database {
           id?: string
           user_id?: string
           client_id?: string | null
+          contract_id?: string | null
           invoice_number?: string
           issue_date?: string
           due_date?: string
+          line_items?: Json
           subtotal?: number
           tax_rate?: number
           tax_amount?: number
+          discount_type?: string | null
+          discount_value?: number | null
           total?: number
           currency?: string
+          payment_method?: string | null
+          payment_instructions?: string | null
           notes?: string | null
+          notes_to_client?: string | null
+          internal_notes?: string | null
           terms?: string | null
           status?: string
           paid_at?: string | null
