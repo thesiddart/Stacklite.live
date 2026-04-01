@@ -125,16 +125,37 @@ export function ContractsList() {
     }
   }
 
-  const escapeHtml = (value: string) =>
-    value
+  const escapeHtml = (value: unknown) => {
+    const text =
+      typeof value === 'string'
+        ? value
+        : Array.isArray(value)
+          ? value
+              .map((item) => {
+                if (typeof item === 'string') return item
+                if (item && typeof item === 'object' && 'text' in item) {
+                  const row = item as { text?: unknown }
+                  return typeof row.text === 'string' ? row.text : ''
+                }
+                return ''
+              })
+              .filter(Boolean)
+              .join(', ')
+          : ''
+
+    return text
       .replaceAll('&', '&amp;')
       .replaceAll('<', '&lt;')
       .replaceAll('>', '&gt;')
       .replaceAll('"', '&quot;')
       .replaceAll("'", '&#39;')
+  }
 
   const openGuestContractPrint = (contract: Contract) => {
     const clientName = getClientName(contract.client_id) || 'Client'
+    const timelineText = contract.start_date || contract.end_date
+      ? `${contract.start_date || 'TBD'} to ${contract.end_date || 'TBD'}`
+      : 'No timeline provided.'
     const html = `
       <!doctype html>
       <html>
@@ -159,7 +180,7 @@ export function ContractsList() {
           <h2>Payment Terms</h2>
           <p>${escapeHtml(contract.payment_terms || 'No payment terms provided.')}</p>
           <h2>Timeline</h2>
-          <p>${escapeHtml(contract.timeline || 'No timeline provided.')}</p>
+          <p>${escapeHtml(timelineText)}</p>
           <p class="muted">Generated with Stacklite</p>
           <script>window.print()</script>
         </body>
