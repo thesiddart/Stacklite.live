@@ -101,13 +101,12 @@ export async function createInvoice(formData: InvoiceFormData): Promise<Invoice>
     throw new Error(`Failed to ensure profile: ${profileError.message}`)
   }
 
-  const invoiceNumber = validated.invoice_number || await getNextInvoiceNumber(supabase)
+  let invoiceNumber = validated.invoice_number || await getNextInvoiceNumber(supabase)
 
-  const insertData: InvoiceInsert = {
+  const fullInsertData = {
     user_id: user.id,
     client_id: validated.client_id,
     contract_id: validated.contract_id,
-    invoice_number: invoiceNumber,
     issue_date: validated.issue_date,
     due_date: validated.due_date,
     line_items: JSON.parse(JSON.stringify(validated.line_items)),
@@ -124,20 +123,92 @@ export async function createInvoice(formData: InvoiceFormData): Promise<Invoice>
     payment_instructions: validated.payment_instructions,
     notes_to_client: validated.notes_to_client,
     internal_notes: validated.internal_notes,
-    status: validated.status || 'unpaid',
   }
 
-  const { data, error } = await supabase
-    .from('invoices')
-    .insert(insertData)
-    .select()
-    .single()
-
-  if (error) {
-    throw toInvoiceApiError('create invoice', error.message)
+  const legacyInsertData = {
+    user_id: user.id,
+    client_id: validated.client_id,
+    issue_date: validated.issue_date,
+    due_date: validated.due_date,
+    subtotal: validated.subtotal,
+    tax_rate: validated.tax_rate ?? 0,
+    tax_amount: validated.tax_rate
+      ? parseFloat(((validated.subtotal * validated.tax_rate) / 100).toFixed(2))
+      : 0,
+    total: validated.total,
+    currency: validated.currency,
+    notes: validated.notes_to_client,
+    terms: validated.payment_instructions || validated.payment_method,
   }
 
-  return data as Invoice
+  const statusCandidates = [validated.status || 'unpaid', 'sent', 'draft']
+  let lastError: Error | null = null
+
+  const tryInsert = async (base: Record<string, unknown>, allowLegacyColumnErrors: boolean) => {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      for (const status of statusCandidates) {
+        const payload = { ...base, invoice_number: invoiceNumber, status } as InvoiceInsert
+        const { data, error } = await supabase
+          .from('invoices')
+          .insert(payload)
+          .select()
+          .single()
+
+        if (!error) {
+          return data as Invoice
+        }
+
+        const message = error.message || ''
+        lastError = toInvoiceApiError('create invoice', message)
+
+        const hasMissingColumnError =
+          /column .* does not exist/i.test(message) ||
+          /could not find the '.*' column/i.test(message)
+
+        if (/duplicate key value|unique constraint/i.test(message) && /invoice_number/i.test(message)) {
+          invoiceNumber = await getNextInvoiceNumber(supabase)
+          break
+        }
+
+        if (allowLegacyColumnErrors && hasMissingColumnError) {
+          throw new Error('__legacy_fallback__')
+        }
+
+        if (!/status|check|constraint|invalid input value|duplicate key value|unique constraint|could not find the '.*' column|column .* does not exist/i.test(message)) {
+          throw lastError
+        }
+      }
+    }
+
+    return null
+  }
+
+  try {
+    const created = await tryInsert(fullInsertData, true)
+    if (created) return created
+  } catch (error) {
+    if (!(error instanceof Error) || error.message !== '__legacy_fallback__') {
+      throw error
+    }
+  }
+
+  const createdLegacy = await tryInsert(legacyInsertData, false)
+  if (createdLegacy) {
+    // Best-effort backfill invoice_items on older schemas.
+    if (validated.line_items.length > 0) {
+      const legacyItems = validated.line_items.map((item) => ({
+        invoice_id: createdLegacy.id,
+        description: item.description,
+        quantity: item.qty,
+        rate: item.rate,
+      }))
+      await supabase.from('invoice_items').insert(legacyItems)
+    }
+
+    return createdLegacy
+  }
+
+  throw lastError || new Error('Failed to create invoice')
 }
 
 export async function updateInvoice(

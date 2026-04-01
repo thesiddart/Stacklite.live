@@ -1,6 +1,7 @@
 import Link from 'next/link'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
-import type { Invoice as InvoiceRow } from '@/lib/types/database'
+import type { Database, Invoice as InvoiceRow } from '@/lib/types/database'
 
 interface InvoiceLineItem {
   id: string
@@ -10,12 +11,31 @@ interface InvoiceLineItem {
   amount: number
 }
 
+interface SharedClient {
+  name: string
+  email: string | null
+  company_name: string | null
+}
+
 function formatCurrency(value: number, currency: string) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency || 'USD',
-    maximumFractionDigits: 2,
-  }).format(value)
+  const normalizedCurrency =
+    typeof currency === 'string' && /^[A-Z]{3}$/.test(currency.trim().toUpperCase())
+      ? currency.trim().toUpperCase()
+      : 'USD'
+
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: normalizedCurrency,
+      maximumFractionDigits: 2,
+    }).format(value)
+  } catch {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 2,
+    }).format(value)
+  }
 }
 
 export default async function SharedInvoicePage({
@@ -25,15 +45,39 @@ export default async function SharedInvoicePage({
 }) {
   const { token } = await params
   const supabase = await createClient()
+  let adminSupabase: ReturnType<typeof createSupabaseClient<Database>> | null = null
 
-  const { data: invoice, error } = await supabase
+  const { data: invoiceData } = await supabase
     .from('invoices')
-    .select('*, clients(name, email, company_name)')
+    .select('*')
     .eq('share_token', token)
-    .neq('status', 'draft')
-    .single()
+    .maybeSingle()
 
-  if (error || !invoice) {
+  let invoice = invoiceData
+
+  if (!invoice) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
+
+    if (supabaseUrl && serviceRoleKey) {
+      adminSupabase = createSupabaseClient<Database>(supabaseUrl, serviceRoleKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      })
+
+      const { data: adminInvoice } = await adminSupabase
+        .from('invoices')
+        .select('*')
+        .eq('share_token', token)
+        .maybeSingle()
+
+      invoice = adminInvoice
+    }
+  }
+
+  if (!invoice) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f9f9f9]">
         <div className="text-center">
@@ -41,15 +85,35 @@ export default async function SharedInvoicePage({
             Invoice not found
           </h1>
           <p className="mt-2 text-sm text-[#7c7288]">
-            This link may have expired or the invoice is still in draft.
+            This link may have expired or the invoice is unavailable.
           </p>
         </div>
       </div>
     )
   }
 
-  const typedInvoice = invoice as InvoiceRow & {
-    clients?: { name: string; email: string | null; company_name: string | null } | null
+  const typedInvoice = invoice as InvoiceRow
+
+  let client: SharedClient | null = null
+
+  if (typedInvoice.client_id) {
+    const { data: clientData } = await supabase
+      .from('clients')
+      .select('name, email, company_name')
+      .eq('id', typedInvoice.client_id)
+      .maybeSingle()
+
+    client = clientData
+
+    if (!client && adminSupabase) {
+      const { data: adminClientData } = await adminSupabase
+        .from('clients')
+        .select('name, email, company_name')
+        .eq('id', typedInvoice.client_id)
+        .maybeSingle()
+
+      client = adminClientData
+    }
   }
 
   const lineItems: InvoiceLineItem[] = Array.isArray(typedInvoice.line_items)
@@ -124,19 +188,19 @@ export default async function SharedInvoicePage({
           </div>
 
           {/* Client */}
-          {typedInvoice.clients && (
+          {client && (
             <div className="mt-6 border-b border-[#e8e4f6] pb-6">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7c7288]">
                 Bill To
               </p>
               <p className="mt-2 text-[14px] font-medium text-[#1a163d]">
-                {typedInvoice.clients.name}
+                {client.name}
               </p>
-              {typedInvoice.clients.email && (
-                <p className="text-[13px] text-[#7c7288]">{typedInvoice.clients.email}</p>
+              {client.email && (
+                <p className="text-[13px] text-[#7c7288]">{client.email}</p>
               )}
-              {typedInvoice.clients.company_name && (
-                <p className="text-[13px] text-[#7c7288]">{typedInvoice.clients.company_name}</p>
+              {client.company_name && (
+                <p className="text-[13px] text-[#7c7288]">{client.company_name}</p>
               )}
             </div>
           )}

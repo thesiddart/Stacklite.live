@@ -23,26 +23,67 @@ export function InvoiceEditor() {
   const updateMutation = useUpdateInvoice()
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const normalizeDate = (value: string | null | undefined): string => {
+    if (!value) return new Date().toISOString().slice(0, 10)
+
+    // Keep ISO input dates untouched.
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+
+    // Convert locale-style dates (MM/DD/YYYY etc.) when possible.
+    const parsed = new Date(value)
+    if (!Number.isNaN(parsed.getTime())) {
+      const year = parsed.getFullYear()
+      const month = String(parsed.getMonth() + 1).padStart(2, '0')
+      const day = String(parsed.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+
+    return new Date().toISOString().slice(0, 10)
+  }
+
   const handleSave = useCallback(async () => {
     if (!isDirty && saveStatus !== 'idle') return
 
     setSaveStatus('saving')
 
     try {
-      const items = (formData.line_items || []) as InvoiceLineItem[]
+      const rawItems = (formData.line_items || []) as InvoiceLineItem[]
+      const items = (rawItems.length > 0 ? rawItems : [{ id: 'fallback-1', description: 'Item', qty: 1, rate: 0, amount: 0 }])
+        .map((item, index) => {
+          const qty = Number(item.qty) || 0
+          const rate = Number(item.rate) || 0
+          const amount = Number((qty * rate).toFixed(2))
+
+          return {
+            id: item.id || `li-${index + 1}`,
+            description: (item.description || '').trim() || `Item ${index + 1}`,
+            qty,
+            rate,
+            amount,
+            ...(item.timeEntryId ? { timeEntryId: item.timeEntryId } : {}),
+          }
+        })
+
+      const issueDate = normalizeDate(formData.issue_date)
+      const dueDate = normalizeDate(formData.due_date)
 
       if (activeInvoiceId) {
         await updateMutation.mutateAsync({
           id: activeInvoiceId,
-          data: formData,
+          data: {
+            ...formData,
+            issue_date: issueDate,
+            due_date: dueDate,
+            line_items: items,
+          },
         })
       } else {
         const created = await createMutation.mutateAsync({
           client_id: formData.client_id || null,
           contract_id: formData.contract_id || null,
           invoice_number: formData.invoice_number || 'INV-000',
-          issue_date: formData.issue_date || new Date().toISOString().slice(0, 10),
-          due_date: formData.due_date || new Date().toISOString().slice(0, 10),
+          issue_date: issueDate,
+          due_date: dueDate,
           line_items: items,
           currency: formData.currency || 'USD',
           tax_rate: formData.tax_rate ?? null,

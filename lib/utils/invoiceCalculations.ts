@@ -36,11 +36,16 @@ export const calcTotal = (
   discount: number
 ): number => parseFloat((subtotal + tax - discount).toFixed(2))
 
+function normalizeInvoiceStatus(status: string): string {
+  if (status === 'sent' || status === 'draft') return 'unpaid'
+  return status
+}
+
 export const isOverdue = (status: string, dueDate: string): boolean =>
-  status === 'unpaid' && new Date(dueDate) < new Date()
+  normalizeInvoiceStatus(status) === 'unpaid' && new Date(dueDate) < new Date()
 
 export const getDisplayStatus = (status: string, dueDate: string): string =>
-  isOverdue(status, dueDate) ? 'overdue' : status
+  isOverdue(status, dueDate) ? 'overdue' : normalizeInvoiceStatus(status)
 
 export const generateInvoiceNumber = (existingCount: number): string =>
   `INV-${String(existingCount + 1).padStart(3, '0')}`

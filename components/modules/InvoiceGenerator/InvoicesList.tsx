@@ -21,6 +21,7 @@ import { useSessionStore } from '@/stores/sessionStore'
 import { useSavePromptStore } from '@/stores/savePromptStore'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { getDisplayStatus, generateInvoiceNumber } from '@/lib/utils/invoiceCalculations'
+import { downloadInvoicePdf as saveInvoicePdf } from '@/lib/utils/pdfDownload'
 import type { Invoice } from '@/lib/types/database'
 import type { InvoiceLineItem } from '@/lib/utils/invoiceCalculations'
 
@@ -61,6 +62,7 @@ export function InvoicesList() {
   const { setView, setActiveInvoice, updateFormData, resetForm, initNewInvoice } =
     useInvoiceStore()
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null)
 
   const getClientName = (clientId: string | null) => {
     if (!clientId) return null
@@ -123,79 +125,50 @@ export function InvoicesList() {
     }
   }
 
-  const escapeHtml = (value: string) =>
-    value
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#39;')
-
-  const openGuestInvoicePrint = (invoice: Invoice) => {
+  const downloadInvoiceAsPdf = (invoice: Invoice) => {
     const clientName = getClientName(invoice.client_id) || 'Client'
     const lineItems = Array.isArray(invoice.line_items)
       ? (invoice.line_items as unknown as InvoiceLineItem[])
       : []
 
-    const lineRows = lineItems
-      .map(
-        (item) => `
-          <tr>
-            <td style="padding:8px;border-bottom:1px solid #ddd;">${escapeHtml(item.description || 'Item')}</td>
-            <td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;">${item.qty}</td>
-            <td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;">${formatCurrency(item.rate, invoice.currency)}</td>
-            <td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;">${formatCurrency(item.amount, invoice.currency)}</td>
-          </tr>
-        `
-      )
-      .join('')
+    const taxAmount = invoice.tax_rate
+      ? parseFloat(((invoice.subtotal * invoice.tax_rate) / 100).toFixed(2))
+      : 0
 
-    const html = `
-      <!doctype html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>${escapeHtml(invoice.invoice_number)}.pdf</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 32px; color: #111; }
-            h1 { margin: 0 0 8px 0; }
-            .muted { color: #666; font-size: 12px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-            .total { margin-top: 16px; text-align: right; font-size: 18px; font-weight: 700; }
-          </style>
-        </head>
-        <body>
-          <h1>Invoice ${escapeHtml(invoice.invoice_number)}</h1>
-          <p class="muted">Client: ${escapeHtml(clientName)} | Due: ${escapeHtml(invoice.due_date)}</p>
-          <table>
-            <thead>
-              <tr>
-                <th style="text-align:left;padding:8px;border-bottom:1px solid #ddd;">Description</th>
-                <th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">Qty</th>
-                <th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">Rate</th>
-                <th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">Amount</th>
-              </tr>
-            </thead>
-            <tbody>${lineRows}</tbody>
-          </table>
-          <p class="total">Total: ${formatCurrency(invoice.total, invoice.currency)}</p>
-          <p class="muted">Generated with Stacklite</p>
-          <script>window.print()</script>
-        </body>
-      </html>
-    `
+    const discountAmount = (() => {
+      if (!invoice.discount_type || !invoice.discount_value) return 0
+      return invoice.discount_type === 'percent'
+        ? parseFloat(((invoice.subtotal * invoice.discount_value) / 100).toFixed(2))
+        : invoice.discount_value
+    })()
 
-    const popup = window.open('', '_blank', 'noopener,noreferrer')
-    if (!popup) return
-    popup.document.open()
-    popup.document.write(html)
-    popup.document.close()
-    popup.focus()
+    const safeClientName = clientName.replace(/[^a-zA-Z0-9_-]+/g, '_')
+    const safeInvoiceNumber = (invoice.invoice_number || 'INV').replace(/[^a-zA-Z0-9_-]+/g, '_')
+    saveInvoicePdf(`Invoice_${safeInvoiceNumber}_${safeClientName}.pdf`, {
+      invoiceNumber: invoice.invoice_number,
+      clientName,
+      issueDate: invoice.issue_date,
+      dueDate: invoice.due_date,
+      status: getDisplayStatus(invoice.status, invoice.due_date),
+      items: lineItems.map((item) => ({
+        description: item.description || 'Item',
+        qty: item.qty,
+        rate: formatCurrency(item.rate, invoice.currency),
+        amount: formatCurrency(item.amount, invoice.currency),
+      })),
+      subtotal: formatCurrency(invoice.subtotal, invoice.currency),
+      tax: formatCurrency(taxAmount, invoice.currency),
+      discount: formatCurrency(discountAmount, invoice.currency),
+      total: formatCurrency(invoice.total, invoice.currency),
+      paymentMethod: invoice.payment_method || 'N/A',
+      paymentInstructions: invoice.payment_instructions || 'N/A',
+      notesToClient: invoice.notes_to_client || 'N/A',
+    })
   }
 
   const handleDownload = (invoice: Invoice) => {
     const action = () => {
-      openGuestInvoicePrint(invoice)
+      downloadInvoiceAsPdf(invoice)
     }
 
     if (isGuest) {
@@ -224,21 +197,84 @@ export function InvoicesList() {
     <div className="flex h-full flex-col gap-3">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-[14px] font-semibold text-[var(--text-soft-strong)]">
-          Invoices
-        </h3>
-        <button
-          type="button"
-          onClick={handleNewInvoice}
-          className="inline-flex items-center gap-1 rounded-[8px] bg-[var(--primary)] px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:opacity-90"
-        >
-          <AddCircleBold size={14} />
-          New
-        </button>
+        {previewInvoice ? (
+          <button
+            type="button"
+            onClick={() => setPreviewInvoice(null)}
+            className="text-[14px] font-semibold text-[var(--text-soft-strong)] hover:text-[var(--tertiary)]"
+          >
+            ← Back
+          </button>
+        ) : (
+          <h3 className="text-[14px] font-semibold text-[var(--text-soft-strong)]">
+            Invoices
+          </h3>
+        )}
+        {!previewInvoice && (
+          <button
+            type="button"
+            onClick={handleNewInvoice}
+            className="inline-flex items-center gap-1 rounded-[8px] bg-[var(--primary)] px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:opacity-90"
+          >
+            <AddCircleBold size={14} />
+            New
+          </button>
+        )}
       </div>
 
       {/* List */}
-      {invoices.length === 0 ? (
+      {previewInvoice ? (
+        <div className="min-h-0 flex-1 overflow-y-auto rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-4 theme-scrollbar">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">Invoice</p>
+          <h2 className="mt-2 text-[20px] font-bold text-[var(--text-soft-strong)]">{previewInvoice.invoice_number}</h2>
+          <p className="mt-1 text-[13px] text-[var(--text-soft-muted)]">Issued {previewInvoice.issue_date} · Due {previewInvoice.due_date}</p>
+
+          <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">Bill To</p>
+            <p className="mt-2 text-[14px] font-medium text-[var(--text-soft-strong)]">{getClientName(previewInvoice.client_id) || 'Client'}</p>
+          </div>
+
+          <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">Line Items</p>
+            <div className="mt-2 space-y-2">
+              {(Array.isArray(previewInvoice.line_items)
+                ? (previewInvoice.line_items as unknown as InvoiceLineItem[])
+                : []
+              ).map((item) => (
+                <div key={item.id} className="grid grid-cols-[1fr_50px_90px_100px] gap-2 text-[13px] text-[var(--text-soft-strong)]">
+                  <span>{item.description || 'Item'}</span>
+                  <span className="text-right">{item.qty}</span>
+                  <span className="text-right">{formatCurrency(item.rate, previewInvoice.currency)}</span>
+                  <span className="text-right">{formatCurrency(item.amount, previewInvoice.currency)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
+            <div className="ml-auto w-full max-w-[240px] space-y-1 text-[13px]">
+              <div className="flex justify-between text-[var(--text-soft-muted)]"><span>Subtotal</span><span>{formatCurrency(previewInvoice.subtotal, previewInvoice.currency)}</span></div>
+              <div className="flex justify-between text-[var(--text-soft-muted)]"><span>Tax</span><span>{formatCurrency(previewInvoice.tax_amount || 0, previewInvoice.currency)}</span></div>
+              <div className="flex justify-between border-t border-[var(--surface-divider)] pt-1 font-semibold text-[var(--text-soft-strong)]"><span>Total</span><span>{formatCurrency(previewInvoice.total, previewInvoice.currency)}</span></div>
+            </div>
+          </div>
+
+          {(previewInvoice.payment_method || previewInvoice.payment_instructions) && (
+            <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">Payment</p>
+              {previewInvoice.payment_method && <p className="mt-2 text-[14px] text-[var(--text-soft-strong)]">{previewInvoice.payment_method}</p>}
+              {previewInvoice.payment_instructions && <p className="mt-1 whitespace-pre-line text-[13px] text-[var(--text-soft-muted)]">{previewInvoice.payment_instructions}</p>}
+            </div>
+          )}
+
+          {previewInvoice.notes_to_client && (
+            <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">Notes</p>
+              <p className="mt-2 whitespace-pre-line text-[14px] leading-[22px] text-[var(--text-soft-strong)]">{previewInvoice.notes_to_client}</p>
+            </div>
+          )}
+        </div>
+      ) : invoices.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
           <DocumentText1Bold size={28} className="text-[var(--text-soft-muted)]" />
           <p className="text-[13px] text-[var(--text-soft-muted)]">No invoices yet</p>
@@ -263,6 +299,7 @@ export function InvoicesList() {
                 className={`group flex items-center justify-between rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-3 transition-all duration-200 hover:border-[var(--primary)] ${
                   isOverdue ? 'border-l-2 border-l-[var(--feedback-error-text)]' : ''
                 }`}
+                onClick={() => setPreviewInvoice(invoice)}
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -284,7 +321,10 @@ export function InvoicesList() {
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        onClick={() => handleEdit(invoice)}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          handleEdit(invoice)
+                        }}
                         className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-[var(--surface-chip)] hover:text-[var(--tertiary)]"
                         aria-label="Edit"
                       >
@@ -298,7 +338,10 @@ export function InvoicesList() {
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        onClick={() => handleCopyLink(invoice)}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          handleCopyLink(invoice)
+                        }}
                         className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-[var(--surface-chip)] hover:text-[var(--tertiary)]"
                         aria-label="Copy share link"
                       >
@@ -318,7 +361,10 @@ export function InvoicesList() {
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        onClick={() => handleDownload(invoice)}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          handleDownload(invoice)
+                        }}
                         className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-[var(--surface-chip)] hover:text-[var(--tertiary)]"
                         aria-label="Download PDF"
                       >
@@ -337,7 +383,10 @@ export function InvoicesList() {
                       <TooltipTrigger asChild>
                         <button
                           type="button"
-                          onClick={() => handleMarkPaid(invoice.id)}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            handleMarkPaid(invoice.id)
+                          }}
                           className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-feedback-success-base/10 hover:text-feedback-success-text"
                           aria-label="Mark as paid"
                         >
@@ -351,7 +400,10 @@ export function InvoicesList() {
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        onClick={() => handleDelete(invoice.id)}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          handleDelete(invoice.id)
+                        }}
                         className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-[var(--surface-danger-soft)] hover:text-[var(--text-danger-soft)]"
                         aria-label="Delete"
                       >

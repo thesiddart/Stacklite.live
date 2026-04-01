@@ -1,7 +1,8 @@
 import React from 'react'
 import Link from 'next/link'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
-import type { Contract as ContractRow } from '@/lib/types/database'
+import type { Database, Contract as ContractRow } from '@/lib/types/database'
 
 interface ContractClauses {
   revision?: { on: boolean; text: string }
@@ -11,6 +12,12 @@ interface ContractClauses {
   governingLaw?: { on: boolean; text: string }
 }
 
+interface SharedClient {
+  name: string
+  email: string | null
+  company_name: string | null
+}
+
 export default async function SharedContractPage({
   params,
 }: {
@@ -18,15 +25,39 @@ export default async function SharedContractPage({
 }) {
   const { token } = await params
   const supabase = await createClient()
+  let adminSupabase: ReturnType<typeof createSupabaseClient<Database>> | null = null
 
-  const { data: contract, error } = await supabase
+  const { data: contractData } = await supabase
     .from('contracts')
-    .select('*, clients(name, email, company_name)')
+    .select('*')
     .eq('share_token', token)
-    .neq('status', 'draft')
-    .single()
+    .maybeSingle()
 
-  if (error || !contract) {
+  let contract = contractData
+
+  if (!contract) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
+
+    if (supabaseUrl && serviceRoleKey) {
+      adminSupabase = createSupabaseClient<Database>(supabaseUrl, serviceRoleKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      })
+
+      const { data: adminContract } = await adminSupabase
+        .from('contracts')
+        .select('*')
+        .eq('share_token', token)
+        .maybeSingle()
+
+      contract = adminContract
+    }
+  }
+
+  if (!contract) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f9f9f9]">
         <div className="text-center">
@@ -34,15 +65,35 @@ export default async function SharedContractPage({
             Contract not found
           </h1>
           <p className="mt-2 text-sm text-[#7c7288]">
-            This link may have expired or the contract is still in draft.
+            This link may have expired or the contract is unavailable.
           </p>
         </div>
       </div>
     )
   }
 
-  const typedContract = contract as ContractRow & {
-    clients?: { name: string; email: string | null; company_name: string | null } | null
+  const typedContract = contract as ContractRow
+
+  let client: SharedClient | null = null
+
+  if (typedContract.client_id) {
+    const { data: clientData } = await supabase
+      .from('clients')
+      .select('name, email, company_name')
+      .eq('id', typedContract.client_id)
+      .maybeSingle()
+
+    client = clientData
+
+    if (!client && adminSupabase) {
+      const { data: adminClientData } = await adminSupabase
+        .from('clients')
+        .select('name, email, company_name')
+        .eq('id', typedContract.client_id)
+        .maybeSingle()
+
+      client = adminClientData
+    }
   }
 
   const deliverables = Array.isArray(typedContract.deliverables)
@@ -103,30 +154,30 @@ export default async function SharedContractPage({
             <h1 className="mt-2 text-[22px] font-bold leading-tight text-[#1a163d]">
               {typedContract.project_name || 'Service Agreement'}
             </h1>
-            {typedContract.clients && (
+            {client && (
               <p className="mt-1 text-[13px] text-[#7c7288]">
                 Prepared for{' '}
                 <span className="font-medium text-[#1a163d]">
-                  {typedContract.clients.name}
+                  {client.name}
                 </span>
               </p>
             )}
           </div>
 
           {/* Client */}
-          {typedContract.clients && (
+          {client && (
             <div className="mt-6 border-b border-[#e8e4f6] pb-6">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7c7288]">
                 Client
               </p>
               <p className="mt-2 text-[14px] font-medium text-[#1a163d]">
-                {typedContract.clients.name}
+                {client.name}
               </p>
-              {typedContract.clients.email && (
-                <p className="text-[13px] text-[#7c7288]">{typedContract.clients.email}</p>
+              {client.email && (
+                <p className="text-[13px] text-[#7c7288]">{client.email}</p>
               )}
-              {typedContract.clients.company_name && (
-                <p className="text-[13px] text-[#7c7288]">{typedContract.clients.company_name}</p>
+              {client.company_name && (
+                <p className="text-[13px] text-[#7c7288]">{client.company_name}</p>
               )}
             </div>
           )}
@@ -248,7 +299,7 @@ export default async function SharedContractPage({
             <div>
               <div className="mb-3 h-px w-full bg-[#1a163d]" />
               <p className="text-[13px] font-medium text-[#1a163d]">
-                {typedContract.clients?.name || 'Client'}
+                {client?.name || 'Client'}
               </p>
               <p className="mt-1 text-[12px] text-[#7c7288]">Date: ___________</p>
             </div>
