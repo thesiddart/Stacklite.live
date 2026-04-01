@@ -137,11 +137,21 @@ export interface Database {
           start_date: string | null
           end_date: string | null
           payment_terms: string | null
-          deliverables: string | null
+          deliverables: Json
           total_amount: number | null
           currency: string
           status: string
           pdf_url: string | null
+          template_type: string | null
+          project_name: string | null
+          scope: string | null
+          exclusions: string | null
+          milestones: Json
+          total_fee: number | null
+          payment_structure: string | null
+          payment_method: string | null
+          clauses: Json
+          share_token: string
           created_at: string
           updated_at: string
         }
@@ -154,11 +164,20 @@ export interface Database {
           start_date?: string | null
           end_date?: string | null
           payment_terms?: string | null
-          deliverables?: string | null
+          deliverables?: Json
           total_amount?: number | null
           currency?: string
           status?: string
           pdf_url?: string | null
+          template_type?: string | null
+          project_name?: string | null
+          scope?: string | null
+          exclusions?: string | null
+          milestones?: Json
+          total_fee?: number | null
+          payment_structure?: string | null
+          payment_method?: string | null
+          clauses?: Json
           created_at?: string
           updated_at?: string
         }
@@ -171,11 +190,20 @@ export interface Database {
           start_date?: string | null
           end_date?: string | null
           payment_terms?: string | null
-          deliverables?: string | null
+          deliverables?: Json
           total_amount?: number | null
           currency?: string
           status?: string
           pdf_url?: string | null
+          template_type?: string | null
+          project_name?: string | null
+          scope?: string | null
+          exclusions?: string | null
+          milestones?: Json
+          total_fee?: number | null
+          payment_structure?: string | null
+          payment_method?: string | null
+          clauses?: Json
           created_at?: string
           updated_at?: string
         }

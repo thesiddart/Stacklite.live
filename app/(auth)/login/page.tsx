@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { LoginBold } from 'sicons'
 import { createClient } from '@/lib/supabase/client'
 import { AppNavbar } from '@/components/layout/AppNavbar'
+import { useSessionStore } from '@/stores/sessionStore'
 
 function GoogleIcon() {
   return <Image src="/icons/social/google-original.svg" alt="Google" width={16} height={16} />
@@ -233,6 +234,27 @@ function LoginPageContent() {
                   Create New Account
                 </button>
               </Link>
+
+              <div className="flex items-center justify-center gap-2">
+                <hr className="h-px flex-1 border-0 bg-[var(--text-soft-subtle)]" />
+                <span className="text-[12px] leading-5 text-[var(--text-soft-subtle)]">or</span>
+                <hr className="h-px flex-1 border-0 bg-[var(--text-soft-subtle)]" />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  useSessionStore.getState().setGuest(true)
+                  document.cookie = 'stacklite-guest=true; path=/; max-age=31536000; SameSite=Lax'
+                  router.push('/dashboard')
+                }}
+                className="flex h-10 w-full items-center justify-center rounded-full border border-dashed border-[var(--text-soft-disabled)] px-8 py-2 text-[12px] font-medium leading-[12px] text-[var(--text-soft-muted)] transition-all hover:border-[var(--primary)] hover:text-[var(--tertiary)] hover:bg-[var(--surface-overlay)]"
+              >
+                Try Without Account
+              </button>
+              <p className="text-center text-[11px] text-[var(--text-soft-disabled)]">
+                No sign up needed · Your work saves in your browser
+              </p>
             </div>
           </div>
         </section>

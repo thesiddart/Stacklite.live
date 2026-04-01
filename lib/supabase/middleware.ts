@@ -50,7 +50,10 @@ export async function updateSession(request: NextRequest) {
   const isAuthPath = authPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
   // Redirect logic
-  if (!user && isProtectedPath) {
+  // Guest mode bypass — if the guest cookie is set, allow access to protected routes
+  const isGuestSession = request.cookies.get('stacklite-guest')?.value === 'true'
+
+  if (!user && isProtectedPath && !isGuestSession) {
     // User is not authenticated and trying to access protected route
     const url = request.nextUrl.clone()
     url.pathname = '/login'

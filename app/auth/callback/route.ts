@@ -5,12 +5,18 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/dashboard'
+  const migrate = searchParams.get('migrate')
 
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      // If migrate flag is set, pass it through to the dashboard
+      // The client-side will pick it up and trigger migrateGuestData()
+      const redirectUrl = migrate === 'true'
+        ? `${origin}${next}?migration=pending`
+        : `${origin}${next}`
+      return NextResponse.redirect(redirectUrl)
     }
   }
 

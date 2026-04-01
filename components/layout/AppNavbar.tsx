@@ -5,6 +5,8 @@ import Image from 'next/image'
 import { CloseCircleBold, ColorfilterBold, EditBold, LoginBold, MusicCircleBold, TrashBold, UserBold, WatchBold } from 'sicons'
 import { useAuth } from '@/hooks/useAuth'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
+import { GuestIndicator } from '@/components/layout/GuestIndicator'
+import { SavePromptModal } from '@/components/layout/SavePromptModal'
 
 function GoogleIcon() {
   return <Image src="/icons/social/google-original.svg" alt="Google" width={16} height={16} />
@@ -222,14 +224,16 @@ export function AppNavbar({
   }
 
   return (
+    <>
     <header
-      className={`absolute left-1/2 ${topClassName} ${zClassName} flex w-[1371px] max-w-[calc(100%-100px)] -translate-x-1/2 items-center justify-between`}
+      className={`absolute left-0 right-0 ${topClassName} ${zClassName} flex w-full items-center justify-between px-6 sm:px-10 lg:px-[50px]`}
     >
       <div className="theme-shell-card flex h-12 items-center gap-[5.94px] rounded-[14px] p-2">
         <Image src="/logo.svg" alt="Stacklite" width={161} height={44} className="h-8 w-auto" priority />
       </div>
 
       <div className="theme-shell-card relative flex h-12 items-center gap-2 rounded-[14px] p-2">
+        <GuestIndicator />
         <div className="theme-shell-subtle flex h-8 items-center justify-center gap-1 rounded-[8px] px-2">
           <WatchBold size={16} />
           <span className="text-[14px] font-medium leading-none">
@@ -592,5 +596,7 @@ export function AppNavbar({
         )}
       </div>
     </header>
+      <SavePromptModal />
+    </>
   )
 }

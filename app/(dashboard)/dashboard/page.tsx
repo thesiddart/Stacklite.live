@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { Suspense, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import {
   AddCircleBold,
   Chart2Bold,
@@ -13,10 +14,13 @@ import {
 } from 'sicons'
 import { AppNavbar } from '@/components/layout/AppNavbar'
 import { ClientForm } from '@/components/modules/ClientManager/ClientForm'
+import { ContractGenerator } from '@/components/modules/ContractGenerator'
 import { TimeTracker } from '@/components/modules/TimeTracker'
 import { useClients } from '@/hooks/useClients'
 import { useTimeLogs } from '@/hooks/useTimeLogs'
+import { useAuth } from '@/hooks/useAuth'
 import type { Client } from '@/lib/types/database'
+import { migrateGuestData } from '@/lib/migration/migrateGuestData'
 import {
   formatHoursAndMinutes,
   getTimeLogElapsedMilliseconds,
@@ -24,7 +28,7 @@ import {
   isSameWeek,
 } from '@/lib/utils/time'
 
-export default function DashboardPage() {
+function DashboardContent() {
   const formTransitionMs = 220
   const [isClientsCollapsed, setIsClientsCollapsed] = useState(false)
   const [isTimeTrackerCollapsed, setIsTimeTrackerCollapsed] = useState(false)
@@ -35,6 +39,20 @@ export default function DashboardPage() {
   const [editingClient, setEditingClient] = useState<Client | null>(null)
   const { data: clients = [], isLoading: isClientsLoading } = useClients()
   const { data: timeLogs = [] } = useTimeLogs()
+  const { user } = useAuth()
+  const searchParams = useSearchParams()
+
+  // Migrate guest data on sign-up (triggered by auth callback ?migration=pending)
+  useEffect(() => {
+    if (searchParams.get('migration') === 'pending' && user?.id) {
+      migrateGuestData(user.id).catch((err) => {
+        console.error('Migration failed:', err)
+        // Guest data is preserved in localStorage — soft warning only
+      })
+      // Clean up the URL
+      window.history.replaceState({}, '', '/dashboard')
+    }
+  }, [searchParams, user?.id])
 
   const newClientsCount = useMemo(() => {
     const now = new Date()
@@ -296,7 +314,7 @@ export default function DashboardPage() {
 
       <section
         aria-hidden={!shouldShowCenterPanel}
-        className={`absolute bottom-28 left-1/2 top-[120px] z-10 flex w-[min(489px,calc(100vw-40px))] -translate-x-1/2 flex-col gap-2 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`absolute bottom-28 left-1/2 top-[120px] z-10 flex w-[min(90%,700px)] -translate-x-1/2 flex-col gap-2 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] max-h-[calc(100vh-200px)] lg:w-[min(50vw,900px)] ${
           shouldShowCenterPanel
             ? 'pointer-events-auto opacity-100 translate-y-0 scale-100'
             : 'pointer-events-none opacity-0 translate-y-3 scale-[0.98]'
@@ -317,13 +335,19 @@ export default function DashboardPage() {
           </div>
           <div className="theme-shell-panel relative flex-1 min-h-0 overflow-visible rounded-[14px] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]">
             <div className="h-full min-h-0 overflow-hidden rounded-[14px]">
-              <div className="flex h-full flex-col items-center justify-center rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] text-center">
-                <CenterPanelIcon size={28} className="text-[var(--tertiary)]" />
-                <p className="mt-2 text-sm font-medium text-[var(--tertiary)]">{centerPanelTitle}</p>
-                <p className="mt-1 max-w-[280px] text-xs text-[var(--text-soft-subtle)]">
-                  Select a module from the dock or click Add Client to start client onboarding here.
-                </p>
-              </div>
+              {activeDockTab === 'contract' ? (
+                <div className="h-full overflow-y-auto rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] p-4 theme-scrollbar">
+                  <ContractGenerator variant="dashboard" />
+                </div>
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] text-center">
+                  <CenterPanelIcon size={28} className="text-[var(--tertiary)]" />
+                  <p className="mt-2 text-sm font-medium text-[var(--tertiary)]">{centerPanelTitle}</p>
+                  <p className="mt-1 max-w-[280px] text-xs text-[var(--text-soft-subtle)]">
+                    This module is coming soon.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
       </section>
@@ -415,5 +439,13 @@ export default function DashboardPage() {
         </button>
       </footer>
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardContent />
+    </Suspense>
   )
 }
