@@ -79,3 +79,27 @@ export async function updateProfile(formData: ProfileUpdate): Promise<Profile> {
 
   return data as Profile
 }
+
+export async function deleteAccount(): Promise<void> {
+  const response = await fetch('/auth/delete-account', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!response.ok) {
+    let errorMessage = 'Failed to delete account'
+
+    try {
+      const body = await response.json()
+      if (body && typeof body.error === 'string') {
+        errorMessage = body.error
+      }
+    } catch {
+      // Ignore response parsing errors and use fallback message.
+    }
+
+    throw new Error(errorMessage)
+  }
+}

@@ -8,6 +8,7 @@ import {
   TrashBold,
   AddCircleBold,
   TickCircleBold,
+  CloseCircleBold,
 } from 'sicons'
 import {
   useContracts,
@@ -356,29 +357,44 @@ export function ContractsList() {
                 >
                   <div className="min-w-0 flex-1">
                     {pendingDeleteContractId === contract.id ? (
-                      <div className="space-y-3">
+                      <div className="flex w-full items-center gap-3">
                         <p className="text-[13px] font-medium text-text-base">Are you sure want to delete this?</p>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              void handleDelete(contract.id)
-                            }}
-                            className="rounded-[8px] bg-feedback-error-base px-3 py-1.5 text-[12px] font-medium text-white transition-opacity hover:opacity-90"
-                          >
-                            Confirm
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              setPendingDeleteContractId(null)
-                            }}
-                            className="rounded-[8px] border border-border-base bg-background-base px-3 py-1.5 text-[12px] font-medium text-text-base transition-colors hover:bg-background-muted"
-                          >
-                            Cancel
-                          </button>
+                        <div className="ml-auto flex items-center gap-2">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  void handleDelete(contract.id)
+                                }}
+                                className="inline-flex items-center gap-1 rounded-[6px] px-2 py-1 text-feedback-error-text hover:bg-feedback-error-bg"
+                                aria-label="Confirm delete"
+                              >
+                                <TickCircleBold size={14} />
+                                <span className="text-[12px] font-medium leading-none">Confirm</span>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Confirm delete</TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  setPendingDeleteContractId(null)
+                                }}
+                                className="inline-flex items-center gap-1 rounded-[6px] px-2 py-1 text-text-brand hover:bg-[var(--surface-chip)] hover:text-text-base"
+                                aria-label="Cancel delete"
+                              >
+                                <CloseCircleBold size={14} />
+                                <span className="text-[12px] font-medium leading-none">Cancel</span>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Cancel</TooltipContent>
+                          </Tooltip>
                         </div>
                       </div>
                     ) : (

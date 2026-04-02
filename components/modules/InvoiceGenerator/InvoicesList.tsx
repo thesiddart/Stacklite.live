@@ -8,6 +8,7 @@ import {
   TrashBold,
   AddCircleBold,
   TickCircleBold,
+  CloseCircleBold,
 } from 'sicons'
 import {
   useInvoices,
@@ -64,6 +65,8 @@ export function InvoicesList() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [copyErrorId, setCopyErrorId] = useState<string | null>(null)
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [pendingDeleteInvoiceId, setPendingDeleteInvoiceId] = useState<string | null>(null)
 
   const getClientName = (clientId: string | null) => {
     if (!clientId) return null
@@ -127,17 +130,20 @@ export function InvoicesList() {
 
   const handleMarkPaid = async (id: string) => {
     try {
+      setActionError(null)
       await paidMutation.mutateAsync(id)
-    } catch {
-      // silently fail
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'Failed to mark invoice as paid')
     }
   }
 
   const handleDelete = async (id: string) => {
     try {
+      setActionError(null)
       await deleteMutation.mutateAsync(id)
-    } catch {
-      // silently fail
+      setPendingDeleteInvoiceId(null)
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'Failed to delete invoice')
     }
   }
 
@@ -238,6 +244,10 @@ export function InvoicesList() {
         )}
       </div>
 
+      {actionError && (
+        <p className="text-[12px] text-feedback-error-text">{actionError}</p>
+      )}
+
       {/* List */}
       {previewInvoice ? (
         <div className="min-h-0 flex-1 overflow-y-auto rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-4 theme-scrollbar">
@@ -315,23 +325,74 @@ export function InvoicesList() {
                 className={`group flex items-center justify-between rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-3 transition-all duration-200 hover:border-[var(--primary)] ${
                   isOverdue ? 'border-l-2 border-l-[var(--feedback-error-text)]' : ''
                 }`}
-                onClick={() => setPreviewInvoice(invoice)}
+                onClick={() => {
+                  if (pendingDeleteInvoiceId === invoice.id) {
+                    return
+                  }
+                  setPreviewInvoice(invoice)
+                }}
               >
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate text-[13px] font-medium text-text-base">
-                      {invoice.invoice_number}
-                      {clientName ? ` · ${clientName}` : ''}
-                      {' · '}
-                      {formatCurrency(invoice.total, invoice.currency)}
-                    </p>
-                    <StatusBadge status={displayStatus} />
-                  </div>
-                  <p className="mt-0.5 text-[11px] text-text-muted">
-                    Due {invoice.due_date} · Updated {new Date(invoice.updated_at).toLocaleDateString()}
-                  </p>
+                  {pendingDeleteInvoiceId === invoice.id ? (
+                    <div className="flex w-full items-center gap-3">
+                      <p className="text-[13px] font-medium text-text-base">Are you sure want to delete this?</p>
+                      <div className="ml-auto flex items-center gap-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                void handleDelete(invoice.id)
+                              }}
+                              className="inline-flex items-center gap-1 rounded-[6px] px-2 py-1 text-feedback-error-text hover:bg-feedback-error-bg"
+                              aria-label="Confirm delete"
+                            >
+                              <TickCircleBold size={14} />
+                              <span className="text-[12px] font-medium leading-none">Confirm</span>
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Confirm delete</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                setPendingDeleteInvoiceId(null)
+                              }}
+                              className="inline-flex items-center gap-1 rounded-[6px] px-2 py-1 text-text-brand hover:bg-[var(--surface-chip)] hover:text-text-base"
+                              aria-label="Cancel delete"
+                            >
+                              <CloseCircleBold size={14} />
+                              <span className="text-[12px] font-medium leading-none">Cancel</span>
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Cancel</TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <p className="truncate text-[13px] font-medium text-text-base">
+                          {invoice.invoice_number}
+                          {clientName ? ` · ${clientName}` : ''}
+                          {' · '}
+                          {formatCurrency(invoice.total, invoice.currency)}
+                        </p>
+                        <StatusBadge status={displayStatus} />
+                      </div>
+                      <p className="mt-0.5 text-[11px] text-text-muted">
+                        Due {invoice.due_date} · Updated {new Date(invoice.updated_at).toLocaleDateString()}
+                      </p>
+                    </>
+                  )}
                 </div>
 
+                {pendingDeleteInvoiceId !== invoice.id && (
                 <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -428,7 +489,7 @@ export function InvoicesList() {
                         type="button"
                         onClick={(event) => {
                           event.stopPropagation()
-                          handleDelete(invoice.id)
+                          setPendingDeleteInvoiceId(invoice.id)
                         }}
                         className="rounded-[6px] p-1.5 text-text-brand hover:bg-feedback-error-bg hover:text-feedback-error-text"
                         aria-label="Delete"
@@ -439,6 +500,7 @@ export function InvoicesList() {
                     <TooltipContent>Delete</TooltipContent>
                   </Tooltip>
                 </div>
+                )}
               </div>
             )
           })}

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { CloseCircleBold, ColorfilterBold, EditBold, LoginBold, MusicCircleBold, TrashBold, UserBold } from 'sicons'
 import { useAuth } from '@/hooks/useAuth'
-import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
+import { useDeleteAccount, useProfile, useUpdateProfile } from '@/hooks/useProfile'
 import { SignInButton } from '@/components/layout/SignInButton'
 import { SavePromptModal } from '@/components/layout/SavePromptModal'
 
@@ -105,6 +105,7 @@ export function AppNavbar({
   const { user } = useAuth()
   const { data: profile } = useProfile(Boolean(user))
   const updateProfileMutation = useUpdateProfile()
+  const deleteAccountMutation = useDeleteAccount()
   const [currentTime, setCurrentTime] = useState<string | null>(null)
   const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark'>('light')
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false)
@@ -114,6 +115,7 @@ export function AppNavbar({
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [profileError, setProfileError] = useState('')
   const [profileSuccess, setProfileSuccess] = useState('')
+  const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false)
   const [profileForm, setProfileForm] = useState({
     full_name: '',
     email: '',
@@ -272,6 +274,25 @@ export function AppNavbar({
       setProfileSuccess('Profile updated')
     } catch (error) {
       setProfileError(error instanceof Error ? error.message : 'Failed to update profile')
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    setProfileError('')
+    setProfileSuccess('')
+
+    try {
+      await deleteAccountMutation.mutateAsync()
+      window.location.href = '/login'
+    } catch (error) {
+      setProfileError(error instanceof Error ? error.message : 'Failed to delete account')
+      setIsDeleteAccountModalOpen(false)
+    }
+  }
+
+  const handleDeleteBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget && !deleteAccountMutation.isPending) {
+      setIsDeleteAccountModalOpen(false)
     }
   }
 
@@ -586,10 +607,19 @@ export function AppNavbar({
                         </p>
                       )}
 
-                      <div className="mt-auto flex items-center justify-end gap-2">
+                      <div className="mt-auto flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsDeleteAccountModalOpen(true)}
+                          disabled={updateProfileMutation.isPending || deleteAccountMutation.isPending}
+                          className="inline-flex h-8 items-center justify-center rounded-[8px] border border-feedback-error-base bg-feedback-error-bg px-3 text-[12px] font-medium text-feedback-error-text transition-colors hover:bg-feedback-error-bg/80 disabled:opacity-60"
+                        >
+                          Delete your account
+                        </button>
+
                         <button
                           type="submit"
-                          disabled={updateProfileMutation.isPending}
+                          disabled={updateProfileMutation.isPending || deleteAccountMutation.isPending}
                           className="inline-flex h-8 items-center justify-center rounded-[8px] bg-[var(--primary)] px-3 text-[12px] font-medium text-white disabled:opacity-60"
                         >
                           {updateProfileMutation.isPending ? 'Saving...' : 'Save'}
@@ -680,6 +710,46 @@ export function AppNavbar({
         )}
       </div>
     </header>
+      {isDeleteAccountModalOpen && (
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fadeIn"
+          onClick={handleDeleteBackdropClick}
+        >
+          <div className="mx-4 w-full max-w-[400px] animate-slideIn rounded-[16px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-6 shadow-lg">
+            <div>
+              <h2 className="text-[16px] font-semibold text-text-base">
+                Delete your account permanently
+              </h2>
+              <p className="mt-2 text-[13px] leading-relaxed text-text-muted">
+                This will permanently remove your Stacklite account and all associated access. This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3">
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deleteAccountMutation.isPending}
+                className="flex h-10 w-full items-center justify-center rounded-full bg-feedback-error-base text-[14px] font-medium text-white transition-all hover:opacity-90 disabled:opacity-60"
+              >
+                {deleteAccountMutation.isPending ? 'Deleting...' : 'Delete account'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsDeleteAccountModalOpen(false)}
+                disabled={deleteAccountMutation.isPending}
+                className="flex h-10 w-full items-center justify-center rounded-full border border-[var(--surface-divider)] text-[13px] font-medium text-text-muted transition-all hover:bg-[var(--surface-overlay)] disabled:opacity-60"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <p className="mt-4 text-center text-[11px] text-text-disabled">
+              You will be signed out immediately after deletion.
+            </p>
+          </div>
+        </div>
+      )}
       <SavePromptModal />
     </>
   )

@@ -10,9 +10,10 @@ interface ModalProps {
   title: string
   children: React.ReactNode
   size?: 'sm' | 'md' | 'lg' | 'xl'
+  contentClassName?: string
 }
 
-export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
+export function Modal({ isOpen, onClose, title, children, size = 'md', contentClassName }: ModalProps) {
   const sizeStyles = {
     sm: 'max-w-md',
     md: 'max-w-lg',
@@ -27,7 +28,8 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
         <Dialog.Content
           className={cn(
             'fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border-base bg-background-base shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background-base',
-            sizeStyles[size]
+            sizeStyles[size],
+            contentClassName
           )}
         >
           <div className="flex items-center justify-between border-b border-border-muted px-4 py-3">

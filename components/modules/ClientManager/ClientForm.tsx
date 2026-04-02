@@ -44,6 +44,15 @@ interface ClientFormState {
   notes: string
 }
 
+function getTagSelectValue(rawTag: string): '' | 'design' | 'development' | 'custom' {
+  const normalized = rawTag.trim().toLowerCase()
+
+  if (normalized === '') return ''
+  if (normalized === 'design') return 'design'
+  if (normalized === 'development' || normalized === 'devlopment') return 'development'
+  return 'custom'
+}
+
 const COUNTRY_STATE_MAP: Record<string, string[]> = {
   'United States': [
     'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
@@ -109,14 +118,13 @@ function getCurrentCountryName(): string | null {
   return displayNames.of(regionCode.toUpperCase()) || null
 }
 
-const toDateTimeLocal = (value: string | null) => {
+const toDateInputValue = (value: string | null) => {
   if (!value) return ''
 
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
 
-  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-  return localDate.toISOString().slice(0, 16)
+  return date.toISOString().slice(0, 10)
 }
 
 const getInitialFormData = (mode: 'create' | 'edit', client?: Client | null): ClientFormState => {
@@ -142,7 +150,7 @@ const getInitialFormData = (mode: 'create' | 'edit', client?: Client | null): Cl
       is_active: client.is_active,
       tags: client.tags?.join(', ') || '',
       metadata: client.metadata ? JSON.stringify(client.metadata, null, 2) : '',
-      last_contacted_at: toDateTimeLocal(client.last_contacted_at),
+      last_contacted_at: toDateInputValue(client.last_contacted_at),
       notes: client.notes || '',
     }
   }
@@ -192,6 +200,7 @@ export function ClientForm({
   const [countryOptions, setCountryOptions] = useState<string[]>(() => getCountryOptions())
 
   const stateOptions = COUNTRY_STATE_MAP[formData.country] || []
+  const tagSelectValue = getTagSelectValue(formData.tags)
 
   useEffect(() => {
     if (!isOpen) {
@@ -368,9 +377,56 @@ export function ClientForm({
   }
   
   const isLoading = createMutation.isPending || updateMutation.isPending
-  
+
+  const handleTagSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedTag = e.target.value
+
+    setFormData((prev) => {
+      if (selectedTag === 'custom') {
+        const currentIsCustom = getTagSelectValue(prev.tags) === 'custom'
+        return {
+          ...prev,
+          tags: currentIsCustom ? prev.tags : '',
+        }
+      }
+
+      return {
+        ...prev,
+        tags: selectedTag,
+      }
+    })
+
+    if (errors.tags) {
+      setErrors((prev) => {
+        const nextErrors = { ...prev }
+        delete nextErrors.tags
+        return nextErrors
+      })
+    }
+  }
+
+  const handleCustomTagChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const customTagValue = e.target.value
+
+    setFormData((prev) => ({
+      ...prev,
+      tags: customTagValue,
+    }))
+
+    if (errors.tags) {
+      setErrors((prev) => {
+        const nextErrors = { ...prev }
+        delete nextErrors.tags
+        return nextErrors
+      })
+    }
+  }
+
   const formContent = (
-    <form onSubmit={handleSubmit} className="space-y-6 px-4 pb-4 pt-3">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6 px-4 pb-4 pt-3 [&_label>span]:text-feedback-error-base"
+    >
         <section className="space-y-3">
           <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-text-base">Identity</h3>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -562,20 +618,20 @@ export function ClientForm({
             <Select
               label="Tags"
               name="tags"
-              value={formData.tags}
-              onChange={handleChange}
+              value={tagSelectValue}
+              onChange={handleTagSelectChange}
               error={errors.tags}
               required
             >
               <option value="">Select tag</option>
               <option value="design">design</option>
-              <option value="devlopment">devlopment</option>
+              <option value="development">development</option>
               <option value="custom">custom</option>
             </Select>
             <Input
               label="Last Contacted"
               name="last_contacted_at"
-              type="datetime-local"
+              type="date"
               value={formData.last_contacted_at}
               onChange={handleChange}
               error={errors.last_contacted_at}
@@ -583,6 +639,18 @@ export function ClientForm({
               required
             />
           </div>
+          {tagSelectValue === 'custom' && (
+            <Input
+              label="Custom Tag"
+              name="custom_tag"
+              value={formData.tags}
+              onChange={handleCustomTagChange}
+              error={errors.tags}
+              placeholder="Enter custom tag"
+              className={authInputClassName}
+              required
+            />
+          )}
           <label className="flex items-center gap-2 text-sm text-text-base">
             <input
               type="checkbox"
@@ -640,6 +708,7 @@ export function ClientForm({
       onClose={onClose}
       title={mode === 'create' ? 'Add New Client' : 'Edit Client'}
       size="lg"
+      contentClassName="max-w-[44.1rem]"
     >
       {formContent}
     </Modal>

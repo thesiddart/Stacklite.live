@@ -1,6 +1,6 @@
 'use client'
 
-import React, { Suspense, useEffect, useMemo, useState } from 'react'
+import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   AddCircleBold,
@@ -48,6 +48,7 @@ function DashboardContent() {
   const [isClientFormMounted, setIsClientFormMounted] = useState(false)
   const [isClientFormVisible, setIsClientFormVisible] = useState(false)
   const [editingClient, setEditingClient] = useState<Client | null>(null)
+  const clientFormContainerRef = useRef<HTMLDivElement | null>(null)
   const initSession = useSessionStore((s) => s.initSession)
   const contractView = useContractStore((s) => s.view)
   const setContractView = useContractStore((s) => s.setView)
@@ -201,6 +202,20 @@ function DashboardContent() {
     setInvoiceView('editor')
   }
 
+  const getClientTagBadgeClassName = (tag: string): string => {
+    const normalizedTag = tag.trim().toLowerCase()
+
+    if (normalizedTag === 'design') {
+      return 'bg-[var(--color-warning)] text-[var(--color-text-inverse)]'
+    }
+
+    if (normalizedTag === 'development' || normalizedTag === 'devlopment') {
+      return 'bg-[var(--color-info)] text-[var(--color-text-inverse)]'
+    }
+
+    return 'bg-[var(--color-brand-subtle)] text-[var(--color-text-brand)]'
+  }
+
   React.useEffect(() => {
     if (isClientFormOpen) {
       setIsClientFormMounted(true)
@@ -223,6 +238,34 @@ function DashboardContent() {
     return () => window.clearTimeout(timeoutId)
   }, [formTransitionMs, isClientFormMounted, isClientFormOpen])
 
+  useEffect(() => {
+    if (!isClientFormOpen) {
+      return
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const container = clientFormContainerRef.current
+      const target = event.target
+
+      if (!container || !(target instanceof Node)) {
+        return
+      }
+
+      if (container.contains(target)) {
+        return
+      }
+
+      setIsCreateClientOpen(false)
+      setEditingClient(null)
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+    }
+  }, [isClientFormOpen])
+
   return (
     <TooltipProvider delayDuration={180}>
     <div className="theme-page-shell">
@@ -243,10 +286,10 @@ function DashboardContent() {
         className={`absolute z-10 flex flex-col ${
           isClientsCollapsed
             ? 'left-[50px] top-[calc(50%+188px)] items-start gap-2'
-            : `left-[50px] items-center gap-4 transition-[top,width,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            : `bottom-28 left-[50px] items-center gap-4 transition-[bottom,width,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
               isClientPanelExpanded
-                ? 'top-[112px] w-[400px] translate-y-0'
-                : 'top-1/2 w-[289px] -translate-y-1/2'
+                ? 'w-[400px] translate-y-0'
+                : 'w-[289px] translate-y-0'
             }`
         }`}
       >
@@ -264,7 +307,9 @@ function DashboardContent() {
           <>
             <div
               className={`theme-shell-card flex w-full flex-col gap-[10px] overflow-hidden rounded-[14px] p-4 transition-[height,max-height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                isClientPanelExpanded ? 'h-[640px]' : 'max-h-[600px]'
+                isClientPanelExpanded
+                  ? 'h-[min(640px,calc(100vh-240px))]'
+                  : 'max-h-[min(600px,calc(100vh-240px))]'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -312,6 +357,7 @@ function DashboardContent() {
               <div className="flex-1 min-h-0 overflow-hidden rounded-[10px]">
                 {isClientFormMounted ? (
                   <div
+                    ref={clientFormContainerRef}
                     className={`h-full min-h-0 overflow-hidden transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                       isClientFormVisible
                         ? 'translate-y-0 opacity-100'
@@ -372,7 +418,9 @@ function DashboardContent() {
 
                             <div className="flex w-full items-center justify-between gap-[10px]">
                               {client.tags && client.tags.length > 0 ? (
-                                <span className="inline-flex h-fit w-fit items-center justify-center rounded-[4px] bg-[var(--primary)] pl-[8px] pr-[8px] pt-[4px] pb-[4px] text-[14px] font-medium leading-none text-white">
+                                <span
+                                  className={`inline-flex h-fit w-fit items-center justify-center rounded-[4px] pl-[8px] pr-[8px] pt-[4px] pb-[4px] text-[14px] font-medium leading-none ${getClientTagBadgeClassName(client.tags[0])}`}
+                                >
                                   {client.tags[0].charAt(0).toUpperCase() + client.tags[0].slice(1)}
                                 </span>
                               ) : (
@@ -488,7 +536,7 @@ function DashboardContent() {
         className={`absolute z-10 flex flex-col ${
           isTimeTrackerCollapsed
             ? 'right-[50px] top-[calc(50%+188px)] items-end gap-2'
-            : 'right-[50px] top-1/2 w-[289px] -translate-y-1/2 items-center gap-4 transition-[top,width,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]'
+            : 'bottom-28 right-[50px] w-[289px] translate-y-0 items-center gap-4 transition-[bottom,width,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]'
         }`}
       >
         {isTimeTrackerCollapsed ? (

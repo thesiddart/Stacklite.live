@@ -21,7 +21,7 @@ export default function PrivacyPage() {
         showProfileActiveBorder
       />
 
-      <main className="relative z-10 mx-auto flex h-[calc(100vh-8rem)] w-full max-w-7xl flex-col px-4 pb-4 pt-32 sm:px-6 lg:px-8">
+      <main className="relative z-10 mx-auto flex h-[calc(100vh-2rem)] w-full max-w-7xl flex-col px-4 pb-8 pt-28 sm:px-6 lg:px-8">
         <article className="theme-shell-panel h-full overflow-y-auto rounded-2xl border border-border-base bg-background-highlight p-6 sm:p-8 lg:p-10">
           <header className="space-y-3 border-b border-border-muted pb-6">
             <h1 className="text-3xl font-semibold text-text-base">Stacklite Privacy Policy</h1>
@@ -31,7 +31,7 @@ export default function PrivacyPage() {
 
           <section className="mt-6 space-y-4 text-sm leading-6 text-text-base">
             <p>
-              Stacklite ("we", "our", or "us") is operated by Siddhartha Dwivedi, an individual based in Kathmandu, Nepal.
+              Stacklite is operated by Siddhartha Dwivedi, an individual based in Kathmandu, Nepal.
               This Privacy Policy explains what information we collect, how we use it, and what rights you have over it when you
               use Stacklite at stacklite.live ("the Service").
             </p>
@@ -241,7 +241,7 @@ export default function PrivacyPage() {
             <p className="text-sm text-text-base">Certain features of Stacklite allow you to share documents publicly:</p>
 
             <div className="space-y-2 text-sm text-text-base">
-              <h3 className="text-lg font-semibold">Shareable Contract Links (/c/[token])</h3>
+              <h3 className="text-lg font-semibold">Shareable Contract Links</h3>
               <p>
                 When you generate a share link for a contract, that contract becomes publicly readable at its unique URL. Anyone with
                 the link can view the contract. No login is required.
@@ -254,7 +254,7 @@ export default function PrivacyPage() {
             </div>
 
             <div className="space-y-2 text-sm text-text-base">
-              <h3 className="text-lg font-semibold">Shareable Invoice Links (/i/[token])</h3>
+              <h3 className="text-lg font-semibold">Shareable Invoice Links</h3>
               <p>Same rules apply to invoice share links.</p>
             </div>
 
