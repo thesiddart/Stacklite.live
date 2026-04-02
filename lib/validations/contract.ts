@@ -15,8 +15,17 @@ export const templateTypes = [
 
 export type TemplateType = (typeof templateTypes)[number]
 
-const statusValues = ['sent', 'signed', 'archived'] as const
+const statusValues = ['draft', 'sent', 'signed', 'archived'] as const
+const legacyStatusValues = ['active', 'completed', 'cancelled'] as const
+const statusInputValues = [...statusValues, ...legacyStatusValues] as const
 const paymentStructureValues = ['full', 'split', 'milestone', 'custom'] as const
+
+const normalizeStatus = (status: (typeof statusInputValues)[number]): (typeof statusValues)[number] => {
+  if (status === 'active') return 'sent'
+  if (status === 'completed') return 'signed'
+  if (status === 'cancelled') return 'archived'
+  return status
+}
 
 const emptyToNull = (value: string | null | undefined) => {
   if (typeof value !== 'string') return null
@@ -113,9 +122,10 @@ export const contractSchema = z.object({
   }),
 
   status: z
-    .enum(statusValues)
+    .enum(statusInputValues)
     .optional()
-    .default('sent'),
+    .default('sent')
+    .transform((value) => normalizeStatus(value)),
 })
 
 export const updateContractSchema = contractSchema.partial()
