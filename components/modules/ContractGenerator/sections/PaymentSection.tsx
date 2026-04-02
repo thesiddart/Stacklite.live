@@ -51,10 +51,10 @@ export function PaymentSection() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-[14px] font-semibold text-[var(--text-soft-strong)]">
+        <h3 className="text-[14px] font-semibold text-text-base">
           Payment
         </h3>
-        <p className="mt-0.5 text-[12px] text-[var(--text-soft-muted)]">
+        <p className="mt-0.5 text-[12px] text-text-muted">
           Set up the pricing, payment schedule, and terms.
         </p>
       </div>
@@ -62,7 +62,7 @@ export function PaymentSection() {
       {/* Fee + Currency */}
       <div className="grid grid-cols-[1fr_100px] gap-3">
         <div>
-          <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+          <label className="mb-1 block text-[12px] font-medium text-text-base">
             Total Fee
           </label>
           <input
@@ -85,13 +85,13 @@ export function PaymentSection() {
             </p>
           )}
           {isConverting && (
-            <p className="mt-1 text-[11px] text-[var(--text-soft-subtle)]">
+            <p className="mt-1 text-[11px] text-text-muted">
               Converting...
             </p>
           )}
         </div>
         <div>
-          <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+          <label className="mb-1 block text-[12px] font-medium text-text-base">
             Currency
           </label>
           <input
@@ -108,7 +108,7 @@ export function PaymentSection() {
 
       {/* Payment structure */}
       <div>
-        <label className="mb-2 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+        <label className="mb-2 block text-[12px] font-medium text-text-base">
           Payment Structure
         </label>
         <div className="grid grid-cols-2 gap-2">
@@ -123,10 +123,10 @@ export function PaymentSection() {
                   : 'border-[var(--surface-panel-border)] bg-[var(--surface-card)] hover:border-[var(--primary)]'
               }`}
             >
-              <p className="text-[13px] font-medium text-[var(--text-soft-strong)]">
+              <p className="text-[13px] font-medium text-text-base">
                 {option.label}
               </p>
-              <p className="mt-0.5 text-[11px] text-[var(--text-soft-muted)]">
+              <p className="mt-0.5 text-[11px] text-text-muted">
                 {option.description}
               </p>
             </button>
@@ -136,7 +136,7 @@ export function PaymentSection() {
 
       {/* Payment method */}
       <div>
-        <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+        <label className="mb-1 block text-[12px] font-medium text-text-base">
           Payment Method
         </label>
         <input

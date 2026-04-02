@@ -1,12 +1,15 @@
 'use client'
 
-import React, { useCallback, useEffect, useRef } from 'react'
-import { CloseCircleBold } from 'sicons'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useInvoiceStore } from '@/stores/invoiceStore'
 import { useCreateInvoice, useUpdateInvoice } from '@/hooks/useInvoices'
+import { useClients } from '@/hooks/useClients'
+import { useSessionStore } from '@/stores/sessionStore'
+import { useSavePromptStore } from '@/stores/savePromptStore'
 import { InvoiceForm } from './InvoiceForm'
 import { InvoicePreview } from './InvoicePreview'
-import type { InvoiceLineItem } from '@/lib/utils/invoiceCalculations'
+import { getDisplayStatus, type InvoiceLineItem } from '@/lib/utils/invoiceCalculations'
+import { downloadInvoicePdf as saveInvoicePdf } from '@/lib/utils/pdfDownload'
 
 export function InvoiceEditor() {
   const {
@@ -14,14 +17,21 @@ export function InvoiceEditor() {
     formData,
     isDirty,
     saveStatus,
-    setView,
-    resetForm,
     setSaveStatus,
   } = useInvoiceStore()
 
   const createMutation = useCreateInvoice()
   const updateMutation = useUpdateInvoice()
+  const { data: clients = [] } = useClients()
+  const isGuest = useSessionStore((s) => s.isGuest)
+  const openWithAction = useSavePromptStore((s) => s.openWithAction)
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [isPreviewFocused, setIsPreviewFocused] = useState(false)
+
+  const selectedClient = useMemo(
+    () => clients.find((client) => client.id === formData.client_id),
+    [clients, formData.client_id]
+  )
 
   const normalizeDate = (value: string | null | undefined): string => {
     if (!value) return new Date().toISOString().slice(0, 10)
@@ -121,26 +131,99 @@ export function InvoiceEditor() {
     }
   }, [isDirty, formData, handleSave])
 
-  const handleClose = () => {
+  useEffect(() => {
     if (isDirty) {
-      handleSave()
+      setIsPreviewFocused(false)
     }
-    resetForm()
-    setView('list')
+  }, [isDirty])
+
+  const handlePreview = () => {
+    setIsPreviewFocused(true)
   }
 
+  const formatCurrency = (value: number, currency: string) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency || 'USD',
+      maximumFractionDigits: 2,
+    }).format(value)
+  }
+
+  const handleDownloadPdf = () => {
+    const lineItems = ((formData.line_items || []) as InvoiceLineItem[])
+    const subtotal = Number(formData.subtotal || 0)
+    const taxRate = Number(formData.tax_rate || 0)
+    const taxAmount = taxRate > 0
+      ? Number(((subtotal * taxRate) / 100).toFixed(2))
+      : 0
+
+    const discountAmount = (() => {
+      if (!formData.discount_type || !formData.discount_value) return 0
+      return formData.discount_type === 'percent'
+        ? Number(((subtotal * Number(formData.discount_value || 0)) / 100).toFixed(2))
+        : Number(formData.discount_value)
+    })()
+
+    const currency = formData.currency || 'USD'
+    const clientName = selectedClient?.name || 'Client'
+    const safeClientName = clientName.replace(/[^a-zA-Z0-9_-]+/g, '_')
+    const safeInvoiceNumber = (formData.invoice_number || 'INV').replace(/[^a-zA-Z0-9_-]+/g, '_')
+
+    const action = () => {
+      saveInvoicePdf(`Invoice_${safeInvoiceNumber}_${safeClientName}.pdf`, {
+        invoiceNumber: formData.invoice_number || 'INV-000',
+        clientName,
+        issueDate: formData.issue_date || 'TBD',
+        dueDate: formData.due_date || 'TBD',
+        status: getDisplayStatus(formData.status || 'unpaid', formData.due_date || ''),
+        items: lineItems.map((item) => ({
+          description: item.description || 'Item',
+          qty: Number(item.qty) || 0,
+          rate: formatCurrency(Number(item.rate) || 0, currency),
+          amount: formatCurrency(Number(item.amount) || 0, currency),
+        })),
+        subtotal: formatCurrency(subtotal, currency),
+        tax: formatCurrency(taxAmount, currency),
+        discount: formatCurrency(discountAmount, currency),
+        total: formatCurrency(Number(formData.total || 0), currency),
+        paymentMethod: formData.payment_method || 'N/A',
+        paymentInstructions: formData.payment_instructions || 'N/A',
+        notesToClient: formData.notes_to_client || 'N/A',
+      })
+    }
+
+    if (isGuest) {
+      openWithAction(action)
+      return
+    }
+
+    action()
+  }
+
+  const isSaveReadyForPreview = saveStatus === 'saved' && !isDirty
+  const isSaving = saveStatus === 'saving'
+
   return (
-    <div className="flex h-full flex-col gap-3">
+    <div className="relative flex h-full flex-col gap-3 overflow-visible">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h3 className="text-[14px] font-semibold text-[var(--text-soft-strong)]">
+          {isPreviewFocused && (
+            <button
+              type="button"
+              onClick={() => setIsPreviewFocused(false)}
+              className="rounded-[8px] border border-border-base bg-background-base px-3 py-1.5 text-[12px] font-medium text-text-base transition-colors hover:bg-background-muted"
+            >
+              ← Back to form
+            </button>
+          )}
+          <h3 className="text-[14px] font-semibold text-text-base">
             {activeInvoiceId ? 'Edit Invoice' : 'New Invoice'}
           </h3>
           <span
             className={`text-[11px] font-medium transition-opacity duration-300 ${
               saveStatus === 'saving'
-                ? 'text-[var(--text-soft-muted)]'
+                ? 'text-text-muted'
                 : saveStatus === 'saved'
                   ? 'text-[var(--feedback-success-text)]'
                   : saveStatus === 'error'
@@ -159,37 +242,49 @@ export function InvoiceEditor() {
         </div>
 
         <div className="flex items-center gap-2">
+          {isSaveReadyForPreview && (
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              aria-label="Download PDF"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] border border-border-base bg-background-base text-text-base transition-colors hover:bg-background-muted"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 3V14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M8 10L12 14L16 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M4 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+          )}
           <button
             type="button"
-            onClick={handleSave}
-            disabled={!isDirty && saveStatus !== 'idle'}
+            onClick={isSaveReadyForPreview ? handlePreview : () => void handleSave()}
+            disabled={isSaving || (!isDirty && saveStatus !== 'idle' && !isSaveReadyForPreview)}
             className="rounded-[8px] bg-[var(--primary)] px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
           >
-            Save
-          </button>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="text-[var(--text-soft-muted)] hover:text-[var(--text-soft-strong)]"
-            aria-label="Close editor"
-          >
-            <CloseCircleBold size={20} />
+            {isSaving ? 'Saving...' : isSaveReadyForPreview ? 'Preview' : 'Save'}
           </button>
         </div>
       </div>
 
       {/* Two column layout */}
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden lg:grid-cols-2">
-        {/* Left: Form */}
-        <div className="min-h-0 overflow-hidden rounded-[14px] border border-[var(--surface-panel-border)] bg-[var(--surface-panel-strong)] p-4">
-          <InvoiceForm />
-        </div>
-
-        {/* Right: Preview */}
-        <div className="hidden min-h-0 overflow-hidden lg:block">
+      {isPreviewFocused ? (
+        <div className="min-h-0 flex-1 overflow-hidden rounded-[14px] border border-[var(--surface-panel-border)] bg-[var(--surface-panel-strong)] p-4">
           <InvoicePreview />
         </div>
-      </div>
+      ) : (
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden lg:grid-cols-2">
+          {/* Left: Form */}
+          <div className="min-h-0 overflow-hidden rounded-[14px] border border-[var(--surface-panel-border)] bg-[var(--surface-panel-strong)] p-4">
+            <InvoiceForm />
+          </div>
+
+          {/* Right: Preview */}
+          <div className="hidden min-h-0 overflow-hidden lg:block">
+            <InvoicePreview />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

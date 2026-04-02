@@ -17,10 +17,10 @@ function formatCurrency(value: number, currency: string) {
 }
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  unpaid: { bg: 'bg-[rgba(234,179,0,0.12)]', text: 'text-[var(--feedback-warning-text)]', label: 'Unpaid' },
-  paid: { bg: 'bg-feedback-success-base/12', text: 'text-feedback-success-text', label: 'Paid' },
-  overdue: { bg: 'bg-[rgba(220,38,38,0.12)]', text: 'text-[var(--feedback-error-text)]', label: 'Overdue' },
-  archived: { bg: 'bg-[var(--surface-disabled)]', text: 'text-[var(--text-soft-disabled)]', label: 'Archived' },
+  unpaid: { bg: 'bg-feedback-warning-bg', text: 'text-feedback-warning-text', label: 'Unpaid' },
+  paid: { bg: 'bg-feedback-success-bg', text: 'text-feedback-success-text', label: 'Paid' },
+  overdue: { bg: 'bg-feedback-error-bg', text: 'text-feedback-error-text', label: 'Overdue' },
+  archived: { bg: 'bg-background-disabled', text: 'text-text-disabled', label: 'Archived' },
 }
 
 export function InvoicePreview() {
@@ -59,13 +59,13 @@ export function InvoicePreview() {
       {/* Header */}
       <div className="flex items-start justify-between border-b border-[var(--surface-divider)] pb-4">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-soft-muted)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-text-muted">
             Invoice
           </p>
-          <h2 className="mt-2 text-[18px] font-bold leading-tight text-[var(--text-soft-strong)]">
+          <h2 className="mt-2 text-[18px] font-bold leading-tight text-text-base">
             {formData.invoice_number || 'INV-000'}
           </h2>
-          <p className="mt-1 text-[12px] text-[var(--text-soft-muted)]">
+          <p className="mt-1 text-[12px] text-text-muted">
             Issued {formData.issue_date || 'TBD'} &middot; Due {formData.due_date || 'TBD'}
           </p>
         </div>
@@ -77,26 +77,26 @@ export function InvoicePreview() {
       {/* Parties */}
       <div className="mt-4 grid grid-cols-2 gap-4 border-b border-[var(--surface-divider)] pb-4">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
             From
           </p>
-          <p className="mt-1 text-[13px] font-medium text-[var(--text-soft-strong)]">
+          <p className="mt-1 text-[13px] font-medium text-text-base">
             {freelancerName}
           </p>
-          <p className="text-[12px] text-[var(--text-soft-muted)]">{freelancerEmail}</p>
+          <p className="text-[12px] text-text-muted">{freelancerEmail}</p>
         </div>
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
             Bill To
           </p>
-          <p className="mt-1 text-[13px] font-medium text-[var(--text-soft-strong)]">
+          <p className="mt-1 text-[13px] font-medium text-text-base">
             {selectedClient?.name || 'Select a client'}
           </p>
-          <p className="text-[12px] text-[var(--text-soft-muted)]">
+          <p className="text-[12px] text-text-muted">
             {selectedClient?.email || '—'}
           </p>
           {selectedClient?.company_name && (
-            <p className="text-[12px] text-[var(--text-soft-muted)]">
+            <p className="text-[12px] text-text-muted">
               {selectedClient.company_name}
             </p>
           )}
@@ -107,7 +107,7 @@ export function InvoicePreview() {
       {items.length > 0 && (
         <div className="mt-4 border-b border-[var(--surface-divider)] pb-4">
           <div className="overflow-hidden rounded-[8px] border border-[var(--surface-panel-border)]">
-            <div className="grid grid-cols-[1fr_60px_80px_90px] gap-2 border-b border-[var(--surface-panel-border)] bg-[var(--surface-chip)] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">
+            <div className="grid grid-cols-[1fr_60px_80px_90px] gap-2 border-b border-[var(--surface-panel-border)] bg-[var(--surface-chip)] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
               <span>Description</span>
               <span className="text-right">Qty</span>
               <span className="text-right">Rate</span>
@@ -116,7 +116,7 @@ export function InvoicePreview() {
             {items.map((item) => (
               <div
                 key={item.id}
-                className="grid grid-cols-[1fr_60px_80px_90px] gap-2 border-b border-[var(--surface-panel-border)] px-3 py-2 text-[12px] text-[var(--text-soft-strong)] last:border-b-0"
+                className="grid grid-cols-[1fr_60px_80px_90px] gap-2 border-b border-[var(--surface-panel-border)] px-3 py-2 text-[12px] text-text-base last:border-b-0"
               >
                 <span className="truncate">{item.description || 'Untitled'}</span>
                 <span className="text-right">{item.qty}</span>
@@ -130,23 +130,23 @@ export function InvoicePreview() {
 
       {/* Totals */}
       <div className="mt-4 ml-auto w-full max-w-[240px] space-y-1 border-b border-[var(--surface-divider)] pb-4">
-        <div className="flex justify-between text-[12px] text-[var(--text-soft-muted)]">
+        <div className="flex justify-between text-[12px] text-text-muted">
           <span>Subtotal</span>
           <span>{formatCurrency(formData.subtotal || 0, currency)}</span>
         </div>
         {formData.tax_rate != null && formData.tax_rate > 0 && (
-          <div className="flex justify-between text-[12px] text-[var(--text-soft-muted)]">
+          <div className="flex justify-between text-[12px] text-text-muted">
             <span>Tax ({formData.tax_rate}%)</span>
             <span>{formatCurrency(taxAmount, currency)}</span>
           </div>
         )}
         {discountAmount > 0 && (
-          <div className="flex justify-between text-[12px] text-[var(--text-soft-muted)]">
+          <div className="flex justify-between text-[12px] text-text-muted">
             <span>Discount</span>
             <span>-{formatCurrency(discountAmount, currency)}</span>
           </div>
         )}
-        <div className="flex justify-between border-t border-[var(--surface-divider)] pt-1 text-[14px] font-bold text-[var(--text-soft-strong)]">
+        <div className="flex justify-between border-t border-[var(--surface-divider)] pt-1 text-[14px] font-bold text-text-base">
           <span>Total</span>
           <span className="text-feedback-success-text">{formatCurrency(formData.total || 0, currency)}</span>
         </div>
@@ -155,16 +155,16 @@ export function InvoicePreview() {
       {/* Payment info */}
       {(formData.payment_method || formData.payment_instructions) && (
         <div className="mt-4 border-b border-[var(--surface-divider)] pb-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
             Payment
           </p>
           {formData.payment_method && (
-            <p className="mt-2 text-[13px] text-[var(--text-soft-strong)]">
+            <p className="mt-2 text-[13px] text-text-base">
               {formData.payment_method}
             </p>
           )}
           {formData.payment_instructions && (
-            <p className="mt-1 whitespace-pre-line text-[12px] leading-[18px] text-[var(--text-soft-muted)]">
+            <p className="mt-1 whitespace-pre-line text-[12px] leading-[18px] text-text-muted">
               {formData.payment_instructions}
             </p>
           )}
@@ -174,10 +174,10 @@ export function InvoicePreview() {
       {/* Notes */}
       {formData.notes_to_client && (
         <div className="mt-4 border-b border-[var(--surface-divider)] pb-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
             Notes
           </p>
-          <p className="mt-2 whitespace-pre-line text-[13px] leading-[20px] text-[var(--text-soft-strong)]">
+          <p className="mt-2 whitespace-pre-line text-[13px] leading-[20px] text-text-base">
             {formData.notes_to_client}
           </p>
         </div>
@@ -185,7 +185,7 @@ export function InvoicePreview() {
 
       {/* Footer */}
       <div className="mt-6 text-center">
-        <p className="text-[10px] text-[var(--text-soft-subtle)]">
+        <p className="text-[10px] text-text-muted">
           Generated with Stacklite
         </p>
       </div>

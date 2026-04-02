@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { Select } from '@/components/ui/Select'
 import { useInvoiceStore } from '@/stores/invoiceStore'
 import { useClients } from '@/hooks/useClients'
 import { useContracts } from '@/hooks/useContracts'
@@ -33,23 +34,23 @@ export function ClientProjectSection() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-[14px] font-semibold text-[var(--text-soft-strong)]">
+        <h3 className="text-[14px] font-semibold text-text-base">
           Client & Project
         </h3>
-        <p className="mt-0.5 text-[12px] text-[var(--text-soft-muted)]">
+        <p className="mt-0.5 text-[12px] text-text-muted">
           Select the client and link an existing contract if applicable.
         </p>
       </div>
 
       {/* Client dropdown */}
       <div>
-        <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+        <label className="mb-1 block text-[12px] font-medium text-text-base">
           Client
         </label>
-        <select
+        <Select
           value={formData.client_id || ''}
           onChange={(e) => handleClientChange(e.target.value)}
-          className="theme-shell-field h-8 w-full rounded-[6px] px-3 text-[13px] focus-visible:border-[var(--primary)] focus-visible:outline-none"
+          className="h-8 rounded-[6px] px-3 text-[13px]"
         >
           <option value="">Choose a client</option>
           {clients.map((client) => (
@@ -57,9 +58,9 @@ export function ClientProjectSection() {
               {client.name}
             </option>
           ))}
-        </select>
+        </Select>
         {clients.length === 0 && (
-          <p className="mt-1 text-[11px] text-[var(--text-soft-muted)]">
+          <p className="mt-1 text-[11px] text-text-muted">
             Add a client in the Client Manager first.
           </p>
         )}
@@ -68,13 +69,13 @@ export function ClientProjectSection() {
       {/* Reference contract — only shown when client has contracts */}
       {clientContracts.length > 0 && (
         <div>
-          <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+          <label className="mb-1 block text-[12px] font-medium text-text-base">
             Reference Contract
           </label>
-          <select
+          <Select
             value={formData.contract_id || ''}
             onChange={(e) => handleContractChange(e.target.value)}
-            className="theme-shell-field h-8 w-full rounded-[6px] px-3 text-[13px] focus-visible:border-[var(--primary)] focus-visible:outline-none"
+            className="h-8 rounded-[6px] px-3 text-[13px]"
           >
             <option value="">None</option>
             {clientContracts.map((contract) => (
@@ -82,8 +83,8 @@ export function ClientProjectSection() {
                 {contract.project_name || contract.contract_number}
               </option>
             ))}
-          </select>
-          <p className="mt-1 text-[11px] text-[var(--text-soft-muted)]">
+          </Select>
+          <p className="mt-1 text-[11px] text-text-muted">
             Optional — links this invoice to an existing contract.
           </p>
         </div>
@@ -92,7 +93,7 @@ export function ClientProjectSection() {
       {/* Invoice number + dates */}
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2">
-          <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+          <label className="mb-1 block text-[12px] font-medium text-text-base">
             Invoice Number
           </label>
           <input
@@ -105,7 +106,7 @@ export function ClientProjectSection() {
         </div>
 
         <div>
-          <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+          <label className="mb-1 block text-[12px] font-medium text-text-base">
             Issue Date
           </label>
           <input
@@ -117,7 +118,7 @@ export function ClientProjectSection() {
         </div>
 
         <div>
-          <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+          <label className="mb-1 block text-[12px] font-medium text-text-base">
             Due Date
           </label>
           <input

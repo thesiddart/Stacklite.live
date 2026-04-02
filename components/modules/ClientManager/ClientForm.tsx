@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
+import { Select } from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
 import { useCreateClient, useUpdateClient } from '@/hooks/useClients'
 import { clientSchema, updateClientSchema } from '@/lib/validations/client'
@@ -41,6 +42,71 @@ interface ClientFormState {
   metadata: string
   last_contacted_at: string
   notes: string
+}
+
+const COUNTRY_STATE_MAP: Record<string, string[]> = {
+  'United States': [
+    'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
+    'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
+    'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan',
+    'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada',
+    'New Hampshire', 'New Jersey', 'New Mexico', 'New York', 'North Carolina',
+    'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island',
+    'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont',
+    'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming',
+  ],
+  India: [
+    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa',
+    'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala',
+    'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland',
+    'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
+    'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Andaman and Nicobar Islands',
+    'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Delhi',
+    'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry',
+  ],
+  Nepal: [
+    'Koshi', 'Madhesh', 'Bagmati', 'Gandaki', 'Lumbini', 'Karnali', 'Sudurpashchim',
+  ],
+}
+
+const CURRENCY_OPTIONS = [
+  { value: 'USD', label: 'USD - US Dollar', flag: '🇺🇸' },
+  { value: 'NPR', label: 'NPR - Nepalese Rupee', flag: '🇳🇵' },
+  { value: 'INR', label: 'INR - Indian Rupee', flag: '🇮🇳' },
+]
+
+const COUNTRY_CODES = [
+  'US', 'IN', 'NP', 'CA', 'GB', 'AU', 'DE', 'FR', 'JP', 'SG', 'AE', 'NL', 'SE', 'CH', 'NZ',
+]
+
+function getCountryOptions(): string[] {
+  if (typeof Intl === 'undefined' || typeof Intl.DisplayNames === 'undefined') {
+    return ['United States', 'India', 'Nepal']
+  }
+
+  const displayNames = new Intl.DisplayNames(['en'], { type: 'region' })
+  const regions = COUNTRY_CODES
+
+  const names = regions
+    .map((code) => displayNames.of(code))
+    .filter((name): name is string => Boolean(name))
+    .sort((a, b) => a.localeCompare(b))
+
+  return names.length > 0 ? names : ['United States', 'India', 'Nepal']
+}
+
+function getCurrentCountryName(): string | null {
+  if (typeof navigator === 'undefined' || typeof Intl === 'undefined' || typeof Intl.DisplayNames === 'undefined') {
+    return null
+  }
+
+  const locale = navigator.language || ''
+  const regionCode = locale.includes('-') ? locale.split('-')[1] : ''
+
+  if (!regionCode) return null
+
+  const displayNames = new Intl.DisplayNames(['en'], { type: 'region' })
+  return displayNames.of(regionCode.toUpperCase()) || null
 }
 
 const toDateTimeLocal = (value: string | null) => {
@@ -116,8 +182,6 @@ export function ClientForm({
 }: ClientFormProps) {
   const authInputClassName =
     'theme-shell-field h-9 rounded-[6px] pl-4 pr-4 py-1 text-[14px] leading-5 focus-visible:border-[var(--primary)] focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-none'
-  const authSelectClassName =
-    'theme-shell-field h-9 w-full appearance-none rounded-[6px] pl-4 pr-10 py-1 text-[14px] leading-5 focus-visible:border-[var(--primary)] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-none'
   const authTextareaClassName =
     'theme-shell-field rounded-[6px] pl-4 pr-4 py-2 text-[14px] leading-5 focus-visible:border-[var(--primary)] focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-none'
 
@@ -125,6 +189,9 @@ export function ClientForm({
   const updateMutation = useUpdateClient()
   const [formData, setFormData] = useState<ClientFormState>(() => getInitialFormData(mode, client))
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [countryOptions, setCountryOptions] = useState<string[]>(() => getCountryOptions())
+
+  const stateOptions = COUNTRY_STATE_MAP[formData.country] || []
 
   useEffect(() => {
     if (!isOpen) {
@@ -134,6 +201,23 @@ export function ClientForm({
     setFormData(getInitialFormData(mode, client))
     setErrors({})
   }, [client, isOpen, mode])
+
+  useEffect(() => {
+    setCountryOptions(getCountryOptions())
+  }, [])
+
+  useEffect(() => {
+    if (!isOpen || mode !== 'create') return
+
+    const currentCountry = getCurrentCountryName()
+
+    if (currentCountry && !formData.country) {
+      setFormData((prev) => ({ ...prev, country: currentCountry }))
+      if (!countryOptions.includes(currentCountry)) {
+        setCountryOptions((prev) => [currentCountry, ...prev].sort((a, b) => a.localeCompare(b)))
+      }
+    }
+  }, [countryOptions, formData.country, isOpen, mode])
   
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -144,7 +228,17 @@ export function ClientForm({
         ? e.target.checked
         : e.target.value
 
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    setFormData((prev) => {
+      if (name === 'country') {
+        return {
+          ...prev,
+          country: value as string,
+          state_province: '',
+        }
+      }
+
+      return { ...prev, [name]: value }
+    })
     // Clear error for this field
     if (errors[name]) {
       setErrors((prev) => {
@@ -305,33 +399,23 @@ export function ClientForm({
         <section className="space-y-3">
           <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-text-base">Company</h3>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-text-base">Company Type</label>
-              <div className="relative">
-                <select
-                  name="company_type"
-                  value={formData.company_type}
-                  onChange={handleChange}
-                  className={authSelectClassName}
-                >
-                  <option value="">Select company type</option>
-                  <option value="individual">Individual</option>
-                  <option value="sole_proprietorship">Sole Proprietorship</option>
-                  <option value="llc">LLC</option>
-                  <option value="corporation">Corporation</option>
-                  <option value="partnership">Partnership</option>
-                  <option value="nonprofit">Nonprofit</option>
-                  <option value="agency">Agency</option>
-                  <option value="other">Other</option>
-                </select>
-                <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-text-base" aria-hidden>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-              </div>
-              {errors.company_type && <p className="mt-xs text-sm text-feedback-error-text">{errors.company_type}</p>}
-            </div>
+            <Select
+              label="Company Type"
+              name="company_type"
+              value={formData.company_type}
+              onChange={handleChange}
+              error={errors.company_type}
+            >
+              <option value="">Select company type</option>
+              <option value="individual">Individual</option>
+              <option value="sole_proprietorship">Sole Proprietorship</option>
+              <option value="llc">LLC</option>
+              <option value="corporation">Corporation</option>
+              <option value="partnership">Partnership</option>
+              <option value="nonprofit">Nonprofit</option>
+              <option value="agency">Agency</option>
+              <option value="other">Other</option>
+            </Select>
             <Input
               label="Industry"
               name="industry"
@@ -392,26 +476,38 @@ export function ClientForm({
             />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Input
+            <Select
               label="Country"
               name="country"
               value={formData.country}
               onChange={handleChange}
               error={errors.country}
-              placeholder="United States"
-              className={authInputClassName}
               required
-            />
-            <Input
+            >
+              <option value="">Select country</option>
+              {countryOptions.map((country) => (
+                <option key={country} value={country}>
+                  {country}
+                </option>
+              ))}
+            </Select>
+
+            <Select
               label="State/Province"
               name="state_province"
               value={formData.state_province}
               onChange={handleChange}
               error={errors.state_province}
-              placeholder="California"
-              className={authInputClassName}
+              disabled={!formData.country || stateOptions.length === 0}
               required
-            />
+            >
+              <option value="">{!formData.country ? 'Select country first' : 'Select state/province'}</option>
+              {stateOptions.map((state) => (
+                <option key={state} value={state}>
+                  {state}
+                </option>
+              ))}
+            </Select>
           </div>
           <Textarea
             label="Address"
@@ -431,53 +527,51 @@ export function ClientForm({
             Billing and Preferences
           </h3>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Input
+            <Select
               label="Payment Currency"
               name="payment_currency"
               value={formData.payment_currency}
               onChange={handleChange}
               error={errors.payment_currency}
-              placeholder="USD"
-              className={authInputClassName}
               required
-            />
-            <Input
-              label="Payment Terms"
-              name="payment_terms"
-              value={formData.payment_terms}
-              onChange={handleChange}
-              error={errors.payment_terms}
-              placeholder="Net 30"
-              className={authInputClassName}
-              required
-            />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+            >
+              {CURRENCY_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.flag} {option.label}
+                </option>
+              ))}
+            </Select>
+
             <div>
               <label className="mb-2 block text-sm font-medium text-text-base">
-                Tags <span className="text-feedback-error-base">*</span>
+                Payment Terms <span className="text-text-brand">*</span>
               </label>
-              <div className="relative">
-                <select
-                  name="tags"
-                  value={formData.tags}
-                  onChange={handleChange}
-                  className={authSelectClassName}
-                  required
-                >
-                  <option value="">Select tag</option>
-                  <option value="design">design</option>
-                  <option value="devlopment">devlopment</option>
-                  <option value="custom">custom</option>
-                </select>
-                <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-text-base" aria-hidden>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-              </div>
-              {errors.tags && <p className="mt-xs text-sm text-feedback-error-text">{errors.tags}</p>}
+              <Input
+                label=""
+                name="payment_terms"
+                value={formData.payment_terms}
+                onChange={handleChange}
+                error={errors.payment_terms}
+                placeholder="Net 30"
+                className={authInputClassName}
+                required
+              />
             </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Select
+              label="Tags"
+              name="tags"
+              value={formData.tags}
+              onChange={handleChange}
+              error={errors.tags}
+              required
+            >
+              <option value="">Select tag</option>
+              <option value="design">design</option>
+              <option value="devlopment">devlopment</option>
+              <option value="custom">custom</option>
+            </Select>
             <Input
               label="Last Contacted"
               name="last_contacted_at"
@@ -512,7 +606,7 @@ export function ClientForm({
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="h-10 rounded-full border border-[var(--primary)] bg-transparent px-4 text-sm font-medium text-[var(--text-soft-subtle)] transition-all hover:bg-[var(--surface-overlay)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-10 rounded-full border border-[var(--primary)] bg-transparent px-4 text-sm font-medium text-text-muted transition-all hover:bg-[var(--surface-overlay)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             Cancel
           </button>

@@ -240,13 +240,13 @@ export function TimeTracker({ variant = 'page', onCollapse }: TimeTrackerProps) 
           <div className="theme-shell-divider mt-[10px] h-px w-full" />
 
           {error && (
-            <div className="mt-4 rounded-[10px] bg-[var(--surface-danger-soft)] px-3 py-2 text-[13px] text-[var(--text-danger-soft)]">
+            <div className="mt-4 rounded-[10px] bg-feedback-error-bg px-3 py-2 text-[13px] text-feedback-error-text">
               {error instanceof Error ? error.message : 'Failed to load time entries.'}
             </div>
           )}
 
           {actionError && (
-            <div className="mt-4 rounded-[10px] bg-[var(--surface-danger-soft)] px-3 py-2 text-[13px] text-[var(--text-danger-soft)]">
+            <div className="mt-4 rounded-[10px] bg-feedback-error-bg px-3 py-2 text-[13px] text-feedback-error-text">
               {actionError}
             </div>
           )}

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { Select } from '@/components/ui/Select'
 import { useInvoiceStore } from '@/stores/invoiceStore'
 import { convertCurrency, formatNPR } from '@/lib/api/frankfurter'
 
@@ -53,17 +54,17 @@ export function PaymentDetailsSection() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-[14px] font-semibold text-[var(--text-soft-strong)]">
+        <h3 className="text-[14px] font-semibold text-text-base">
           Payment Details
         </h3>
-        <p className="mt-0.5 text-[12px] text-[var(--text-soft-muted)]">
+        <p className="mt-0.5 text-[12px] text-text-muted">
           Currency, tax, discount, and payment instructions.
         </p>
       </div>
 
       {/* Currency */}
       <div>
-        <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+        <label className="mb-1 block text-[12px] font-medium text-text-base">
           Currency
         </label>
         <input
@@ -91,7 +92,7 @@ export function PaymentDetailsSection() {
         </button>
         {showTax && (
           <div className="mt-2">
-            <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+            <label className="mb-1 block text-[12px] font-medium text-text-base">
               Tax Rate (%)
             </label>
             <input
@@ -126,20 +127,20 @@ export function PaymentDetailsSection() {
         {showDiscount && (
           <div className="mt-2 flex items-end gap-3">
             <div>
-              <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+              <label className="mb-1 block text-[12px] font-medium text-text-base">
                 Type
               </label>
-              <select
+              <Select
                 value={formData.discount_type || 'flat'}
                 onChange={(e) => updateFormData({ discount_type: e.target.value as 'flat' | 'percent' })}
-                className="theme-shell-field h-8 rounded-[6px] px-3 text-[13px] focus-visible:border-[var(--primary)] focus-visible:outline-none"
+                className="h-8 rounded-[6px] px-3 text-[13px]"
               >
                 <option value="flat">Flat</option>
                 <option value="percent">Percent</option>
-              </select>
+              </Select>
             </div>
             <div>
-              <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+              <label className="mb-1 block text-[12px] font-medium text-text-base">
                 Value
               </label>
               <input
@@ -160,7 +161,7 @@ export function PaymentDetailsSection() {
 
       {/* Total */}
       <div className="rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-chip)] p-3">
-        <div className="flex items-center justify-between text-[16px] font-bold text-[var(--text-soft-strong)]">
+        <div className="flex items-center justify-between text-[16px] font-bold text-text-base">
           <span>Total</span>
           <span>{formatCurrency(formData.total || 0, currency)}</span>
         </div>
@@ -170,7 +171,7 @@ export function PaymentDetailsSection() {
           </p>
         )}
         {isConverting && (
-          <p className="mt-1 text-right text-[11px] text-[var(--text-soft-subtle)]">
+          <p className="mt-1 text-right text-[11px] text-text-muted">
             Converting...
           </p>
         )}
@@ -178,7 +179,7 @@ export function PaymentDetailsSection() {
 
       {/* Payment method + instructions */}
       <div>
-        <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+        <label className="mb-1 block text-[12px] font-medium text-text-base">
           Payment Method
         </label>
         <input
@@ -191,7 +192,7 @@ export function PaymentDetailsSection() {
       </div>
 
       <div>
-        <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+        <label className="mb-1 block text-[12px] font-medium text-text-base">
           Payment Instructions
         </label>
         <textarea

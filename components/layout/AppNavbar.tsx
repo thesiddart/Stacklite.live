@@ -32,13 +32,14 @@ function formatWorkspaceTime(date: Date): string {
 }
 
 function AnalogClockIcon({ size = 16 }: { size?: number }) {
-  const [now, setNow] = useState(() => new Date())
+  const [seconds, setSeconds] = useState<number | null>(null)
 
   useEffect(() => {
     let frameId = 0
 
     const tick = () => {
-      setNow(new Date())
+      const now = new Date()
+      setSeconds(now.getSeconds() + now.getMilliseconds() / 1000)
       frameId = window.requestAnimationFrame(tick)
     }
 
@@ -47,8 +48,8 @@ function AnalogClockIcon({ size = 16 }: { size?: number }) {
     return () => window.cancelAnimationFrame(frameId)
   }, [])
 
-  const seconds = now.getSeconds() + now.getMilliseconds() / 1000
-  const secondAngle = seconds * 6
+  // Keep first render deterministic to avoid SSR/client hydration mismatch.
+  const secondAngle = (seconds ?? 0) * 6
 
   return (
     <svg
@@ -61,7 +62,7 @@ function AnalogClockIcon({ size = 16 }: { size?: number }) {
       <circle cx="12" cy="12" r="9" className="stroke-[var(--primary)]" strokeWidth="1.5" fill="none" opacity="0.85" />
 
       <g style={{ transform: `rotate(${secondAngle}deg)`, transformOrigin: '12px 12px' }}>
-        <line x1="12" y1="12" x2="12" y2="4.2" stroke="rgb(217 99 54)" strokeWidth="1.2" strokeLinecap="round" />
+        <line x1="12" y1="12" x2="12" y2="4.2" stroke="var(--tertiary)" strokeWidth="1.2" strokeLinecap="round" />
       </g>
 
       <circle cx="12" cy="12" r="1.2" className="fill-text-base" />
@@ -81,6 +82,8 @@ type AppNavbarProps = {
   connectDisabled?: boolean
   onConnectGoogle?: () => void
   onConnectGithub?: () => void
+  onOpenPrivacyPolicy?: () => void
+  onDownloadReport?: () => void
 }
 
 export function AppNavbar({
@@ -95,6 +98,8 @@ export function AppNavbar({
   connectDisabled = false,
   onConnectGoogle,
   onConnectGithub,
+  onOpenPrivacyPolicy,
+  onDownloadReport,
 }: AppNavbarProps) {
   const pathname = usePathname()
   const { user } = useAuth()
@@ -330,16 +335,16 @@ export function AppNavbar({
                     onClick={() => handleThemeChange('dark')}
                     className={`overflow-hidden rounded-[18px] border bg-[var(--surface-card)] text-left transition-all duration-200 ${
                       selectedTheme === 'dark'
-                        ? 'border-[#1f275f]'
-                        : 'border-[rgba(31,39,95,0.12)] hover:border-[rgba(31,39,95,0.28)]'
+                        ? 'border-border-brand'
+                        : 'border-border-muted hover:border-border-base'
                     }`}
                   >
-                    <div className="flex h-[92px] items-center justify-center bg-[radial-gradient(circle_at_25%_20%,rgba(130,146,255,0.45),transparent_22%),linear-gradient(135deg,#28306d_0%,#131a46_100%)]">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,#d8c8ff_0%,#ab8dff_100%)] text-white shadow-[0_12px_24px_rgba(42,50,118,0.32)]">
+                    <div className="flex h-[92px] items-center justify-center bg-background-emphasis">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-button-primary text-button-primaryFg shadow-md">
                         <ColorfilterBold size={28} />
                       </div>
                     </div>
-                    <div className="bg-[var(--surface-card)] px-4 py-4 text-[14px] font-semibold leading-none text-[var(--text-soft-strong)]">
+                    <div className="bg-[var(--surface-card)] px-4 py-4 text-[14px] font-semibold leading-none text-text-base">
                       Dark
                     </div>
                   </button>
@@ -350,15 +355,15 @@ export function AppNavbar({
                     className={`overflow-hidden rounded-[18px] border bg-[var(--surface-card)] text-left transition-all duration-200 ${
                       selectedTheme === 'light'
                         ? 'border-[var(--primary)]'
-                        : 'border-[rgba(121,98,244,0.18)] hover:border-[rgba(121,98,244,0.38)]'
+                        : 'border-border-muted hover:border-border-base'
                     }`}
                   >
-                    <div className="flex h-[92px] items-center justify-center bg-[radial-gradient(circle_at_35%_30%,rgba(255,235,200,0.8),transparent_24%),linear-gradient(180deg,#fff3dc_0%,#efdfbb_100%)]">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,#efe5ff_0%,#c1b2f0_100%)] text-[#6753cb] shadow-[0_12px_24px_rgba(201,171,132,0.22)]">
+                    <div className="flex h-[92px] items-center justify-center bg-background-highlight">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-button-secondary text-button-secondaryFg shadow-md">
                         <ColorfilterBold size={28} />
                       </div>
                     </div>
-                    <div className="bg-[var(--surface-card)] px-4 py-4 text-[14px] font-semibold leading-none text-[var(--text-soft-strong)]">
+                    <div className="bg-[var(--surface-card)] px-4 py-4 text-[14px] font-semibold leading-none text-text-base">
                       Light
                     </div>
                   </button>
@@ -389,9 +394,9 @@ export function AppNavbar({
                   <span>Music</span>
                 </div>
                 <div className="mt-[10px] space-y-2">
-                  <div className="h-2.5 w-24 animate-pulse rounded bg-[#e8e4f6]" />
-                  <div className="h-2.5 w-32 animate-pulse rounded bg-[#eceaf6]" />
-                  <div className="h-2.5 w-20 animate-pulse rounded bg-[#f0eef8]" />
+                  <div className="h-2.5 w-24 animate-pulse rounded bg-background-muted" />
+                  <div className="h-2.5 w-32 animate-pulse rounded bg-background-muted" />
+                  <div className="h-2.5 w-20 animate-pulse rounded bg-background-muted" />
                 </div>
               </div>
             )}
@@ -416,7 +421,7 @@ export function AppNavbar({
               className={`flex h-8 w-8 items-center justify-center rounded-[8px] bg-[var(--primary)] text-white ${
                 showProfileActiveBorder && isProfileMenuOpen
                   ? 'border border-[var(--tertiary)]'
-                  : 'border border-[rgba(121,98,244,0.46)]'
+                  : 'border border-border-brand'
               }`}
             >
               {profilePhoto ? (
@@ -439,7 +444,7 @@ export function AppNavbar({
                 aria-hidden={!isProfileMenuOpen}
                 className={`theme-shell-card absolute right-0 top-[48px] z-50 overflow-hidden rounded-[10px] p-4 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                   isProfileMenuOpen
-                    ? `${profileView === 'details' ? 'h-[420px] w-[320px]' : 'h-[182px] w-[200px]'} pointer-events-auto opacity-100 translate-y-0 scale-100`
+                    ? `${profileView === 'details' ? 'h-[420px] w-[320px]' : 'h-auto w-[220px]'} pointer-events-auto opacity-100 translate-y-0 scale-100`
                     : 'pointer-events-none h-[140px] w-[180px] opacity-0 -translate-y-2 scale-[0.98]'
                 }`}
               >
@@ -475,7 +480,7 @@ export function AppNavbar({
 
                         <label
                           htmlFor={photoInputId}
-                          className="theme-shell-chip absolute right-0 top-0 inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.1)]"
+                          className="theme-shell-chip absolute right-0 top-0 inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-full shadow-sm"
                         >
                           <EditBold size={14} />
                         </label>
@@ -484,7 +489,7 @@ export function AppNavbar({
                           type="button"
                           onClick={() => setPhotoPreview(null)}
                           aria-label="Remove profile photo"
-                          className="absolute bottom-0 right-0 inline-flex h-6 w-6 items-center justify-center rounded-full bg-[var(--surface-card)] text-[#d14343] shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
+                          className="absolute bottom-0 right-0 inline-flex h-6 w-6 items-center justify-center rounded-full bg-[var(--surface-card)] text-feedback-error-text shadow-sm"
                         >
                           <TrashBold size={14} />
                         </button>
@@ -576,7 +581,7 @@ export function AppNavbar({
                       </div>
 
                       {(profileError || profileSuccess) && (
-                        <p className={`text-[12px] leading-none ${profileError ? 'text-[#d14343]' : 'text-[#2f8f4e]'}`}>
+                        <p className={`text-[12px] leading-none ${profileError ? 'text-feedback-error-text' : 'text-feedback-success-text'}`}>
                           {profileError || profileSuccess}
                         </p>
                       )}
@@ -615,9 +620,35 @@ export function AppNavbar({
 
                     <div className="theme-shell-divider h-px w-full" />
 
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onOpenPrivacyPolicy?.()
+                        setIsProfileMenuOpen(false)
+                        setProfileView('menu')
+                      }}
+                      className="flex h-8 w-full items-center gap-1 rounded-[8px] px-2 text-left transition-colors duration-200 hover:bg-[var(--surface-chip)]"
+                    >
+                      <span className="text-[14px] font-medium leading-none">Privacy Policy</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onDownloadReport?.()
+                        setIsProfileMenuOpen(false)
+                        setProfileView('menu')
+                      }}
+                      className="flex h-8 w-full items-center gap-1 rounded-[8px] px-2 text-left transition-colors duration-200 hover:bg-[var(--surface-chip)]"
+                    >
+                      <span className="text-[14px] font-medium leading-none">Download Report</span>
+                    </button>
+
+                    <div className="theme-shell-divider h-px w-full" />
+
                     <div className="px-2">
                       <p className="text-[14px] font-medium leading-[19px]">Connect to</p>
-                      <div className="mt-1 flex items-center gap-3 text-[#2b2b2b]">
+                      <div className="mt-1 flex items-center gap-3 text-text-base">
                         <button
                           type="button"
                           onClick={onConnectGithub}

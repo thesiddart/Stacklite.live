@@ -51,6 +51,7 @@ export default async function SharedInvoicePage({
     .from('invoices')
     .select('*')
     .eq('share_token', token)
+    .neq('status', 'draft')
     .maybeSingle()
 
   let invoice = invoiceData
@@ -71,6 +72,7 @@ export default async function SharedInvoicePage({
         .from('invoices')
         .select('*')
         .eq('share_token', token)
+        .neq('status', 'draft')
         .maybeSingle()
 
       invoice = adminInvoice
@@ -79,12 +81,12 @@ export default async function SharedInvoicePage({
 
   if (!invoice) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f9f9f9]">
+      <div className="flex min-h-screen items-center justify-center bg-background-muted">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-[#1a163d]">
+          <h1 className="text-2xl font-semibold text-text-base">
             Invoice not found
           </h1>
-          <p className="mt-2 text-sm text-[#7c7288]">
+          <p className="mt-2 text-sm text-text-muted">
             This link may have expired or the invoice is unavailable.
           </p>
         </div>
@@ -135,12 +137,12 @@ export default async function SharedInvoicePage({
 
   const statusColor =
     displayStatus === 'paid'
-      ? 'bg-[rgba(0,126,0,0.12)] text-[#007e00]'
+      ? 'bg-feedback-success-bg text-feedback-success-text'
       : displayStatus === 'overdue'
-        ? 'bg-[rgba(220,38,38,0.12)] text-[#dc2626]'
+        ? 'bg-feedback-error-bg text-feedback-error-text'
         : displayStatus === 'unpaid'
-          ? 'bg-[rgba(234,179,0,0.12)] text-[#b38600]'
-          : 'bg-[#f0edf8] text-[#5c5c5c]'
+          ? 'bg-feedback-warning-bg text-feedback-warning-text'
+          : 'bg-background-muted text-text-muted'
 
   const taxAmount = typedInvoice.tax_rate
     ? parseFloat(((typedInvoice.subtotal * typedInvoice.tax_rate) / 100).toFixed(2))
@@ -154,7 +156,7 @@ export default async function SharedInvoicePage({
   })()
 
   return (
-    <div className="min-h-screen bg-[#f9f9f9]">
+    <div className="min-h-screen bg-background-muted">
       <div className="mx-auto max-w-[680px] px-6 py-12">
         {/* Logo */}
         <div className="mb-8">
@@ -168,17 +170,17 @@ export default async function SharedInvoicePage({
         </div>
 
         {/* Document */}
-        <div className="rounded-[16px] border border-[#e8e4f6] bg-white p-8 shadow-sm">
+        <div className="rounded-[16px] border border-border-muted bg-background-base p-8 shadow-sm">
           {/* Header */}
-          <div className="flex items-start justify-between border-b border-[#e8e4f6] pb-6">
+          <div className="flex items-start justify-between border-b border-border-muted pb-6">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7c7288]">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-text-muted">
                 Invoice
               </p>
-              <h1 className="mt-2 text-[22px] font-bold leading-tight text-[#1a163d]">
+              <h1 className="mt-2 text-[22px] font-bold leading-tight text-text-base">
                 {typedInvoice.invoice_number}
               </h1>
-              <p className="mt-1 text-[13px] text-[#7c7288]">
+              <p className="mt-1 text-[13px] text-text-muted">
                 Issued {typedInvoice.issue_date} &middot; Due {typedInvoice.due_date}
               </p>
             </div>
@@ -189,27 +191,27 @@ export default async function SharedInvoicePage({
 
           {/* Client */}
           {client && (
-            <div className="mt-6 border-b border-[#e8e4f6] pb-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7c7288]">
+            <div className="mt-6 border-b border-border-muted pb-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
                 Bill To
               </p>
-              <p className="mt-2 text-[14px] font-medium text-[#1a163d]">
+              <p className="mt-2 text-[14px] font-medium text-text-base">
                 {client.name}
               </p>
               {client.email && (
-                <p className="text-[13px] text-[#7c7288]">{client.email}</p>
+                <p className="text-[13px] text-text-muted">{client.email}</p>
               )}
               {client.company_name && (
-                <p className="text-[13px] text-[#7c7288]">{client.company_name}</p>
+                <p className="text-[13px] text-text-muted">{client.company_name}</p>
               )}
             </div>
           )}
 
           {/* Line items table */}
           {lineItems.length > 0 && (
-            <div className="mt-6 border-b border-[#e8e4f6] pb-6">
-              <div className="overflow-hidden rounded-[10px] border border-[#e8e4f6]">
-                <div className="grid grid-cols-[1fr_70px_100px_110px] gap-2 border-b border-[#e8e4f6] bg-[#f6f4fc] px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7c7288]">
+            <div className="mt-6 border-b border-border-muted pb-6">
+              <div className="overflow-hidden rounded-[10px] border border-border-muted">
+                <div className="grid grid-cols-[1fr_70px_100px_110px] gap-2 border-b border-border-muted bg-background-highlight px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
                   <span>Description</span>
                   <span className="text-right">Qty</span>
                   <span className="text-right">Rate</span>
@@ -218,7 +220,7 @@ export default async function SharedInvoicePage({
                 {lineItems.map((item, index) => (
                   <div
                     key={item.id || index}
-                    className="grid grid-cols-[1fr_70px_100px_110px] gap-2 border-b border-[#e8e4f6] px-4 py-3 text-[14px] text-[#1a163d] last:border-b-0"
+                    className="grid grid-cols-[1fr_70px_100px_110px] gap-2 border-b border-border-muted px-4 py-3 text-[14px] text-text-base last:border-b-0"
                   >
                     <span>{item.description}</span>
                     <span className="text-right">{item.qty}</span>
@@ -231,24 +233,24 @@ export default async function SharedInvoicePage({
           )}
 
           {/* Totals */}
-          <div className="mt-6 ml-auto w-full max-w-[280px] space-y-2 border-b border-[#e8e4f6] pb-6">
-            <div className="flex justify-between text-[13px] text-[#7c7288]">
+          <div className="mt-6 ml-auto w-full max-w-[280px] space-y-2 border-b border-border-muted pb-6">
+            <div className="flex justify-between text-[13px] text-text-muted">
               <span>Subtotal</span>
               <span>{formatCurrency(typedInvoice.subtotal, typedInvoice.currency)}</span>
             </div>
             {taxAmount > 0 && (
-              <div className="flex justify-between text-[13px] text-[#7c7288]">
+              <div className="flex justify-between text-[13px] text-text-muted">
                 <span>Tax ({typedInvoice.tax_rate}%)</span>
                 <span>{formatCurrency(taxAmount, typedInvoice.currency)}</span>
               </div>
             )}
             {discountAmount > 0 && (
-              <div className="flex justify-between text-[13px] text-[#7c7288]">
+              <div className="flex justify-between text-[13px] text-text-muted">
                 <span>Discount</span>
                 <span>-{formatCurrency(discountAmount, typedInvoice.currency)}</span>
               </div>
             )}
-            <div className="flex justify-between border-t border-[#e8e4f6] pt-2 text-[18px] font-bold text-[#1a163d]">
+            <div className="flex justify-between border-t border-border-muted pt-2 text-[18px] font-bold text-text-base">
               <span>Total</span>
               <span>{formatCurrency(typedInvoice.total, typedInvoice.currency)}</span>
             </div>
@@ -256,17 +258,17 @@ export default async function SharedInvoicePage({
 
           {/* Payment info */}
           {(typedInvoice.payment_method || typedInvoice.payment_instructions) && (
-            <div className="mt-6 border-b border-[#e8e4f6] pb-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7c7288]">
+            <div className="mt-6 border-b border-border-muted pb-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
                 Payment
               </p>
               {typedInvoice.payment_method && (
-                <p className="mt-2 text-[14px] font-medium text-[#1a163d]">
+                <p className="mt-2 text-[14px] font-medium text-text-base">
                   {typedInvoice.payment_method}
                 </p>
               )}
               {typedInvoice.payment_instructions && (
-                <p className="mt-1 whitespace-pre-line text-[13px] leading-[20px] text-[#7c7288]">
+                <p className="mt-1 whitespace-pre-line text-[13px] leading-[20px] text-text-muted">
                   {typedInvoice.payment_instructions}
                 </p>
               )}
@@ -275,11 +277,11 @@ export default async function SharedInvoicePage({
 
           {/* Notes (never show internal_notes) */}
           {typedInvoice.notes_to_client && (
-            <div className="mt-6 border-b border-[#e8e4f6] pb-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7c7288]">
+            <div className="mt-6 border-b border-border-muted pb-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
                 Notes
               </p>
-              <p className="mt-2 whitespace-pre-line text-[14px] leading-[22px] text-[#1a163d]">
+              <p className="mt-2 whitespace-pre-line text-[14px] leading-[22px] text-text-base">
                 {typedInvoice.notes_to_client}
               </p>
             </div>
@@ -290,7 +292,7 @@ export default async function SharedInvoicePage({
         <div className="mt-6 flex items-center justify-center gap-4">
           <button
             type="button"
-            className="rounded-[10px] border border-[#e8e4f6] bg-white px-5 py-2.5 text-[13px] font-medium text-[#1a163d] shadow-sm transition-colors hover:bg-[#f3e8ff]"
+            className="rounded-[10px] border border-border-muted bg-background-base px-5 py-2.5 text-[13px] font-medium text-text-base shadow-sm transition-colors hover:bg-button-secondary"
             id="print-button"
           >
             Print / Save as PDF
@@ -299,7 +301,7 @@ export default async function SharedInvoicePage({
 
         {/* Footer */}
         <div className="mt-8 text-center">
-          <p className="text-[11px] text-[#7c7288]">Generated with Stacklite</p>
+          <p className="text-[11px] text-text-muted">Generated with Stacklite</p>
         </div>
       </div>
 

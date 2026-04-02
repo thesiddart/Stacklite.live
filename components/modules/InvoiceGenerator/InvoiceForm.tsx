@@ -46,7 +46,7 @@ export function InvoiceForm() {
                 ? 'bg-[var(--primary)] text-white'
                 : index < currentStep
                   ? 'bg-[var(--surface-chip)] text-[var(--tertiary)]'
-                  : 'text-[var(--text-soft-muted)] hover:text-[var(--text-soft-strong)]'
+                  : 'text-text-muted hover:text-text-base'
             }`}
           >
             <span>{step.number}</span>
@@ -71,7 +71,7 @@ export function InvoiceForm() {
           ← Back
         </button>
 
-        <span className="text-[12px] text-[var(--text-soft-muted)]">
+        <span className="text-[12px] text-text-muted">
           {currentStep + 1} of {STEPS.length}
         </span>
 

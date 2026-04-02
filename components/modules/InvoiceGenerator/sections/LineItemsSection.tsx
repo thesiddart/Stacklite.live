@@ -22,10 +22,10 @@ export function LineItemsSection() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-[14px] font-semibold text-[var(--text-soft-strong)]">
+          <h3 className="text-[14px] font-semibold text-text-base">
             Line Items
           </h3>
-          <p className="mt-0.5 text-[12px] text-[var(--text-soft-muted)]">
+          <p className="mt-0.5 text-[12px] text-text-muted">
             Add each billable service or deliverable.
           </p>
         </div>
@@ -46,14 +46,14 @@ export function LineItemsSection() {
             className="rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-3"
           >
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-text-muted">
                 Item {index + 1}
               </span>
               <button
                 type="button"
                 onClick={() => removeLineItem(item.id)}
                 disabled={items.length <= 1}
-                className="rounded-[6px] p-1 text-[var(--text-soft-muted)] hover:bg-[var(--surface-danger-soft)] hover:text-[var(--text-danger-soft)] disabled:opacity-40"
+                className="rounded-[6px] p-1 text-text-muted hover:bg-feedback-error-bg hover:text-feedback-error-text disabled:opacity-40"
                 aria-label={`Remove item ${index + 1}`}
               >
                 <TrashBold size={14} />
@@ -62,7 +62,7 @@ export function LineItemsSection() {
 
             <div className="grid gap-2 sm:grid-cols-[1fr_80px_100px]">
               <div>
-                <label className="mb-1 block text-[11px] font-medium text-[var(--text-soft-strong)]">
+                <label className="mb-1 block text-[11px] font-medium text-text-base">
                   Description
                 </label>
                 <input
@@ -74,7 +74,7 @@ export function LineItemsSection() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[11px] font-medium text-[var(--text-soft-strong)]">
+                <label className="mb-1 block text-[11px] font-medium text-text-base">
                   Qty
                 </label>
                 <input
@@ -87,7 +87,7 @@ export function LineItemsSection() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[11px] font-medium text-[var(--text-soft-strong)]">
+                <label className="mb-1 block text-[11px] font-medium text-text-base">
                   Rate
                 </label>
                 <input
@@ -101,7 +101,7 @@ export function LineItemsSection() {
               </div>
             </div>
 
-            <p className="mt-2 text-right text-[12px] font-semibold text-[var(--text-soft-strong)]">
+            <p className="mt-2 text-right text-[12px] font-semibold text-text-base">
               Amount: {formatCurrency(item.amount, currency)}
             </p>
           </div>
@@ -110,8 +110,8 @@ export function LineItemsSection() {
 
       {/* Subtotal */}
       <div className="flex items-center justify-between rounded-[8px] bg-[var(--surface-chip)] px-3 py-2">
-        <span className="text-[13px] font-medium text-[var(--text-soft-strong)]">Subtotal</span>
-        <span className="text-[13px] font-semibold text-[var(--text-soft-strong)]">
+        <span className="text-[13px] font-medium text-text-base">Subtotal</span>
+        <span className="text-[13px] font-semibold text-text-base">
           {formatCurrency(formData.subtotal || 0, currency)}
         </span>
       </div>

@@ -43,10 +43,10 @@ export function SavePromptModal() {
     >
       <div className="mx-4 w-full max-w-[400px] animate-slideIn rounded-[16px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-6 shadow-lg">
         <div>
-          <h2 className="text-[16px] font-semibold text-[var(--text-soft-strong)]">
+          <h2 className="text-[16px] font-semibold text-text-base">
             Save your work permanently
           </h2>
-          <p className="mt-2 text-[13px] leading-relaxed text-[var(--text-soft-muted)]">
+          <p className="mt-2 text-[13px] leading-relaxed text-text-muted">
             You&apos;re working in guest mode — your work is saved in this browser.
             Create a free account to access it from anywhere, anytime.
           </p>
@@ -63,13 +63,13 @@ export function SavePromptModal() {
           <button
             type="button"
             onClick={handleContinueAsGuest}
-            className="flex h-10 w-full items-center justify-center rounded-full border border-[var(--surface-divider)] text-[13px] font-medium text-[var(--text-soft-muted)] transition-all hover:bg-[var(--surface-overlay)]"
+            className="flex h-10 w-full items-center justify-center rounded-full border border-[var(--surface-divider)] text-[13px] font-medium text-text-muted transition-all hover:bg-[var(--surface-overlay)]"
           >
             Continue as Guest
           </button>
         </div>
 
-        <p className="mt-4 text-center text-[11px] text-[var(--text-soft-disabled)]">
+        <p className="mt-4 text-center text-[11px] text-text-disabled">
           Your current work stays safe until you close this browser.
         </p>
       </div>

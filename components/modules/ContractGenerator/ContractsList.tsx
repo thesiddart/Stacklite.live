@@ -16,26 +16,28 @@ import {
   useUpdateContract,
 } from '@/hooks/useContracts'
 import { useClients } from '@/hooks/useClients'
+import { useAuth } from '@/hooks/useAuth'
+import { useProfile } from '@/hooks/useProfile'
 import { useContractStore } from '@/stores/contractStore'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useSavePromptStore } from '@/stores/savePromptStore'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { downloadContractPdf as saveContractPdf } from '@/lib/utils/pdfDownload'
+import { generateContractPDF } from '@/lib/pdf/generateContractPDF'
 import type { Contract } from '@/lib/types/database'
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
   sent: {
-    bg: 'bg-[var(--surface-chip)]',
+    bg: 'bg-background-highlight',
     text: 'text-text-muted',
     label: 'Not Signed',
   },
   signed: {
-    bg: 'bg-[rgba(0,126,0,0.18)]',
-    text: 'text-[var(--feedback-success-text)]',
+    bg: 'bg-feedback-success-bg',
+    text: 'text-feedback-success-text',
     label: 'Signed',
   },
   archived: {
-    bg: 'bg-[var(--surface-disabled)]',
+    bg: 'bg-background-disabled',
     text: 'text-text-disabled',
     label: 'Archived',
   },
@@ -57,12 +59,15 @@ export function ContractsList() {
   const openWithAction = useSavePromptStore((s) => s.openWithAction)
   const { data: contracts = [], isLoading } = useContracts()
   const { data: clients = [] } = useClients()
+  const { user } = useAuth()
+  const { data: profile } = useProfile(Boolean(user))
   const deleteMutation = useDeleteContract()
   const updateMutation = useUpdateContract()
   const shareMutation = useGenerateShareLink()
   const { setView, setActiveContract, updateFormData, resetForm } =
     useContractStore()
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [copyErrorId, setCopyErrorId] = useState<string | null>(null)
   const [previewContract, setPreviewContract] = useState<Contract | null>(null)
 
   const getClientName = (clientId: string | null) => {
@@ -101,13 +106,28 @@ export function ContractsList() {
   }
 
   const handleCopyLink = async (contract: Contract) => {
+    if (isGuest) {
+      openWithAction(() => {
+        // Share links require migration to an authenticated account.
+      })
+      return
+    }
+
     try {
       const url = await shareMutation.mutateAsync(contract.id)
+
+      if (!url || /\/(null|undefined)$/.test(url)) {
+        throw new Error('Invalid share URL')
+      }
+
       await navigator.clipboard.writeText(url)
       setCopiedId(contract.id)
+      setCopyErrorId(null)
       setTimeout(() => setCopiedId(null), 2000)
     } catch {
-      // silently fail
+      setCopyErrorId(contract.id)
+      setCopiedId(null)
+      setTimeout(() => setCopyErrorId(null), 2500)
     }
   }
 
@@ -132,57 +152,51 @@ export function ContractsList() {
 
     const deliverables = Array.isArray(contract.deliverables)
       ? (contract.deliverables as Array<{ text?: string }>)
-          .map((item) => item.text || '')
-          .filter(Boolean)
+          .map((item) => ({ text: item.text || '' }))
+          .filter((item) => item.text !== '')
       : []
 
     const milestones = Array.isArray(contract.milestones)
       ? (contract.milestones as Array<{ label?: string; date?: string }>)
-          .map((item) => `${item.label || 'Milestone'}: ${item.date || 'TBD'}`)
+          .map((item) => ({ label: item.label || 'Milestone', date: item.date || 'TBD' }))
       : []
 
     const clauses = contract.clauses && typeof contract.clauses === 'object'
       ? Object.entries(contract.clauses as Record<string, unknown>)
           .map(([key, value]) => {
-            if (!value || typeof value !== 'object') return ''
+            if (!value || typeof value !== 'object') return null
             const clause = value as { on?: unknown; text?: unknown }
             if (!clause.on || typeof clause.text !== 'string' || clause.text.trim() === '') {
-              return ''
+              return null
             }
-            return `${key}: ${clause.text}`
+            return { key, on: true, text: clause.text }
           })
-          .filter(Boolean)
+          .filter((entry): entry is { key: string; on: boolean; text: string } => entry !== null)
       : []
 
-    const timelineText = contract.start_date || contract.end_date
-      ? `${contract.start_date || 'TBD'} to ${contract.end_date || 'TBD'}`
-      : 'No timeline provided.'
+    const freelancerName =
+      profile?.full_name ||
+      user?.user_metadata?.full_name ||
+      user?.user_metadata?.name ||
+      'Freelancer'
+    const freelancerEmail = profile?.email || user?.email || ''
 
-    const displayStatus = contract.status === 'signed' ? 'Signed' : 'Not Signed'
-
-    const safeClientName = clientName.replace(/[^a-zA-Z0-9_-]+/g, '_')
-    const safeProjectName = (contract.project_name || 'Contract').replace(/[^a-zA-Z0-9_-]+/g, '_')
-    const formattedAmount = contract.total_fee != null
-      ? `${contract.currency} ${Number(contract.total_fee).toLocaleString('en-US', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`
-      : 'N/A'
-
-    saveContractPdf(`Contract_${safeClientName}_${safeProjectName}.pdf`, {
-      projectName: contract.project_name || 'Untitled Contract',
+    void generateContractPDF({
+      freelancerName,
+      freelancerEmail,
       clientName,
-      status: displayStatus,
-      templateType: contract.template_type || 'N/A',
-      scope: contract.scope || 'N/A',
+      clientEmail: clients.find((c) => c.id === contract.client_id)?.email || undefined,
+      projectName: contract.project_name || 'Untitled Project',
+      scope: contract.scope || undefined,
       deliverables,
-      exclusions: contract.exclusions || 'N/A',
-      timeline: timelineText,
+      exclusions: contract.exclusions || undefined,
+      startDate: contract.start_date || undefined,
+      endDate: contract.end_date || undefined,
       milestones,
-      amount: formattedAmount,
-      paymentStructure: contract.payment_structure || 'N/A',
-      paymentMethod: contract.payment_method || 'N/A',
-      paymentTerms: contract.payment_terms || 'N/A',
+      totalFee: contract.total_fee ?? undefined,
+      currency: (contract.currency || 'USD').toUpperCase(),
+      paymentStructure: (contract.payment_structure as 'full' | 'split' | 'milestone' | 'custom' | null) || null,
+      paymentMethod: contract.payment_method || undefined,
       clauses,
     })
   }
@@ -387,12 +401,22 @@ export function ContractsList() {
                           <span className="text-[11px] font-medium text-[var(--feedback-success-text)]">
                             Copied!
                           </span>
+                        ) : copyErrorId === contract.id ? (
+                          <span className="text-[11px] font-medium text-feedback-errorText">
+                            Failed
+                          </span>
                         ) : (
                           <LinkBold size={14} />
                         )}
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent>Copy share link</TooltipContent>
+                    <TooltipContent>
+                      {copyErrorId === contract.id
+                        ? 'Failed to copy link'
+                        : copiedId === contract.id
+                          ? 'Link copied'
+                          : 'Copy share link'}
+                    </TooltipContent>
                   </Tooltip>
 
                   <Tooltip>
@@ -443,7 +467,7 @@ export function ContractsList() {
                           event.stopPropagation()
                           handleDelete(contract.id)
                         }}
-                        className="rounded-[6px] p-1.5 text-text-brand hover:bg-[var(--surface-danger-soft)] hover:text-[var(--text-danger-soft)]"
+                        className="rounded-[6px] p-1.5 text-text-brand hover:bg-feedback-error-bg hover:text-feedback-error-text"
                         aria-label="Delete"
                       >
                         <TrashBold size={14} />

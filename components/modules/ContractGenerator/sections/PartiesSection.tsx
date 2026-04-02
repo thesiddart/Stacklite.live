@@ -5,6 +5,7 @@ import { useContractStore } from '@/stores/contractStore'
 import { useClients } from '@/hooks/useClients'
 import { useProfile } from '@/hooks/useProfile'
 import { useAuth } from '@/hooks/useAuth'
+import { Select } from '@/components/ui/Select'
 
 export function PartiesSection() {
   const { formData, updateFormData } = useContractStore()
@@ -21,22 +22,22 @@ export function PartiesSection() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-[14px] font-semibold text-[var(--text-soft-strong)]">
+        <h3 className="text-[14px] font-semibold text-text-base">
           Parties
         </h3>
-        <p className="mt-0.5 text-[12px] text-[var(--text-soft-muted)]">
+        <p className="mt-0.5 text-[12px] text-text-muted">
           Identify the freelancer and client for this contract.
         </p>
       </div>
 
       {/* Freelancer info — auto-filled from profile */}
       <div className="rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-panel-strong)] p-3">
-        <p className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-soft-muted)]">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-text-muted">
           Freelancer
         </p>
         <div className="mt-2 space-y-2">
           <div>
-            <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+            <label className="mb-1 block text-[12px] font-medium text-text-base">
               Name
             </label>
             <input
@@ -47,7 +48,7 @@ export function PartiesSection() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+            <label className="mb-1 block text-[12px] font-medium text-text-base">
               Email
             </label>
             <input
@@ -59,7 +60,7 @@ export function PartiesSection() {
           </div>
           {freelancerLocation && (
             <div>
-              <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+              <label className="mb-1 block text-[12px] font-medium text-text-base">
                 Location
               </label>
               <input
@@ -75,18 +76,18 @@ export function PartiesSection() {
 
       {/* Client selection */}
       <div className="rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-panel-strong)] p-3">
-        <p className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-soft-muted)]">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-text-muted">
           Client
         </p>
         <div className="mt-2 space-y-2">
           <div>
-            <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+            <label className="mb-1 block text-[12px] font-medium text-text-base">
               Select client
             </label>
-            <select
+            <Select
               value={formData.client_id || ''}
               onChange={(e) => updateFormData({ client_id: e.target.value || null })}
-              className="theme-shell-field h-8 w-full rounded-[6px] px-3 text-[13px] focus-visible:border-[var(--primary)] focus-visible:outline-none"
+              className="h-8 rounded-[6px] px-3 text-[13px]"
             >
               <option value="">Choose a client</option>
               {isClientsLoading && <option disabled>Loading...</option>}
@@ -96,9 +97,9 @@ export function PartiesSection() {
                   {client.company_name ? ` — ${client.company_name}` : ''}
                 </option>
               ))}
-            </select>
+            </Select>
             {clients.length === 0 && !isClientsLoading && (
-              <p className="mt-1 text-[11px] text-[var(--text-soft-subtle)]">
+              <p className="mt-1 text-[11px] text-text-muted">
                 No clients yet. Add one via the Client Manager first.
               </p>
             )}
@@ -107,16 +108,16 @@ export function PartiesSection() {
           {/* Auto-filled client info */}
           {selectedClient && (
             <div className="mt-2 space-y-1 rounded-[8px] bg-[var(--surface-card)] p-2">
-              <p className="text-[13px] font-medium text-[var(--text-soft-strong)]">
+              <p className="text-[13px] font-medium text-text-base">
                 {selectedClient.name}
               </p>
               {selectedClient.email && (
-                <p className="text-[12px] text-[var(--text-soft-muted)]">
+                <p className="text-[12px] text-text-muted">
                   {selectedClient.email}
                 </p>
               )}
               {selectedClient.company_name && (
-                <p className="text-[12px] text-[var(--text-soft-muted)]">
+                <p className="text-[12px] text-text-muted">
                   {selectedClient.company_name}
                 </p>
               )}

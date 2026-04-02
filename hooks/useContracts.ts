@@ -273,8 +273,7 @@ export function useGenerateShareLink() {
   return useMutation({
     mutationFn: async (id: string) => {
       if (isGuest) {
-        // Guest contracts can't generate share links — trigger save prompt instead
-        return `${window.location.origin}/c/guest-${id}`
+        throw new Error('Guest mode requires account save before creating share links')
       }
       return generateShareLink(id)
     },

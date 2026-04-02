@@ -17,6 +17,8 @@ function SignupPageContent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false)
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false)
   const [fullName, setFullName] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -243,7 +245,7 @@ function SignupPageContent() {
                 <h2 className="text-3xl font-semibold text-text-base">
                   Verify your email
                 </h2>
-                <p className="text-lg leading-8 text-[var(--text-soft-subtle)]">
+                <p className="text-lg leading-8 text-text-muted">
                   We just sent an email to{' '}
                   <span className="font-medium text-[var(--tertiary)]">{normalizeEmail(email)}</span>. Click the
                   link in that email to verify your account.
@@ -275,7 +277,7 @@ function SignupPageContent() {
                 <button
                   type="button"
                   onClick={handleUpdateEmail}
-                  className="h-10 rounded-full border border-[var(--primary)] px-8 py-2 text-xs font-medium text-[var(--text-soft-subtle)] transition-all hover:bg-[var(--surface-overlay)]"
+                  className="h-10 rounded-full border border-[var(--primary)] px-8 py-2 text-xs font-medium text-text-muted transition-all hover:bg-[var(--surface-overlay)]"
                 >
                   Update email address
                 </button>
@@ -287,7 +289,7 @@ function SignupPageContent() {
                     href="https://mail.google.com"
                     target="_blank"
                     rel="noreferrer"
-                    className="flex h-10 items-center justify-center rounded-full border border-[var(--text-soft-subtle)] px-8 py-2 text-xs font-medium text-[var(--text-soft-subtle)] transition-all hover:bg-[var(--surface-overlay)]"
+                    className="flex h-10 items-center justify-center rounded-full border border-border-muted px-8 py-2 text-xs font-medium text-text-muted transition-all hover:bg-[var(--surface-overlay)]"
                   >
                     Open Gmail
                   </a>
@@ -295,7 +297,7 @@ function SignupPageContent() {
                     href="https://outlook.live.com/mail"
                     target="_blank"
                     rel="noreferrer"
-                    className="flex h-10 items-center justify-center rounded-full border border-[var(--text-soft-subtle)] px-8 py-2 text-xs font-medium text-[var(--text-soft-subtle)] transition-all hover:bg-[var(--surface-overlay)]"
+                    className="flex h-10 items-center justify-center rounded-full border border-border-muted px-8 py-2 text-xs font-medium text-text-muted transition-all hover:bg-[var(--surface-overlay)]"
                   >
                     Open Outlook
                   </a>
@@ -303,7 +305,7 @@ function SignupPageContent() {
 
                 <Link
                   href="/login"
-                  className="text-center text-sm text-[var(--text-soft-subtle)] underline"
+                  className="text-center text-sm text-text-muted underline"
                 >
                   Already verified? Sign in
                 </Link>
@@ -315,11 +317,11 @@ function SignupPageContent() {
                   <button
                     onClick={handleGoogleSignup}
                     type="button"
-                    className="flex h-10 flex-1 items-center justify-center gap-1 rounded-full border border-[var(--text-soft-subtle)] px-8 py-2 transition-colors hover:bg-[var(--surface-overlay)]"
+                    className="flex h-10 flex-1 items-center justify-center gap-1 rounded-full border border-border-muted px-8 py-2 transition-colors hover:bg-[var(--surface-overlay)]"
                     disabled={isLoading}
                   >
                     <Image src="/icons/social/google-original.svg" alt="Google" width={16} height={16} />
-                    <span className="text-xs font-medium text-[var(--text-soft-subtle)]">
+                    <span className="text-xs font-medium text-text-muted">
                       Google
                     </span>
                   </button>
@@ -327,11 +329,11 @@ function SignupPageContent() {
                   <button
                     onClick={handleGithubSignup}
                     type="button"
-                    className="flex h-10 flex-1 items-center justify-center gap-1 rounded-full border border-[var(--text-soft-subtle)] px-8 py-2 transition-colors hover:bg-[var(--surface-overlay)]"
+                    className="flex h-10 flex-1 items-center justify-center gap-1 rounded-full border border-border-muted px-8 py-2 transition-colors hover:bg-[var(--surface-overlay)]"
                     disabled={isLoading}
                   >
                     <Image src="/icons/social/github-original.svg" alt="GitHub" width={16} height={16} />
-                    <span className="text-xs font-medium text-[var(--text-soft-subtle)]">
+                    <span className="text-xs font-medium text-text-muted">
                       Github
                     </span>
                   </button>
@@ -339,11 +341,11 @@ function SignupPageContent() {
 
                 {/* Divider */}
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 border-t border-[var(--text-soft-subtle)]" />
+                  <div className="flex-1 border-t border-border-muted" />
                   <p className="text-sm text-text-base">
                     or sign up with email
                   </p>
-                  <div className="flex-1 border-t border-[var(--text-soft-subtle)]" />
+                  <div className="flex-1 border-t border-border-muted" />
                 </div>
 
                 {/* Signup Form */}
@@ -354,7 +356,7 @@ function SignupPageContent() {
                       <label htmlFor="fullName" className="text-sm font-medium text-text-base">
                         Full Name
                       </label>
-                      <span className="text-sm font-medium text-[#fb3748]">*</span>
+                      <span className="text-sm font-medium text-text-brand">*</span>
                     </div>
                     <input
                       id="fullName"
@@ -374,7 +376,7 @@ function SignupPageContent() {
                       <label htmlFor="email" className="text-sm font-medium text-text-base">
                         Your email
                       </label>
-                      <span className="text-sm font-medium text-[#fb3748]">*</span>
+                      <span className="text-sm font-medium text-text-brand">*</span>
                     </div>
                     <input
                       id="email"
@@ -394,18 +396,40 @@ function SignupPageContent() {
                       <label htmlFor="password" className="text-sm font-medium text-text-base">
                         Password
                       </label>
-                      <span className="text-sm font-medium text-[#fb3748]">*</span>
+                      <span className="text-sm font-medium text-text-brand">*</span>
                     </div>
-                    <input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="theme-shell-field h-9 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
-                      placeholder=" "
-                      disabled={isLoading}
-                    />
+                    <div className="relative">
+                      <input
+                        id="password"
+                        type={isPasswordVisible ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="theme-shell-field h-9 w-full rounded-md px-3 py-1 pr-10 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                        placeholder=" "
+                        disabled={isLoading}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setIsPasswordVisible((prev) => !prev)}
+                        className="absolute right-2 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center text-text-muted transition-colors hover:text-text-base"
+                        aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
+                        disabled={isLoading}
+                      >
+                        {isPasswordVisible ? (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M3.5 12C4.6 8.7 8.1 5.25 12 5.25C15.9 5.25 19.4 8.7 20.5 12C19.4 15.3 15.9 18.75 12 18.75C8.1 18.75 4.6 15.3 3.5 12Z" fill="currentColor" opacity="0.45" />
+                            <circle cx="12" cy="12" r="2.6" fill="currentColor" />
+                            <path d="M4 4L20 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          </svg>
+                        ) : (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M2.5 12C3.5 8.5 7.2 4.75 12 4.75C16.8 4.75 20.5 8.5 21.5 12C20.5 15.5 16.8 19.25 12 19.25C7.2 19.25 3.5 15.5 2.5 12Z" fill="currentColor" opacity="0.45" />
+                            <circle cx="12" cy="12" r="3" fill="currentColor" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   {/* Confirm Password Input */}
@@ -414,18 +438,40 @@ function SignupPageContent() {
                       <label htmlFor="confirmPassword" className="text-sm font-medium text-text-base">
                         Confirm Password
                       </label>
-                      <span className="text-sm font-medium text-[#fb3748]">*</span>
+                      <span className="text-sm font-medium text-text-brand">*</span>
                     </div>
-                    <input
-                      id="confirmPassword"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      className="theme-shell-field h-9 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
-                      placeholder=" "
-                      disabled={isLoading}
-                    />
+                    <div className="relative">
+                      <input
+                        id="confirmPassword"
+                        type={isConfirmPasswordVisible ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        className="theme-shell-field h-9 w-full rounded-md px-3 py-1 pr-10 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                        placeholder=" "
+                        disabled={isLoading}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setIsConfirmPasswordVisible((prev) => !prev)}
+                        className="absolute right-2 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center text-text-muted transition-colors hover:text-text-base"
+                        aria-label={isConfirmPasswordVisible ? 'Hide confirm password' : 'Show confirm password'}
+                        disabled={isLoading}
+                      >
+                        {isConfirmPasswordVisible ? (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M3.5 12C4.6 8.7 8.1 5.25 12 5.25C15.9 5.25 19.4 8.7 20.5 12C19.4 15.3 15.9 18.75 12 18.75C8.1 18.75 4.6 15.3 3.5 12Z" fill="currentColor" opacity="0.45" />
+                            <circle cx="12" cy="12" r="2.6" fill="currentColor" />
+                            <path d="M4 4L20 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          </svg>
+                        ) : (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M2.5 12C3.5 8.5 7.2 4.75 12 4.75C16.8 4.75 20.5 8.5 21.5 12C20.5 15.5 16.8 19.25 12 19.25C7.2 19.25 3.5 15.5 2.5 12Z" fill="currentColor" opacity="0.45" />
+                            <circle cx="12" cy="12" r="3" fill="currentColor" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   {/* Action Buttons */}
@@ -440,7 +486,7 @@ function SignupPageContent() {
 
                     <Link
                       href="/login"
-                      className="flex h-10 items-center justify-center rounded-full border border-[var(--primary)] px-8 py-2 text-xs font-medium text-[var(--text-soft-subtle)] transition-all hover:bg-[var(--surface-overlay)]"
+                      className="flex h-10 items-center justify-center rounded-full border border-[var(--primary)] px-8 py-2 text-xs font-medium text-text-muted transition-all hover:bg-[var(--surface-overlay)]"
                     >
                       Already have an account? Sign In
                     </Link>

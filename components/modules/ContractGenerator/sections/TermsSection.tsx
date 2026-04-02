@@ -55,10 +55,10 @@ export function TermsSection() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-[14px] font-semibold text-[var(--text-soft-strong)]">
+        <h3 className="text-[14px] font-semibold text-text-base">
           Terms & Clauses
         </h3>
-        <p className="mt-0.5 text-[12px] text-[var(--text-soft-muted)]">
+        <p className="mt-0.5 text-[12px] text-text-muted">
           Toggle clauses on or off, and edit their text inline.
         </p>
       </div>
@@ -96,11 +96,11 @@ export function TermsSection() {
                   />
                 </button>
 
-                <p className="text-[13px] font-semibold text-[var(--text-soft-strong)]">
+                <p className="text-[13px] font-semibold text-text-base">
                   {config.label}
                 </p>
 
-                <p className="col-start-2 text-[11px] text-[var(--text-soft-muted)]">
+                <p className="col-start-2 text-[11px] text-text-muted">
                   {config.description}
                 </p>
 
@@ -116,7 +116,7 @@ export function TermsSection() {
                       />
                       <EditBold
                         size={12}
-                        className="pointer-events-none absolute right-2 top-2 text-[var(--text-soft-muted)]"
+                        className="pointer-events-none absolute right-2 top-2 text-text-muted"
                       />
                     </div>
                   </div>

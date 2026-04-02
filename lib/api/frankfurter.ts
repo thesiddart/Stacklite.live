@@ -70,3 +70,57 @@ export function formatNPR(amount: number): string {
 
   return `${grouped},${lastThree}`
 }
+
+/**
+ * Fetch historical exchange rate for a specific date.
+ * Silent fail — returns null on error.
+ */
+export async function getHistoricalExchangeRate(
+  date: string,
+  from: string,
+  to: string
+): Promise<number | null> {
+  try {
+    const response = await fetch(
+      `https://api.frankfurter.app/${encodeURIComponent(date)}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+      { next: { revalidate: 3600 } }
+    )
+
+    if (!response.ok) return null
+
+    const data: ExchangeRateResponse = await response.json()
+    return data.rates[to] ?? null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Monthly average exchange rate approximation.
+ * Uses first day of month and current day (or month end for past months).
+ */
+export async function getMonthlyAverageRate(
+  from: string,
+  to: string,
+  year: number,
+  month: number
+): Promise<number | null> {
+  const startDate = `${year}-${String(month).padStart(2, '0')}-01`
+
+  const now = new Date()
+  const isCurrentMonth = now.getFullYear() === year && now.getMonth() + 1 === month
+  const endDateObj = isCurrentMonth
+    ? now
+    : new Date(year, month, 0)
+
+  const endDate = endDateObj.toISOString().slice(0, 10)
+
+  const [startRate, endRate] = await Promise.all([
+    getHistoricalExchangeRate(startDate, from, to),
+    getHistoricalExchangeRate(endDate, from, to),
+  ])
+
+  if (startRate === null || endRate === null) return null
+
+  return (startRate + endRate) / 2
+}

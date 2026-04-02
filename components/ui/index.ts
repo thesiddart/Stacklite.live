@@ -2,6 +2,7 @@
 export { Button, IconButton } from './Button'
 export { Input } from './Input'
 export { InputWrapper } from './Input'
+export { Select } from './Select'
 export {
 	Card,
 	CardHeader,

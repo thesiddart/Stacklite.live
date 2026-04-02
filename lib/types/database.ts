@@ -178,6 +178,7 @@ export interface Database {
           payment_structure?: string | null
           payment_method?: string | null
           clauses?: Json
+          share_token?: string
           created_at?: string
           updated_at?: string
         }
@@ -204,6 +205,7 @@ export interface Database {
           payment_structure?: string | null
           payment_method?: string | null
           clauses?: Json
+          share_token?: string
           created_at?: string
           updated_at?: string
         }
@@ -263,6 +265,7 @@ export interface Database {
           status?: string
           paid_at?: string | null
           pdf_url?: string | null
+          share_token?: string
           created_at?: string
           updated_at?: string
         }
@@ -291,6 +294,7 @@ export interface Database {
           status?: string
           paid_at?: string | null
           pdf_url?: string | null
+          share_token?: string
           created_at?: string
           updated_at?: string
         }

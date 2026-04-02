@@ -33,10 +33,10 @@ export function TimelineSection() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-[14px] font-semibold text-[var(--text-soft-strong)]">
+        <h3 className="text-[14px] font-semibold text-text-base">
           Timeline
         </h3>
-        <p className="mt-0.5 text-[12px] text-[var(--text-soft-muted)]">
+        <p className="mt-0.5 text-[12px] text-text-muted">
           Set the project start and end dates, and optionally add milestones.
         </p>
       </div>
@@ -44,7 +44,7 @@ export function TimelineSection() {
       {/* Dates */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+          <label className="mb-1 block text-[12px] font-medium text-text-base">
             Start Date
           </label>
           <input
@@ -55,7 +55,7 @@ export function TimelineSection() {
           />
         </div>
         <div>
-          <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+          <label className="mb-1 block text-[12px] font-medium text-text-base">
             End Date
           </label>
           <input
@@ -84,7 +84,7 @@ export function TimelineSection() {
         ) : (
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <label className="text-[12px] font-medium text-[var(--text-soft-strong)]">
+              <label className="text-[12px] font-medium text-text-base">
                 Milestones
               </label>
               <button
@@ -115,7 +115,7 @@ export function TimelineSection() {
                   <button
                     type="button"
                     onClick={() => removeMilestone(index)}
-                    className="text-[var(--text-soft-muted)] hover:text-[var(--text-danger-soft)]"
+                    className="text-text-muted hover:text-feedback-error-text"
                   >
                     <CloseCircleBold size={14} />
                   </button>

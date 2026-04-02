@@ -31,6 +31,7 @@ export default async function SharedContractPage({
     .from('contracts')
     .select('*')
     .eq('share_token', token)
+    .neq('status', 'draft')
     .maybeSingle()
 
   let contract = contractData
@@ -51,6 +52,7 @@ export default async function SharedContractPage({
         .from('contracts')
         .select('*')
         .eq('share_token', token)
+        .neq('status', 'draft')
         .maybeSingle()
 
       contract = adminContract
@@ -59,12 +61,12 @@ export default async function SharedContractPage({
 
   if (!contract) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f9f9f9]">
+      <div className="flex min-h-screen items-center justify-center bg-background-muted">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-[#1a163d]">
+          <h1 className="text-2xl font-semibold text-text-base">
             Contract not found
           </h1>
-          <p className="mt-2 text-sm text-[#7c7288]">
+          <p className="mt-2 text-sm text-text-muted">
             This link may have expired or the contract is unavailable.
           </p>
         </div>
@@ -131,7 +133,7 @@ export default async function SharedContractPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#f9f9f9]">
+    <div className="min-h-screen bg-background-muted">
       <div className="mx-auto max-w-[680px] px-6 py-12">
         {/* Logo */}
         <div className="mb-8">
@@ -145,19 +147,19 @@ export default async function SharedContractPage({
         </div>
 
         {/* Document */}
-        <div className="rounded-[16px] border border-[#e8e4f6] bg-white p-8 shadow-sm">
+        <div className="rounded-[16px] border border-border-muted bg-background-base p-8 shadow-sm">
           {/* Header */}
-          <div className="border-b border-[#e8e4f6] pb-6">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7c7288]">
+          <div className="border-b border-border-muted pb-6">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-text-muted">
               Service Agreement
             </p>
-            <h1 className="mt-2 text-[22px] font-bold leading-tight text-[#1a163d]">
+            <h1 className="mt-2 text-[22px] font-bold leading-tight text-text-base">
               {typedContract.project_name || 'Service Agreement'}
             </h1>
             {client && (
-              <p className="mt-1 text-[13px] text-[#7c7288]">
+              <p className="mt-1 text-[13px] text-text-muted">
                 Prepared for{' '}
-                <span className="font-medium text-[#1a163d]">
+                <span className="font-medium text-text-base">
                   {client.name}
                 </span>
               </p>
@@ -166,29 +168,29 @@ export default async function SharedContractPage({
 
           {/* Client */}
           {client && (
-            <div className="mt-6 border-b border-[#e8e4f6] pb-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7c7288]">
+            <div className="mt-6 border-b border-border-muted pb-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
                 Client
               </p>
-              <p className="mt-2 text-[14px] font-medium text-[#1a163d]">
+              <p className="mt-2 text-[14px] font-medium text-text-base">
                 {client.name}
               </p>
               {client.email && (
-                <p className="text-[13px] text-[#7c7288]">{client.email}</p>
+                <p className="text-[13px] text-text-muted">{client.email}</p>
               )}
               {client.company_name && (
-                <p className="text-[13px] text-[#7c7288]">{client.company_name}</p>
+                <p className="text-[13px] text-text-muted">{client.company_name}</p>
               )}
             </div>
           )}
 
           {/* Scope */}
           {typedContract.scope && (
-            <div className="mt-6 border-b border-[#e8e4f6] pb-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7c7288]">
+            <div className="mt-6 border-b border-border-muted pb-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
                 Scope of Work
               </p>
-              <p className="mt-2 whitespace-pre-line text-[14px] leading-[22px] text-[#1a163d]">
+              <p className="mt-2 whitespace-pre-line text-[14px] leading-[22px] text-text-base">
                 {typedContract.scope}
               </p>
             </div>
@@ -196,14 +198,14 @@ export default async function SharedContractPage({
 
           {/* Deliverables */}
           {deliverables.length > 0 && (
-            <div className="mt-6 border-b border-[#e8e4f6] pb-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7c7288]">
+            <div className="mt-6 border-b border-border-muted pb-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
                 Deliverables
               </p>
               <ul className="mt-2 space-y-1.5">
                 {deliverables.map((item, index) => (
-                  <li key={index} className="flex items-start gap-2 text-[14px] text-[#1a163d]">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#7962f4]" />
+                  <li key={index} className="flex items-start gap-2 text-[14px] text-text-base">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-icon-brand" />
                     {item.text}
                   </li>
                 ))}
@@ -213,11 +215,11 @@ export default async function SharedContractPage({
 
           {/* Exclusions */}
           {typedContract.exclusions && (
-            <div className="mt-6 border-b border-[#e8e4f6] pb-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7c7288]">
+            <div className="mt-6 border-b border-border-muted pb-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
                 Not Included
               </p>
-              <p className="mt-2 whitespace-pre-line text-[14px] leading-[22px] text-[#1a163d]">
+              <p className="mt-2 whitespace-pre-line text-[14px] leading-[22px] text-text-base">
                 {typedContract.exclusions}
               </p>
             </div>
@@ -225,17 +227,17 @@ export default async function SharedContractPage({
 
           {/* Timeline */}
           {(typedContract.start_date || typedContract.end_date) && (
-            <div className="mt-6 border-b border-[#e8e4f6] pb-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7c7288]">
+            <div className="mt-6 border-b border-border-muted pb-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
                 Timeline
               </p>
-              <p className="mt-2 text-[14px] text-[#1a163d]">
+              <p className="mt-2 text-[14px] text-text-base">
                 {typedContract.start_date || 'TBD'} — {typedContract.end_date || 'TBD'}
               </p>
               {milestones.length > 0 && (
                 <div className="mt-2 space-y-1">
                   {milestones.map((m, i) => (
-                    <p key={i} className="text-[13px] text-[#7c7288]">
+                    <p key={i} className="text-[13px] text-text-muted">
                       • {m.label} — {m.date}
                     </p>
                   ))}
@@ -246,12 +248,12 @@ export default async function SharedContractPage({
 
           {/* Payment */}
           {(typedContract.total_fee || typedContract.payment_structure) && (
-            <div className="mt-6 border-b border-[#e8e4f6] pb-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7c7288]">
+            <div className="mt-6 border-b border-border-muted pb-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
                 Payment Terms
               </p>
               {typedContract.total_fee != null && (
-                <p className="mt-2 text-[18px] font-bold text-[#1a163d]">
+                <p className="mt-2 text-[18px] font-bold text-text-base">
                   {typedContract.currency || 'USD'}{' '}
                   {Number(typedContract.total_fee).toLocaleString('en-US', {
                     minimumFractionDigits: 2,
@@ -260,10 +262,10 @@ export default async function SharedContractPage({
                 </p>
               )}
               {paymentLabel && (
-                <p className="mt-1 text-[14px] text-[#7c7288]">{paymentLabel}</p>
+                <p className="mt-1 text-[14px] text-text-muted">{paymentLabel}</p>
               )}
               {typedContract.payment_method && (
-                <p className="mt-1 text-[13px] text-[#5c5c5c]">
+                <p className="mt-1 text-[13px] text-text-muted">
                   Via {typedContract.payment_method}
                 </p>
               )}
@@ -272,17 +274,17 @@ export default async function SharedContractPage({
 
           {/* Clauses */}
           {activeClauses.length > 0 && (
-            <div className="mt-6 border-b border-[#e8e4f6] pb-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7c7288]">
+            <div className="mt-6 border-b border-border-muted pb-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
                 Terms & Conditions
               </p>
               <ol className="mt-3 space-y-4">
                 {activeClauses.map(([key, clause], index) => (
                   <li key={key} className="text-[14px] leading-[22px]">
-                    <span className="font-semibold text-[#1a163d]">
+                    <span className="font-semibold text-text-base">
                       {index + 1}. {clauseLabelMap[key] || key}.
                     </span>{' '}
-                    <span className="text-[#5c5c5c]">{clause!.text}</span>
+                    <span className="text-text-muted">{clause!.text}</span>
                   </li>
                 ))}
               </ol>
@@ -292,16 +294,16 @@ export default async function SharedContractPage({
           {/* Signatures */}
           <div className="mt-8 grid grid-cols-2 gap-10">
             <div>
-              <div className="mb-3 h-px w-full bg-[#1a163d]" />
-              <p className="text-[13px] font-medium text-[#1a163d]">Freelancer</p>
-              <p className="mt-1 text-[12px] text-[#7c7288]">Date: ___________</p>
+              <div className="mb-3 h-px w-full bg-border-base" />
+              <p className="text-[13px] font-medium text-text-base">Freelancer</p>
+              <p className="mt-1 text-[12px] text-text-muted">Date: ___________</p>
             </div>
             <div>
-              <div className="mb-3 h-px w-full bg-[#1a163d]" />
-              <p className="text-[13px] font-medium text-[#1a163d]">
+              <div className="mb-3 h-px w-full bg-border-base" />
+              <p className="text-[13px] font-medium text-text-base">
                 {client?.name || 'Client'}
               </p>
-              <p className="mt-1 text-[12px] text-[#7c7288]">Date: ___________</p>
+              <p className="mt-1 text-[12px] text-text-muted">Date: ___________</p>
             </div>
           </div>
         </div>
@@ -311,7 +313,7 @@ export default async function SharedContractPage({
           <button
             type="button"
             onClick={() => {}}
-            className="rounded-[10px] border border-[#e8e4f6] bg-white px-5 py-2.5 text-[13px] font-medium text-[#1a163d] shadow-sm transition-colors hover:bg-[#f3e8ff]"
+            className="rounded-[10px] border border-border-muted bg-background-base px-5 py-2.5 text-[13px] font-medium text-text-base shadow-sm transition-colors hover:bg-button-secondary"
             id="print-button"
           >
             Print / Save as PDF
@@ -320,7 +322,7 @@ export default async function SharedContractPage({
 
         {/* Footer */}
         <div className="mt-8 text-center">
-          <p className="text-[11px] text-[#7c7288]">Generated with Stacklite</p>
+          <p className="text-[11px] text-text-muted">Generated with Stacklite</p>
         </div>
       </div>
 

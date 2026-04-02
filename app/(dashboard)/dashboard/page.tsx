@@ -1,7 +1,7 @@
 'use client'
 
 import React, { Suspense, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   AddCircleBold,
   Chart2Bold,
@@ -17,13 +17,21 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { ClientForm } from '@/components/modules/ClientManager/ClientForm'
 import { ContractGenerator } from '@/components/modules/ContractGenerator'
 import { InvoiceGenerator } from '@/components/modules/InvoiceGenerator'
+import { IncomeTracker } from '@/components/modules/IncomeTracker'
 import { TimeTracker } from '@/components/modules/TimeTracker'
 import { useClients } from '@/hooks/useClients'
+import { useContracts } from '@/hooks/useContracts'
 import { useTimeLogs } from '@/hooks/useTimeLogs'
+import { useInvoices } from '@/hooks/useInvoices'
 import { useAuth } from '@/hooks/useAuth'
 import { useSessionStore } from '@/stores/sessionStore'
+import { useContractStore } from '@/stores/contractStore'
+import { useInvoiceStore } from '@/stores/invoiceStore'
 import type { Client } from '@/lib/types/database'
+import type { Invoice } from '@/lib/types/database'
+import type { InvoiceLineItem } from '@/lib/utils/invoiceCalculations'
 import { migrateGuestData } from '@/lib/migration/migrateGuestData'
+import { generateClientActivityReportPDF } from '@/lib/pdf/generateClientActivityReportPDF'
 import {
   formatHoursAndMinutes,
   getTimeLogElapsedMilliseconds,
@@ -41,10 +49,17 @@ function DashboardContent() {
   const [isClientFormVisible, setIsClientFormVisible] = useState(false)
   const [editingClient, setEditingClient] = useState<Client | null>(null)
   const initSession = useSessionStore((s) => s.initSession)
+  const contractView = useContractStore((s) => s.view)
+  const setContractView = useContractStore((s) => s.setView)
+  const invoiceView = useInvoiceStore((s) => s.view)
+  const setInvoiceView = useInvoiceStore((s) => s.setView)
   const { data: clients = [], isLoading: isClientsLoading } = useClients()
+  const { data: contracts = [] } = useContracts()
+  const { data: invoices = [] } = useInvoices()
   const { data: timeLogs = [] } = useTimeLogs()
   const { user, isLoading: isAuthLoading } = useAuth()
   const searchParams = useSearchParams()
+  const router = useRouter()
 
   useEffect(() => {
     if (isAuthLoading) {
@@ -133,6 +148,59 @@ function DashboardContent() {
     setActiveDockTab((currentTab) => currentTab === tab ? null : tab)
   }
 
+  const handleOpenPrivacyPolicy = () => {
+    router.push('/privacy')
+  }
+
+  const handleDownloadReport = () => {
+    void generateClientActivityReportPDF({
+      generatedAt: new Date().toISOString(),
+      clients,
+      contracts,
+      invoices,
+      timeLogs,
+    })
+  }
+
+  const openInvoiceFromIncome = (invoiceId: string) => {
+    const invoice = invoices.find((entry) => entry.id === invoiceId)
+
+    setActiveDockTab('invoice')
+
+    if (!invoice) {
+      setInvoiceView('list')
+      return
+    }
+
+    useInvoiceStore.getState().resetForm()
+    useInvoiceStore.getState().setActiveInvoice(invoice.id)
+
+    useInvoiceStore.getState().updateFormData({
+      client_id: invoice.client_id,
+      contract_id: invoice.contract_id,
+      invoice_number: invoice.invoice_number,
+      issue_date: invoice.issue_date,
+      due_date: invoice.due_date,
+      line_items: Array.isArray(invoice.line_items)
+        ? (invoice.line_items as unknown as InvoiceLineItem[])
+        : [],
+      currency: invoice.currency,
+      tax_rate: invoice.tax_rate || null,
+      discount_type: (invoice.discount_type as 'flat' | 'percent') || null,
+      discount_value: invoice.discount_value || null,
+      subtotal: invoice.subtotal,
+      total: invoice.total,
+      payment_method: invoice.payment_method,
+      payment_instructions: invoice.payment_instructions,
+      notes_to_client: invoice.notes_to_client,
+      internal_notes: invoice.internal_notes,
+      status: (invoice.status as 'unpaid' | 'paid' | 'archived') || 'unpaid',
+    })
+
+    useInvoiceStore.setState({ isDirty: false })
+    setInvoiceView('editor')
+  }
+
   React.useEffect(() => {
     if (isClientFormOpen) {
       setIsClientFormMounted(true)
@@ -158,7 +226,7 @@ function DashboardContent() {
   return (
     <TooltipProvider delayDuration={180}>
     <div className="theme-page-shell">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(0,0,0,0.12)_1px,transparent_1px)] bg-[length:16px_16px]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,var(--dot-color)_1px,transparent_1px)] bg-[length:16px_16px]" />
 
       <AppNavbar
         topClassName="top-8"
@@ -167,6 +235,8 @@ function DashboardContent() {
         showProfileButton
         showProfileDropdown
         showProfileActiveBorder
+        onOpenPrivacyPolicy={handleOpenPrivacyPolicy}
+        onDownloadReport={handleDownloadReport}
       />
 
       <section
@@ -268,7 +338,7 @@ function DashboardContent() {
                       </div>
                     ) : clients.length === 0 ? (
                       <div className="rounded-[10px] bg-[var(--surface-card-subtle)] p-3 text-[13px] text-text-muted">
-                        No clients yet. Click + to add your first client.
+                        Add a client to get started. They'll be available across contracts, invoices, and time tracking.
                       </div>
                     ) : (
                       clients.map((client) => (
@@ -358,16 +428,48 @@ function DashboardContent() {
               </div>
             </div>
 
+            {((activeDockTab === 'contract' && contractView === 'editor') ||
+              (activeDockTab === 'invoice' && invoiceView === 'editor')) && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeDockTab === 'contract') {
+                    setContractView('list')
+                    return
+                  }
+
+                  if (activeDockTab === 'invoice') {
+                    setInvoiceView('list')
+                  }
+                }}
+                className="theme-shell-chip-strong inline-flex h-8 w-8 items-center justify-center rounded-[3px] text-[var(--tertiary)] transition-colors duration-200 hover:text-[var(--primary)]"
+                aria-label={`Close ${centerPanelTitle}`}
+              >
+                <CloseCircleBold size={16} />
+              </button>
+            )}
+
           </div>
           <div className="theme-shell-panel relative flex-1 min-h-0 overflow-visible rounded-[14px] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]">
-            <div className="h-full min-h-0 overflow-hidden rounded-[14px]">
+            <div className="h-full min-h-0 overflow-visible rounded-[14px]">
               {activeDockTab === 'contract' ? (
-                <div className="h-full overflow-y-auto rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] p-4 theme-scrollbar">
+                <div className="h-full overflow-visible rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] p-4 theme-scrollbar">
                   <ContractGenerator variant="dashboard" />
                 </div>
               ) : activeDockTab === 'invoice' ? (
-                <div className="h-full overflow-y-auto rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] p-4 theme-scrollbar">
+                <div className="h-full overflow-visible rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] p-4 theme-scrollbar">
                   <InvoiceGenerator variant="dashboard" />
+                </div>
+              ) : activeDockTab === 'income' ? (
+                <div className="h-full overflow-visible rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] p-4 theme-scrollbar">
+                  <IncomeTracker
+                    variant="dashboard"
+                    onOpenInvoice={openInvoiceFromIncome}
+                    onOpenInvoiceGenerator={() => {
+                      setActiveDockTab('invoice')
+                      setInvoiceView('list')
+                    }}
+                  />
                 </div>
               ) : (
                 <div className="flex h-full flex-col items-center justify-center rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] text-center">

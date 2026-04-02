@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
+import { Select } from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
 import { useClients } from '@/hooks/useClients'
 import { useCreateManualTimeLog, useCreateRunningTimeLog, useUpdateTimeLog } from '@/hooks/useTimeLogs'
@@ -26,8 +27,6 @@ export function TimerForm({
 }: TimerFormProps) {
   const inlineInputClassName =
     'theme-shell-field h-9 w-full rounded-[6px] px-3 py-1 text-[14px] leading-5 outline-none focus-visible:border-[var(--primary)]'
-  const inlineSelectClassName =
-    'theme-shell-field h-9 w-full appearance-none rounded-[6px] px-3 py-1 pr-10 text-[14px] leading-5 outline-none focus-visible:border-[var(--primary)]'
 
   const { data: clients = [] } = useClients()
   const createRunningTimeLog = useCreateRunningTimeLog()
@@ -132,27 +131,19 @@ export function TimerForm({
             />
           </div>
 
-          <div className="relative">
-            <select
-              id="timer-client"
-              value={clientId}
-              onChange={(event) => setClientId(event.target.value)}
-              className={inlineSelectClassName}
-            >
+          <Select
+            id="timer-client"
+            value={clientId}
+            onChange={(event) => setClientId(event.target.value)}
+            className="h-9 px-3"
+          >
               <option value="">Clients</option>
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
                   {client.name}
                 </option>
               ))}
-            </select>
-            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[var(--primary)]" aria-hidden>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="10" fill="currentColor" />
-                <path d="M8 10L12 14L16 10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
-          </div>
+          </Select>
 
           {mode === 'manual' && (
             <Input
@@ -192,21 +183,19 @@ export function TimerForm({
               <label htmlFor="timer-client" className="mb-2 block text-sm font-medium text-text-base">
                 Client
               </label>
-              <div className="relative">
-                <select
-                  id="timer-client"
-                  value={clientId}
-                  onChange={(event) => setClientId(event.target.value)}
-                  className="w-full rounded-md border-2 border-border-base bg-background-base px-lg py-md text-text-base transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-text-brand"
-                >
+              <Select
+                id="timer-client"
+                value={clientId}
+                onChange={(event) => setClientId(event.target.value)}
+                className="rounded-md border-2 border-border-base bg-background-base py-md text-text-base focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-text-brand"
+              >
                   <option value="">Unassigned</option>
                   {clients.map((client) => (
                     <option key={client.id} value={client.id}>
                       {client.name}
                     </option>
                   ))}
-                </select>
-              </div>
+              </Select>
             </div>
 
             {mode === 'manual' && (
@@ -248,7 +237,7 @@ export function TimerForm({
             variant="ghost"
             onClick={onClose}
             disabled={isPending}
-            className="h-10 rounded-full border border-[var(--primary)] px-8 py-2 text-[12px] font-medium leading-[12px] text-[var(--text-soft-subtle)] transition-all hover:bg-[var(--surface-overlay)]"
+            className="h-10 rounded-full border border-[var(--primary)] px-8 py-2 text-[12px] font-medium leading-[12px] text-text-muted transition-all hover:bg-[var(--surface-overlay)]"
           >
             Cancel
           </Button>

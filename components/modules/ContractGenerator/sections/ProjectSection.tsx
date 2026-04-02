@@ -31,17 +31,17 @@ export function ProjectSection() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-[14px] font-semibold text-[var(--text-soft-strong)]">
+        <h3 className="text-[14px] font-semibold text-text-base">
           Project
         </h3>
-        <p className="mt-0.5 text-[12px] text-[var(--text-soft-muted)]">
+        <p className="mt-0.5 text-[12px] text-text-muted">
           Define the scope of work, deliverables, and exclusions.
         </p>
       </div>
 
       {/* Project name */}
       <div>
-        <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+        <label className="mb-1 block text-[12px] font-medium text-text-base">
           Project Name
         </label>
         <input
@@ -55,7 +55,7 @@ export function ProjectSection() {
 
       {/* Scope */}
       <div>
-        <label className="mb-1 block text-[12px] font-medium text-[var(--text-soft-strong)]">
+        <label className="mb-1 block text-[12px] font-medium text-text-base">
           Scope of Work
         </label>
         <textarea
@@ -70,7 +70,7 @@ export function ProjectSection() {
       {/* Deliverables */}
       <div>
         <div className="mb-1 flex items-center justify-between">
-          <label className="text-[12px] font-medium text-[var(--text-soft-strong)]">
+          <label className="text-[12px] font-medium text-text-base">
             Deliverables
           </label>
           <button
@@ -84,13 +84,13 @@ export function ProjectSection() {
         </div>
         <div className="space-y-2">
           {deliverables.length === 0 && (
-            <p className="text-[12px] text-[var(--text-soft-subtle)]">
+            <p className="text-[12px] text-text-muted">
               No deliverables yet. Click Add to list what the client will receive.
             </p>
           )}
           {deliverables.map((item, index) => (
             <div key={index} className="flex items-center gap-2">
-              <span className="text-[12px] text-[var(--text-soft-muted)]">•</span>
+              <span className="text-[12px] text-text-muted">•</span>
               <input
                 type="text"
                 value={item.text}
@@ -101,7 +101,7 @@ export function ProjectSection() {
               <button
                 type="button"
                 onClick={() => removeDeliverable(index)}
-                className="text-[var(--text-soft-muted)] hover:text-[var(--text-danger-soft)]"
+                className="text-text-muted hover:text-feedback-error-text"
               >
                 <CloseCircleBold size={14} />
               </button>
@@ -124,7 +124,7 @@ export function ProjectSection() {
         ) : (
           <div>
             <div className="mb-1 flex items-center justify-between">
-              <label className="text-[12px] font-medium text-[var(--text-soft-strong)]">
+              <label className="text-[12px] font-medium text-text-base">
                 Not Included
               </label>
               <button
@@ -133,7 +133,7 @@ export function ProjectSection() {
                   setShowExclusions(false)
                   updateFormData({ exclusions: null })
                 }}
-                className="text-[12px] text-[var(--text-soft-muted)] hover:text-[var(--text-danger-soft)]"
+                className="text-[12px] text-text-muted hover:text-feedback-error-text"
               >
                 Remove
               </button>

@@ -62,10 +62,10 @@ export function TemplatePicker({ onSelect }: TemplatePickerProps) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-6 px-4">
       <div className="text-center">
-        <h2 className="text-lg font-semibold text-[var(--text-soft-strong)]">
+        <h2 className="text-lg font-semibold text-text-base">
           Choose a template
         </h2>
-        <p className="mt-1 text-[13px] text-[var(--text-soft-muted)]">
+        <p className="mt-1 text-[13px] text-text-muted">
           Each template pre-fills relevant sections with sensible defaults.
         </p>
       </div>
@@ -82,15 +82,15 @@ export function TemplatePicker({ onSelect }: TemplatePickerProps) {
               {template.icon}
             </div>
             <div>
-              <p className="text-[14px] font-semibold leading-tight text-[var(--text-soft-strong)]">
+              <p className="text-[14px] font-semibold leading-tight text-text-base">
                 {template.title}
               </p>
               {template.subtitle && (
-                <p className="text-[13px] font-medium text-[var(--text-soft-muted)]">
+                <p className="text-[13px] font-medium text-text-muted">
                   {template.subtitle}
                 </p>
               )}
-              <p className="mt-1 text-[12px] text-[var(--text-soft-subtle)]">
+              <p className="mt-1 text-[12px] text-text-muted">
                 {template.description}
               </p>
             </div>
@@ -110,15 +110,15 @@ export function TemplatePicker({ onSelect }: TemplatePickerProps) {
               {template.icon}
             </div>
             <div>
-              <p className="text-[14px] font-semibold leading-tight text-[var(--text-soft-strong)]">
+              <p className="text-[14px] font-semibold leading-tight text-text-base">
                 {template.title}
               </p>
               {template.subtitle && (
-                <p className="text-[13px] font-medium text-[var(--text-soft-muted)]">
+                <p className="text-[13px] font-medium text-text-muted">
                   {template.subtitle}
                 </p>
               )}
-              <p className="mt-1 text-[12px] text-[var(--text-soft-subtle)]">
+              <p className="mt-1 text-[12px] text-text-muted">
                 {template.description}
               </p>
             </div>

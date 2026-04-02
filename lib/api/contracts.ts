@@ -76,6 +76,7 @@ export async function getContractByToken(token: string): Promise<Contract | null
     .from('contracts')
     .select('*')
     .eq('share_token', token)
+    .neq('status', 'draft')
     .single()
 
   if (error) {
@@ -236,6 +237,31 @@ export async function generateShareLink(id: string): Promise<string> {
     throw toContractApiError('generate share link', error.message)
   }
 
+  let shareToken = data?.share_token || null
+
+  if (!shareToken) {
+    const fallbackToken = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+
+    const { data: tokenData, error: tokenError } = await supabase
+      .from('contracts')
+      .update({ status: 'sent', share_token: fallbackToken })
+      .eq('id', id)
+      .select('share_token')
+      .single()
+
+    if (tokenError) {
+      throw toContractApiError('generate share link', tokenError.message)
+    }
+
+    shareToken = tokenData?.share_token || null
+  }
+
+  if (!shareToken) {
+    throw new Error('Failed to generate share link: share token is missing')
+  }
+
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-  return `${baseUrl}/c/${data.share_token}`
+  return `${baseUrl}/c/${shareToken}`
 }

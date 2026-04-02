@@ -26,10 +26,10 @@ import type { Invoice } from '@/lib/types/database'
 import type { InvoiceLineItem } from '@/lib/utils/invoiceCalculations'
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  unpaid: { bg: 'bg-[rgba(234,179,0,0.12)]', text: 'text-[var(--feedback-warning-text)]', label: 'Unpaid' },
-  paid: { bg: 'bg-feedback-success-base/12', text: 'text-feedback-success-text', label: 'Paid' },
-  overdue: { bg: 'bg-[rgba(220,38,38,0.12)]', text: 'text-[var(--feedback-error-text)]', label: 'Overdue' },
-  archived: { bg: 'bg-[var(--surface-disabled)]', text: 'text-[var(--text-soft-disabled)]', label: 'Archived' },
+  unpaid: { bg: 'bg-feedback-warning-bg', text: 'text-feedback-warning-text', label: 'Unpaid' },
+  paid: { bg: 'bg-feedback-success-bg', text: 'text-feedback-success-text', label: 'Paid' },
+  overdue: { bg: 'bg-feedback-error-bg', text: 'text-feedback-error-text', label: 'Overdue' },
+  archived: { bg: 'bg-background-disabled', text: 'text-text-disabled', label: 'Archived' },
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -62,6 +62,7 @@ export function InvoicesList() {
   const { setView, setActiveInvoice, updateFormData, resetForm, initNewInvoice } =
     useInvoiceStore()
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [copyErrorId, setCopyErrorId] = useState<string | null>(null)
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null)
 
   const getClientName = (clientId: string | null) => {
@@ -99,13 +100,28 @@ export function InvoicesList() {
   }
 
   const handleCopyLink = async (invoice: Invoice) => {
+    if (isGuest) {
+      openWithAction(() => {
+        // Share links require migration to an authenticated account.
+      })
+      return
+    }
+
     try {
       const url = await shareMutation.mutateAsync(invoice.id)
+
+      if (!url || /\/(null|undefined)$/.test(url)) {
+        throw new Error('Invalid share URL')
+      }
+
       await navigator.clipboard.writeText(url)
       setCopiedId(invoice.id)
+      setCopyErrorId(null)
       setTimeout(() => setCopiedId(null), 2000)
     } catch {
-      // silently fail
+      setCopyErrorId(invoice.id)
+      setCopiedId(null)
+      setTimeout(() => setCopyErrorId(null), 2500)
     }
   }
 
@@ -187,7 +203,7 @@ export function InvoicesList() {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-[13px] text-[var(--text-soft-muted)]">Loading invoices...</p>
+        <p className="text-[13px] text-text-muted">Loading invoices...</p>
       </div>
     )
   }
@@ -201,12 +217,12 @@ export function InvoicesList() {
           <button
             type="button"
             onClick={() => setPreviewInvoice(null)}
-            className="text-[14px] font-semibold text-[var(--text-soft-strong)] hover:text-[var(--tertiary)]"
+            className="text-[14px] font-semibold text-text-base hover:text-[var(--tertiary)]"
           >
             ← Back
           </button>
         ) : (
-          <h3 className="text-[14px] font-semibold text-[var(--text-soft-strong)]">
+          <h3 className="text-[14px] font-semibold text-text-base">
             Invoices
           </h3>
         )}
@@ -225,23 +241,23 @@ export function InvoicesList() {
       {/* List */}
       {previewInvoice ? (
         <div className="min-h-0 flex-1 overflow-y-auto rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-4 theme-scrollbar">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">Invoice</p>
-          <h2 className="mt-2 text-[20px] font-bold text-[var(--text-soft-strong)]">{previewInvoice.invoice_number}</h2>
-          <p className="mt-1 text-[13px] text-[var(--text-soft-muted)]">Issued {previewInvoice.issue_date} · Due {previewInvoice.due_date}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Invoice</p>
+          <h2 className="mt-2 text-[20px] font-bold text-text-base">{previewInvoice.invoice_number}</h2>
+          <p className="mt-1 text-[13px] text-text-muted">Issued {previewInvoice.issue_date} · Due {previewInvoice.due_date}</p>
 
           <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">Bill To</p>
-            <p className="mt-2 text-[14px] font-medium text-[var(--text-soft-strong)]">{getClientName(previewInvoice.client_id) || 'Client'}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Bill To</p>
+            <p className="mt-2 text-[14px] font-medium text-text-base">{getClientName(previewInvoice.client_id) || 'Client'}</p>
           </div>
 
           <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">Line Items</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Line Items</p>
             <div className="mt-2 space-y-2">
               {(Array.isArray(previewInvoice.line_items)
                 ? (previewInvoice.line_items as unknown as InvoiceLineItem[])
                 : []
               ).map((item) => (
-                <div key={item.id} className="grid grid-cols-[1fr_50px_90px_100px] gap-2 text-[13px] text-[var(--text-soft-strong)]">
+                <div key={item.id} className="grid grid-cols-[1fr_50px_90px_100px] gap-2 text-[13px] text-text-base">
                   <span>{item.description || 'Item'}</span>
                   <span className="text-right">{item.qty}</span>
                   <span className="text-right">{formatCurrency(item.rate, previewInvoice.currency)}</span>
@@ -253,31 +269,31 @@ export function InvoicesList() {
 
           <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
             <div className="ml-auto w-full max-w-[240px] space-y-1 text-[13px]">
-              <div className="flex justify-between text-[var(--text-soft-muted)]"><span>Subtotal</span><span>{formatCurrency(previewInvoice.subtotal, previewInvoice.currency)}</span></div>
-              <div className="flex justify-between text-[var(--text-soft-muted)]"><span>Tax</span><span>{formatCurrency(previewInvoice.tax_amount || 0, previewInvoice.currency)}</span></div>
-              <div className="flex justify-between border-t border-[var(--surface-divider)] pt-1 font-semibold text-[var(--text-soft-strong)]"><span>Total</span><span>{formatCurrency(previewInvoice.total, previewInvoice.currency)}</span></div>
+              <div className="flex justify-between text-text-muted"><span>Subtotal</span><span>{formatCurrency(previewInvoice.subtotal, previewInvoice.currency)}</span></div>
+              <div className="flex justify-between text-text-muted"><span>Tax</span><span>{formatCurrency(previewInvoice.tax_amount || 0, previewInvoice.currency)}</span></div>
+              <div className="flex justify-between border-t border-[var(--surface-divider)] pt-1 font-semibold text-text-base"><span>Total</span><span>{formatCurrency(previewInvoice.total, previewInvoice.currency)}</span></div>
             </div>
           </div>
 
           {(previewInvoice.payment_method || previewInvoice.payment_instructions) && (
             <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">Payment</p>
-              {previewInvoice.payment_method && <p className="mt-2 text-[14px] text-[var(--text-soft-strong)]">{previewInvoice.payment_method}</p>}
-              {previewInvoice.payment_instructions && <p className="mt-1 whitespace-pre-line text-[13px] text-[var(--text-soft-muted)]">{previewInvoice.payment_instructions}</p>}
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Payment</p>
+              {previewInvoice.payment_method && <p className="mt-2 text-[14px] text-text-base">{previewInvoice.payment_method}</p>}
+              {previewInvoice.payment_instructions && <p className="mt-1 whitespace-pre-line text-[13px] text-text-muted">{previewInvoice.payment_instructions}</p>}
             </div>
           )}
 
           {previewInvoice.notes_to_client && (
             <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">Notes</p>
-              <p className="mt-2 whitespace-pre-line text-[14px] leading-[22px] text-[var(--text-soft-strong)]">{previewInvoice.notes_to_client}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Notes</p>
+              <p className="mt-2 whitespace-pre-line text-[14px] leading-[22px] text-text-base">{previewInvoice.notes_to_client}</p>
             </div>
           )}
         </div>
       ) : invoices.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-          <DocumentText1Bold size={28} className="text-[var(--text-soft-muted)]" />
-          <p className="text-[13px] text-[var(--text-soft-muted)]">No invoices yet</p>
+          <DocumentText1Bold size={28} className="text-text-muted" />
+          <p className="text-[13px] text-text-muted">No invoices yet</p>
           <button
             type="button"
             onClick={handleNewInvoice}
@@ -303,7 +319,7 @@ export function InvoicesList() {
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="truncate text-[13px] font-medium text-[var(--text-soft-strong)]">
+                    <p className="truncate text-[13px] font-medium text-text-base">
                       {invoice.invoice_number}
                       {clientName ? ` · ${clientName}` : ''}
                       {' · '}
@@ -349,12 +365,22 @@ export function InvoicesList() {
                           <span className="text-[11px] font-medium text-[var(--feedback-success-text)]">
                             Copied!
                           </span>
+                        ) : copyErrorId === invoice.id ? (
+                          <span className="text-[11px] font-medium text-feedback-errorText">
+                            Failed
+                          </span>
                         ) : (
                           <LinkBold size={14} />
                         )}
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent>Copy share link</TooltipContent>
+                    <TooltipContent>
+                      {copyErrorId === invoice.id
+                        ? 'Failed to copy link'
+                        : copiedId === invoice.id
+                          ? 'Link copied'
+                          : 'Copy share link'}
+                    </TooltipContent>
                   </Tooltip>
 
                   <Tooltip>
@@ -404,7 +430,7 @@ export function InvoicesList() {
                           event.stopPropagation()
                           handleDelete(invoice.id)
                         }}
-                        className="rounded-[6px] p-1.5 text-text-brand hover:bg-[var(--surface-danger-soft)] hover:text-[var(--text-danger-soft)]"
+                        className="rounded-[6px] p-1.5 text-text-brand hover:bg-feedback-error-bg hover:text-feedback-error-text"
                         aria-label="Delete"
                       >
                         <TrashBold size={14} />

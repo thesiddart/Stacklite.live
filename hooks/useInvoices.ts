@@ -248,7 +248,7 @@ export function useGenerateInvoiceShareLink() {
   return useMutation({
     mutationFn: async (id: string) => {
       if (isGuest) {
-        return `${window.location.origin}/i/guest-${id}`
+        throw new Error('Guest mode requires account save before creating share links')
       }
       return generateInvoiceShareLink(id)
     },

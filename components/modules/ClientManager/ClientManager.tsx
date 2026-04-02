@@ -119,10 +119,10 @@ export function ClientManager({ variant = 'dashboard' }: ClientManagerProps) {
               <div className="rounded-lg border border-dashed border-border-muted bg-background-highlight/30 p-xl text-center">
                 <PeopleBold className="mx-auto h-10 w-10 text-text-muted" />
                 <p className="mt-md text-base font-medium text-text-base">
-                  {searchQuery ? 'No clients match this search.' : 'No clients yet.'}
+                  {searchQuery ? 'No clients match this search.' : 'Add a client to get started.'}
                 </p>
                 <p className="mt-xs text-sm text-text-muted">
-                  Add your first client to start generating contracts and invoices.
+                  They'll be available across contracts, invoices, and time tracking.
                 </p>
                 {!searchQuery && (
                   <div className="mt-lg">

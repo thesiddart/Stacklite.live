@@ -22,6 +22,7 @@ function LoginPageContent() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [needsVerificationHelp, setNeedsVerificationHelp] = useState(false)
@@ -128,7 +129,7 @@ function LoginPageContent() {
                 type="button"
                 onClick={() => handleOAuthSignIn('google')}
                 disabled={oauthLoadingProvider !== null}
-                className="flex h-10 min-w-0 items-center justify-center gap-1 rounded-full border border-[var(--text-soft-subtle)] px-8 py-2 text-[12px] font-medium leading-[12px] text-[var(--text-soft-subtle)] transition-colors hover:bg-[var(--surface-overlay)] disabled:opacity-60"
+                className="flex h-10 min-w-0 items-center justify-center gap-1 rounded-full border border-border-muted px-8 py-2 text-[12px] font-medium leading-[12px] text-text-muted transition-colors hover:bg-[var(--surface-overlay)] disabled:opacity-60"
               >
                 <GoogleIcon />
                 <span>{oauthLoadingProvider === 'google' ? 'Connecting...' : 'Google'}</span>
@@ -138,7 +139,7 @@ function LoginPageContent() {
                 type="button"
                 onClick={() => handleOAuthSignIn('github')}
                 disabled={oauthLoadingProvider !== null}
-                className="flex h-10 min-w-0 items-center justify-center gap-1 rounded-full border border-[var(--text-soft-subtle)] px-8 py-2 text-[12px] font-medium leading-[12px] text-[var(--text-soft-subtle)] transition-colors hover:bg-[var(--surface-overlay)] disabled:opacity-60"
+                className="flex h-10 min-w-0 items-center justify-center gap-1 rounded-full border border-border-muted px-8 py-2 text-[12px] font-medium leading-[12px] text-text-muted transition-colors hover:bg-[var(--surface-overlay)] disabled:opacity-60"
               >
                 <GithubIcon />
                 <span>Github</span>
@@ -146,9 +147,9 @@ function LoginPageContent() {
             </div>
 
             <div className="flex items-center justify-center gap-2">
-              <hr className="h-px flex-1 border-0 bg-[var(--text-soft-subtle)]" />
+              <hr className="h-px flex-1 border-0 bg-border-muted" />
               <span className="text-[14px] leading-5 text-text-base">or sign in with email</span>
-              <hr className="h-px flex-1 border-0 bg-[var(--text-soft-subtle)]" />
+              <hr className="h-px flex-1 border-0 bg-border-muted" />
             </div>
 
             <form id="login-form" onSubmit={handleEmailSignIn} className="flex flex-col gap-4">
@@ -185,7 +186,7 @@ function LoginPageContent() {
 
               <div className="flex flex-col gap-2">
                 <label className="text-[14px] font-medium leading-4 text-text-base">
-                  Your email<span className="text-feedback-error-base">*</span>
+                  Your email<span className="text-text-brand">*</span>
                 </label>
                 <input
                   type="email"
@@ -199,19 +200,40 @@ function LoginPageContent() {
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <label className="text-[14px] font-medium leading-4 text-text-base">
-                    Password<span className="text-feedback-error-base">*</span>
+                    Password<span className="text-text-brand">*</span>
                   </label>
                   <Link href="#" className="text-[14px] leading-none text-text-muted underline">
                     Forgot your password?
                   </Link>
                 </div>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                  className="theme-shell-field h-9 w-full rounded-[6px] px-3 py-1 text-[14px] leading-5 outline-none focus-visible:border-[var(--primary)]"
-                />
+                <div className="relative">
+                  <input
+                    type={isPasswordVisible ? 'text' : 'password'}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    required
+                    className="theme-shell-field h-9 w-full rounded-[6px] px-3 py-1 pr-10 text-[14px] leading-5 outline-none focus-visible:border-[var(--primary)]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIsPasswordVisible((prev) => !prev)}
+                    className="absolute right-2 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center text-text-muted transition-colors hover:text-text-base"
+                    aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
+                  >
+                    {isPasswordVisible ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M3.5 12C4.6 8.7 8.1 5.25 12 5.25C15.9 5.25 19.4 8.7 20.5 12C19.4 15.3 15.9 18.75 12 18.75C8.1 18.75 4.6 15.3 3.5 12Z" fill="currentColor" opacity="0.45" />
+                        <circle cx="12" cy="12" r="2.6" fill="currentColor" />
+                        <path d="M4 4L20 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      </svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M2.5 12C3.5 8.5 7.2 4.75 12 4.75C16.8 4.75 20.5 8.5 21.5 12C20.5 15.5 16.8 19.25 12 19.25C7.2 19.25 3.5 15.5 2.5 12Z" fill="currentColor" opacity="0.45" />
+                        <circle cx="12" cy="12" r="3" fill="currentColor" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
             </form>
 
@@ -228,7 +250,7 @@ function LoginPageContent() {
               <Link href="/signup" className="block">
                 <button
                   type="button"
-                  className="flex h-10 w-full items-center justify-center rounded-full border border-[var(--primary)] px-8 py-2 text-[12px] font-medium leading-[12px] text-[var(--text-soft-subtle)] transition-all hover:bg-[var(--surface-overlay)]"
+                  className="flex h-10 w-full items-center justify-center rounded-full border border-[var(--primary)] px-8 py-2 text-[12px] font-medium leading-[12px] text-text-muted transition-all hover:bg-[var(--surface-overlay)]"
                 >
                   Create New Account
                 </button>
