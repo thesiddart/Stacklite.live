@@ -26,7 +26,7 @@ import type { Contract } from '@/lib/types/database'
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
   sent: {
     bg: 'bg-[var(--surface-chip)]',
-    text: 'text-[var(--text-soft-muted)]',
+    text: 'text-text-muted',
     label: 'Not Signed',
   },
   signed: {
@@ -36,7 +36,7 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }>
   },
   archived: {
     bg: 'bg-[var(--surface-disabled)]',
-    text: 'text-[var(--text-soft-disabled)]',
+    text: 'text-text-disabled',
     label: 'Archived',
   },
 }
@@ -216,7 +216,7 @@ export function ContractsList() {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-[13px] text-[var(--text-soft-muted)]">Loading contracts...</p>
+        <p className="text-[13px] text-text-muted">Loading contracts...</p>
       </div>
     )
   }
@@ -230,12 +230,12 @@ export function ContractsList() {
           <button
             type="button"
             onClick={() => setPreviewContract(null)}
-            className="text-[14px] font-semibold text-[var(--text-soft-strong)] hover:text-[var(--tertiary)]"
+            className="text-[14px] font-semibold text-text-base hover:text-[var(--tertiary)]"
           >
             ← Back
           </button>
         ) : (
-          <h3 className="text-[14px] font-semibold text-[var(--text-soft-strong)]">
+          <h3 className="text-[14px] font-semibold text-text-base">
             Contracts
           </h3>
         )}
@@ -254,49 +254,49 @@ export function ContractsList() {
       {/* List */}
       {previewContract ? (
         <div className="min-h-0 flex-1 overflow-y-auto rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-4 theme-scrollbar">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
             Service Agreement
           </p>
-          <h2 className="mt-2 text-[20px] font-bold text-[var(--text-soft-strong)]">
+          <h2 className="mt-2 text-[20px] font-bold text-text-base">
             {previewContract.project_name || 'Untitled Contract'}
           </h2>
-          <p className="mt-1 text-[13px] text-[var(--text-soft-muted)]">
+          <p className="mt-1 text-[13px] text-text-muted">
             Between Siddhartha Dwivedi and {getClientName(previewContract.client_id) || 'Client'}
           </p>
 
           <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">Scope of Work</p>
-            <p className="mt-2 whitespace-pre-line text-[14px] leading-[22px] text-[var(--text-soft-strong)]">{previewContract.scope || 'No scope provided.'}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Scope of Work</p>
+            <p className="mt-2 whitespace-pre-line text-[14px] leading-[22px] text-text-base">{previewContract.scope || 'No scope provided.'}</p>
           </div>
 
           <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">Deliverables</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Deliverables</p>
             <ul className="mt-2 space-y-1.5">
               {(Array.isArray(previewContract.deliverables)
                 ? (previewContract.deliverables as Array<{ text?: string }>).map((d) => d.text || '').filter(Boolean)
                 : []
               ).map((item, index) => (
-                <li key={index} className="text-[14px] text-[var(--text-soft-strong)]">• {item}</li>
+                <li key={index} className="text-[14px] text-text-base">• {item}</li>
               ))}
             </ul>
           </div>
 
           <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">Timeline</p>
-            <p className="mt-2 text-[14px] text-[var(--text-soft-strong)]">{previewContract.start_date || 'TBD'} — {previewContract.end_date || 'TBD'}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Timeline</p>
+            <p className="mt-2 text-[14px] text-text-base">{previewContract.start_date || 'TBD'} — {previewContract.end_date || 'TBD'}</p>
           </div>
 
           <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">Payment Terms</p>
-            <p className="mt-2 text-[18px] font-bold text-[var(--text-soft-strong)]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Payment Terms</p>
+            <p className="mt-2 text-[18px] font-bold text-text-base">
               {previewContract.currency} {Number(previewContract.total_fee || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
-            <p className="mt-1 text-[14px] text-[var(--text-soft-muted)]">{previewContract.payment_structure || 'Custom payment terms'}</p>
-            <p className="mt-1 text-[13px] text-[var(--text-soft-muted)]">Via {previewContract.payment_method || 'Bank transfer'}.</p>
+            <p className="mt-1 text-[14px] text-text-muted">{previewContract.payment_structure || 'Custom payment terms'}</p>
+            <p className="mt-1 text-[13px] text-text-muted">Via {previewContract.payment_method || 'Bank transfer'}.</p>
           </div>
 
           <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-soft-muted)]">Terms & Conditions</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Terms & Conditions</p>
             <ol className="mt-3 space-y-3">
               {Object.entries((previewContract.clauses && typeof previewContract.clauses === 'object'
                 ? (previewContract.clauses as Record<string, { on?: boolean; text?: string }>)
@@ -304,8 +304,8 @@ export function ContractsList() {
               ))
                 .filter(([, c]) => Boolean(c?.on && c?.text))
                 .map(([key, clause], index) => (
-                  <li key={key} className="text-[14px] leading-[22px] text-[var(--text-soft-muted)]">
-                    <span className="font-semibold text-[var(--text-soft-strong)]">{index + 1}. {clauseLabelMap[key] || key}.</span>{' '}
+                  <li key={key} className="text-[14px] leading-[22px] text-text-muted">
+                    <span className="font-semibold text-text-base">{index + 1}. {clauseLabelMap[key] || key}.</span>{' '}
                     {clause?.text}
                   </li>
                 ))}
@@ -314,8 +314,8 @@ export function ContractsList() {
         </div>
       ) : contracts.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-          <DocumentText1Bold size={28} className="text-[var(--text-soft-muted)]" />
-          <p className="text-[13px] text-[var(--text-soft-muted)]">No contracts yet</p>
+          <DocumentText1Bold size={28} className="text-[var(--tertiary)]" />
+          <p className="text-[13px] text-text-muted">No contracts yet</p>
           <button
             type="button"
             onClick={handleNewContract}
@@ -342,14 +342,14 @@ export function ContractsList() {
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="truncate text-[13px] font-medium text-[var(--text-soft-strong)]">
+                    <p className="truncate text-[13px] font-medium text-text-base">
                       {clientName
                         ? `${clientName} — ${contract.project_name || 'Untitled'}`
                         : contract.project_name || 'Untitled Contract'}
                     </p>
                     <StatusBadge status={displayStatus} />
                   </div>
-                  <p className="mt-0.5 text-[11px] text-[var(--text-soft-subtle)]">
+                  <p className="mt-0.5 text-[11px] text-text-muted">
                     Updated {new Date(contract.updated_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -363,7 +363,7 @@ export function ContractsList() {
                           event.stopPropagation()
                           handleEdit(contract)
                         }}
-                        className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-[var(--surface-chip)] hover:text-[var(--tertiary)]"
+                        className="rounded-[6px] p-1.5 text-text-brand hover:bg-[var(--surface-chip)] hover:text-text-base"
                         aria-label="Edit"
                       >
                         <EditBold size={14} />
@@ -380,7 +380,7 @@ export function ContractsList() {
                           event.stopPropagation()
                           handleCopyLink(contract)
                         }}
-                        className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-[var(--surface-chip)] hover:text-[var(--tertiary)]"
+                        className="rounded-[6px] p-1.5 text-text-brand hover:bg-[var(--surface-chip)] hover:text-text-base"
                         aria-label="Copy share link"
                       >
                         {copiedId === contract.id ? (
@@ -403,7 +403,7 @@ export function ContractsList() {
                           event.stopPropagation()
                           handleDownload(contract)
                         }}
-                        className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-[var(--surface-chip)] hover:text-[var(--tertiary)]"
+                        className="rounded-[6px] p-1.5 text-text-brand hover:bg-[var(--surface-chip)] hover:text-text-base"
                         aria-label="Download PDF"
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -425,7 +425,7 @@ export function ContractsList() {
                             event.stopPropagation()
                             handleMarkSigned(contract.id)
                           }}
-                          className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-feedback-success-base/10 hover:text-feedback-success-text"
+                          className="rounded-[6px] p-1.5 text-text-brand hover:bg-feedback-success-base/10 hover:text-feedback-success-text"
                           aria-label="Mark as signed"
                         >
                           <TickCircleBold size={14} />
@@ -443,7 +443,7 @@ export function ContractsList() {
                           event.stopPropagation()
                           handleDelete(contract.id)
                         }}
-                        className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-[var(--surface-danger-soft)] hover:text-[var(--text-danger-soft)]"
+                        className="rounded-[6px] p-1.5 text-text-brand hover:bg-[var(--surface-danger-soft)] hover:text-[var(--text-danger-soft)]"
                         aria-label="Delete"
                       >
                         <TrashBold size={14} />

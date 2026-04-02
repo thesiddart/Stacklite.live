@@ -45,7 +45,7 @@ export function TimerEntry({
             aria-label={`Edit ${entry.task_name}`}
             onClick={onEdit}
             disabled={isPending}
-            className="inline-flex shrink-0 items-center justify-center text-[var(--text-soft-strong)] transition-colors hover:text-[var(--tertiary)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex shrink-0 items-center justify-center text-text-base transition-colors hover:text-[var(--tertiary)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <EditBold size={16} />
           </button>
@@ -53,8 +53,8 @@ export function TimerEntry({
 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-px">
-            <WatchBold className="h-4 w-4 flex-shrink-0 text-[var(--text-soft-muted)]" />
-            <span className="text-[12px] font-medium leading-normal whitespace-nowrap text-[var(--text-soft-muted)]">
+            <WatchBold className="h-4 w-4 flex-shrink-0 text-text-muted" />
+            <span className="text-[12px] font-medium leading-normal whitespace-nowrap text-text-muted">
               {formatDuration(elapsed)}
             </span>
           </div>
@@ -77,7 +77,7 @@ export function TimerEntry({
                   aria-label={`Complete ${entry.task_name}`}
                   onClick={onStop}
                   disabled={isPending}
-                  className="inline-flex items-center justify-center text-[var(--text-soft-muted)] transition-colors hover:text-[var(--text-soft-subtle)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center text-text-muted transition-colors hover:text-text-base disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <TickCircleBold size={16} />
                 </button>
@@ -99,7 +99,7 @@ export function TimerEntry({
                   aria-label={`Complete ${entry.task_name}`}
                   onClick={onStop}
                   disabled={isPending}
-                  className="inline-flex items-center justify-center text-[var(--text-soft-muted)] transition-colors hover:text-[var(--text-soft-subtle)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center text-text-muted transition-colors hover:text-text-base disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <TickCircleBold size={16} />
                 </button>
@@ -119,7 +119,7 @@ export function TimerEntry({
         )}
 
         {entry.notes && !clientName && (
-          <p className="line-clamp-2 text-[12px] leading-normal text-[var(--text-soft-muted)]">
+          <p className="line-clamp-2 text-[12px] leading-normal text-text-muted">
             {entry.notes}
           </p>
         )}

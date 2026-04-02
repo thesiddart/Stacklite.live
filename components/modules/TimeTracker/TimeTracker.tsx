@@ -272,11 +272,11 @@ export function TimeTracker({ variant = 'page', onCollapse }: TimeTrackerProps) 
                 />
               </div>
             ) : isLoading ? (
-              <div className="rounded-[10px] bg-[var(--surface-card-subtle)] p-3 text-[13px] text-[var(--text-soft-muted)]">
+              <div className="rounded-[10px] bg-[var(--surface-card-subtle)] p-3 text-[13px] text-text-muted">
                 Loading time entries...
               </div>
             ) : shouldShowList && displayedTimers.length === 0 ? (
-              <div className="rounded-[10px] bg-[var(--surface-card-subtle)] p-3 text-[13px] text-[var(--text-soft-muted)]">
+              <div className="rounded-[10px] bg-[var(--surface-card-subtle)] p-3 text-[13px] text-text-muted">
                 No time entries yet. Click + to start your first timer.
               </div>
             ) : shouldShowList ? (
@@ -305,12 +305,12 @@ export function TimeTracker({ variant = 'page', onCollapse }: TimeTrackerProps) 
 
         {variant === 'page' && (
           <div className="theme-shell-card inline-flex items-center gap-[2px] rounded-[8px] px-1">
-            <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[var(--text-soft-muted)]">
+            <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-text-muted">
               <span>Today:</span>
               <span>{formatHoursAndMinutes(dailyTotal)}</span>
             </div>
             <div className="theme-shell-divider h-6 w-px" />
-            <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[var(--text-soft-muted)]">
+            <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-text-muted">
               <span>This Week:</span>
               <span>{formatHoursAndMinutes(weeklyTotal)}</span>
             </div>

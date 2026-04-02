@@ -301,100 +301,98 @@ function parseClause(clause: string): { title: string; body: string } {
 }
 
 export function downloadContractPdf(fileName: string, data: ContractPdfData) {
-  const textDark: Rgb = [0.102, 0.086, 0.239]
-  const textMuted: Rgb = [0.380, 0.455, 0.430]
-  const textBody: Rgb = [0.355, 0.420, 0.400]
-  const border: Rgb = [0.910, 0.894, 0.965]
-  const accent: Rgb = [0.176, 0.541, 0.392]
+  const textDark: Rgb = [0.043, 0.082, 0.133]
+  const textMuted: Rgb = [0.200, 0.255, 0.314]
+  const divider: Rgb = [0.714, 0.808, 0.780]
   const commands: PdfCmd[] = []
 
-  let y = 760
-  commands.push({ kind: 'text', text: 'SERVICE AGREEMENT', x: 50, y, size: 10, color: textMuted, bold: true })
-  y -= 24
-  commands.push({ kind: 'text', text: data.projectName, x: 50, y, size: 22, color: textDark, bold: true })
-  y -= 16
-  commands.push({ kind: 'text', text: `Between Freelancer and ${data.clientName}`, x: 50, y, size: 11, color: textMuted })
-  y -= 16
-  commands.push({ kind: 'line', x1: 50, y1: y, x2: 560, y2: y, width: 1, color: border })
+  const left = 38
+  const right = 574
+  const maxChars = 92
 
+  // Outer frame to match the preview card.
+  commands.push({ kind: 'rect', x: 22, y: 18, w: 568, h: 752, stroke: divider, lineWidth: 1 })
+
+  let y = 738
+  commands.push({ kind: 'text', text: 'SERVICE AGREEMENT', x: left, y, size: 13, color: textMuted, bold: true })
+  y -= 28
+  commands.push({ kind: 'text', text: data.projectName, x: left, y, size: 32, color: textDark, bold: true })
   y -= 22
-  commands.push({ kind: 'text', text: 'FREELANCER', x: 50, y, size: 9, color: textMuted, bold: true })
-  commands.push({ kind: 'text', text: 'CLIENT', x: 300, y, size: 9, color: textMuted, bold: true })
-  y -= 14
-  commands.push({ kind: 'text', text: 'Siddhartha Dwivedi', x: 50, y, size: 12, color: textDark, bold: true })
-  commands.push({ kind: 'text', text: data.clientName, x: 300, y, size: 12, color: textDark, bold: true })
-  y -= 12
-  commands.push({ kind: 'line', x1: 50, y1: y, x2: 560, y2: y, width: 1, color: border })
+  commands.push({ kind: 'text', text: `Between Siddhartha Dwivedi and ${data.clientName}`, x: left, y, size: 14, color: textMuted })
+  y -= 18
+  commands.push({ kind: 'line', x1: left, y1: y, x2: right, y2: y, width: 1, color: divider })
 
-  y -= 20
-  commands.push({ kind: 'text', text: 'SCOPE OF WORK', x: 50, y, size: 9, color: textMuted, bold: true })
-  y -= 14
-  for (const line of wrapText(data.scope || 'N/A', 92)) {
-    commands.push({ kind: 'text', text: line, x: 50, y, size: 11, color: textBody })
-    y -= 12
+  y -= 34
+  commands.push({ kind: 'text', text: 'SCOPE OF WORK', x: left, y, size: 13, color: textMuted, bold: true })
+  y -= 22
+  for (const line of wrapText(data.scope || 'No scope provided.', maxChars)) {
+    commands.push({ kind: 'text', text: line, x: left, y, size: 13, color: textDark })
+    y -= 16
   }
-  y -= 12
-  commands.push({ kind: 'line', x1: 50, y1: y, x2: 560, y2: y, width: 1, color: border })
+  y -= 8
+  commands.push({ kind: 'line', x1: left, y1: y, x2: right, y2: y, width: 1, color: divider })
 
-  y -= 20
-  commands.push({ kind: 'text', text: 'DELIVERABLES', x: 50, y, size: 9, color: textMuted, bold: true })
-  y -= 14
-  for (const item of data.deliverables.length > 0 ? data.deliverables : ['N/A']) {
-    commands.push({ kind: 'text', text: `- ${item}`, x: 56, y, size: 11, color: textDark })
-    commands.push({ kind: 'rect', x: 50, y: y + 3, w: 3, h: 3, fill: accent })
-    y -= 12
+  y -= 34
+  commands.push({ kind: 'text', text: 'DELIVERABLES', x: left, y, size: 13, color: textMuted, bold: true })
+  y -= 22
+  for (const item of data.deliverables.length > 0 ? data.deliverables : ['No deliverables provided.']) {
+    for (const [index, line] of wrapText(`• ${item}`, maxChars).entries()) {
+      commands.push({ kind: 'text', text: line, x: left, y, size: 13, color: textDark })
+      y -= index === 0 ? 16 : 15
+    }
   }
-  y -= 12
-  commands.push({ kind: 'line', x1: 50, y1: y, x2: 560, y2: y, width: 1, color: border })
+  y -= 8
+  commands.push({ kind: 'line', x1: left, y1: y, x2: right, y2: y, width: 1, color: divider })
 
-  y -= 20
-  commands.push({ kind: 'text', text: 'TIMELINE', x: 50, y, size: 9, color: textMuted, bold: true })
-  y -= 14
-  commands.push({ kind: 'text', text: data.timeline, x: 50, y, size: 11, color: textDark })
+  y -= 34
+  commands.push({ kind: 'text', text: 'TIMELINE', x: left, y, size: 13, color: textMuted, bold: true })
+  y -= 22
+  commands.push({ kind: 'text', text: data.timeline, x: left, y, size: 13, color: textDark })
   for (const milestone of data.milestones) {
-    y -= 12
-    commands.push({ kind: 'text', text: `- ${milestone}`, x: 56, y, size: 10, color: textMuted })
+    y -= 16
+    commands.push({ kind: 'text', text: `• ${milestone}`, x: left, y, size: 12, color: textMuted })
   }
-  y -= 12
-  commands.push({ kind: 'line', x1: 50, y1: y, x2: 560, y2: y, width: 1, color: border })
+  y -= 8
+  commands.push({ kind: 'line', x1: left, y1: y, x2: right, y2: y, width: 1, color: divider })
 
+  y -= 34
+  commands.push({ kind: 'text', text: 'PAYMENT TERMS', x: left, y, size: 13, color: textMuted, bold: true })
+  y -= 22
+  commands.push({ kind: 'text', text: data.amount, x: left, y, size: 24, color: textDark, bold: true })
   y -= 20
-  commands.push({ kind: 'text', text: 'PAYMENT TERMS', x: 50, y, size: 9, color: textMuted, bold: true })
-  y -= 14
-  commands.push({ kind: 'text', text: data.amount, x: 50, y, size: 17, color: textDark, bold: true })
-  y -= 14
-  commands.push({ kind: 'text', text: getPaymentStructureLabel(data.paymentStructure), x: 50, y, size: 11, color: textMuted })
-  y -= 12
-  commands.push({ kind: 'text', text: `Via ${data.paymentMethod || data.paymentTerms || 'Payment method'}.`, x: 50, y, size: 11, color: textMuted })
-
+  commands.push({ kind: 'text', text: data.paymentStructure || getPaymentStructureLabel(data.paymentStructure), x: left, y, size: 13, color: textMuted })
   y -= 16
-  commands.push({ kind: 'line', x1: 50, y1: y, x2: 560, y2: y, width: 1, color: border })
+  commands.push({ kind: 'text', text: `Via ${data.paymentMethod || data.paymentTerms || 'Payment method'}.`, x: left, y, size: 13, color: textMuted })
 
+  y -= 18
+  commands.push({ kind: 'line', x1: left, y1: y, x2: right, y2: y, width: 1, color: divider })
+
+  y -= 34
+  commands.push({ kind: 'text', text: 'TERMS & CONDITIONS', x: left, y, size: 13, color: textMuted, bold: true })
   y -= 20
-  commands.push({ kind: 'text', text: 'TERMS & CONDITIONS', x: 50, y, size: 9, color: textMuted, bold: true })
-  y -= 14
   const parsedClauses = (data.clauses.length > 0 ? data.clauses : ['No active clauses.'])
     .map(parseClause)
 
   parsedClauses.forEach((clause, index) => {
     const heading = `${index + 1}. ${clause.title}.`
-    const bodyLines = wrapText(clause.body || 'No details provided.', 74)
+    const bodyLines = wrapText(clause.body || 'No details provided.', 76)
+    const headingOffset = Math.min(220, left + heading.length * 5.7 + 10)
 
-    commands.push({ kind: 'text', text: heading, x: 50, y, size: 11, color: textDark, bold: true })
+    commands.push({ kind: 'text', text: heading, x: left, y, size: 13, color: textDark, bold: true })
     if (bodyLines.length > 0) {
-      commands.push({ kind: 'text', text: bodyLines[0], x: 180, y, size: 11, color: textBody })
+      commands.push({ kind: 'text', text: bodyLines[0], x: headingOffset, y, size: 13, color: textMuted })
       for (let i = 1; i < bodyLines.length; i += 1) {
-        y -= 12
-        commands.push({ kind: 'text', text: bodyLines[i], x: 50, y, size: 11, color: textBody })
+        y -= 16
+        commands.push({ kind: 'text', text: bodyLines[i], x: left, y, size: 13, color: textMuted })
       }
     }
-    y -= 18
+    y -= 22
   })
 
-  if (y < 80) {
-    y = 80
+  if (y < 64) {
+    y = 64
   }
 
-  commands.push({ kind: 'text', text: 'Generated with Stacklite', x: 50, y: 36, size: 9, color: textMuted })
+  commands.push({ kind: 'text', text: 'Generated with Stacklite', x: left, y: 30, size: 9, color: textMuted })
   downloadPdf(fileName, commands)
 }

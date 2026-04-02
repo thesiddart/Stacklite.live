@@ -263,11 +263,11 @@ function DashboardContent() {
                 ) : (
                   <div className="space-y-2 overflow-y-auto">
                     {isClientsLoading ? (
-                      <div className="rounded-[10px] bg-[var(--surface-card-subtle)] p-3 text-[13px] text-[var(--text-soft-muted)]">
+                      <div className="rounded-[10px] bg-[var(--surface-card-subtle)] p-3 text-[13px] text-text-muted">
                         Loading clients...
                       </div>
                     ) : clients.length === 0 ? (
-                      <div className="rounded-[10px] bg-[var(--surface-card-subtle)] p-3 text-[13px] text-[var(--text-soft-muted)]">
+                      <div className="rounded-[10px] bg-[var(--surface-card-subtle)] p-3 text-[13px] text-text-muted">
                         No clients yet. Click + to add your first client.
                       </div>
                     ) : (
@@ -278,7 +278,7 @@ function DashboardContent() {
                         >
                           <div className="flex flex-col gap-[10px]">
                             <div className="flex w-full items-center justify-between gap-[10px]">
-                              <h3 className="min-w-0 flex-1 truncate text-[16px] font-medium leading-none text-[var(--text-soft-strong)]">
+                              <h3 className="min-w-0 flex-1 truncate text-[16px] font-medium leading-none text-text-base">
                                 {client.name}
                               </h3>
                               <button
@@ -288,14 +288,14 @@ function DashboardContent() {
                                   setIsCreateClientOpen(false)
                                   setEditingClient(client)
                                 }}
-                                className="inline-flex shrink-0 items-center justify-center text-[var(--text-soft-strong)] transition-colors hover:text-[var(--tertiary)]"
+                                className="inline-flex shrink-0 items-center justify-center text-text-base transition-colors hover:text-[var(--tertiary)]"
                               >
                                 <EditBold size={16} />
                               </button>
                             </div>
 
                             <div className="w-full">
-                              <p className="truncate text-[14px] leading-none text-[var(--text-soft-muted)]">
+                              <p className="truncate text-[14px] leading-none text-text-muted">
                                 {client.email || 'No email added'}
                               </p>
                             </div>
@@ -310,7 +310,7 @@ function DashboardContent() {
                                   Placeholder
                                 </span>
                               )}
-                              <span className="truncate text-[12px] leading-none text-[var(--text-soft-muted)]">
+                              <span className="truncate text-[12px] leading-none text-text-muted">
                                 Tasks: {taskCountByClientId.get(client.id) ?? 0}
                               </span>
                             </div>
@@ -326,12 +326,12 @@ function DashboardContent() {
         )}
 
         <div className="theme-shell-card inline-flex items-center gap-[2px] rounded-[8px] px-1">
-          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[var(--text-soft-muted)]">
+          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-text-muted">
             <span>Total Clients:</span>
             <span>{clients.length}</span>
           </div>
           <div className="theme-shell-divider h-6 w-px" />
-          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[var(--text-soft-muted)]">
+          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-text-muted">
             <span>New Clients:</span>
             <span>{newClientsCount}</span>
           </div>
@@ -373,7 +373,7 @@ function DashboardContent() {
                 <div className="flex h-full flex-col items-center justify-center rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] text-center">
                   <CenterPanelIcon size={28} className="text-[var(--tertiary)]" />
                   <p className="mt-2 text-sm font-medium text-[var(--tertiary)]">{centerPanelTitle}</p>
-                  <p className="mt-1 max-w-[280px] text-xs text-[var(--text-soft-subtle)]">
+                  <p className="mt-1 max-w-[280px] text-xs text-text-muted">
                     This module is coming soon.
                   </p>
                 </div>
@@ -409,12 +409,12 @@ function DashboardContent() {
         )}
 
         <div className="theme-shell-card inline-flex items-center gap-[2px] rounded-[8px] px-1">
-          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[var(--text-soft-muted)]">
+          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-text-muted">
             <span>Today:</span>
             <span>{formatHoursAndMinutes(dailyTotal)}</span>
           </div>
           <div className="theme-shell-divider h-6 w-px" />
-          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-[var(--text-soft-muted)]">
+          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-text-muted">
             <span>This Week:</span>
             <span>{formatHoursAndMinutes(weeklyTotal)}</span>
           </div>

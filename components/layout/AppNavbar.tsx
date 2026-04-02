@@ -4,7 +4,7 @@ import React, { useEffect, useId, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { CloseCircleBold, ColorfilterBold, EditBold, LoginBold, MusicCircleBold, TrashBold, UserBold, WatchBold } from 'sicons'
+import { CloseCircleBold, ColorfilterBold, EditBold, LoginBold, MusicCircleBold, TrashBold, UserBold } from 'sicons'
 import { useAuth } from '@/hooks/useAuth'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
 import { SignInButton } from '@/components/layout/SignInButton'
@@ -29,6 +29,44 @@ function formatWorkspaceTime(date: Date): string {
   const seconds = String(date.getSeconds()).padStart(2, '0')
   const period = hours24 >= 12 ? 'PM' : 'AM'
   return `${String(hours12).padStart(2, '0')}:${minutes}:${seconds} ${period}`
+}
+
+function AnalogClockIcon({ size = 16 }: { size?: number }) {
+  const [now, setNow] = useState(() => new Date())
+
+  useEffect(() => {
+    let frameId = 0
+
+    const tick = () => {
+      setNow(new Date())
+      frameId = window.requestAnimationFrame(tick)
+    }
+
+    frameId = window.requestAnimationFrame(tick)
+
+    return () => window.cancelAnimationFrame(frameId)
+  }, [])
+
+  const seconds = now.getSeconds() + now.getMilliseconds() / 1000
+  const secondAngle = seconds * 6
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      className="text-text-base"
+    >
+      <circle cx="12" cy="12" r="9" className="stroke-[var(--primary)]" strokeWidth="1.5" fill="none" opacity="0.85" />
+
+      <g style={{ transform: `rotate(${secondAngle}deg)`, transformOrigin: '12px 12px' }}>
+        <line x1="12" y1="12" x2="12" y2="4.2" stroke="rgb(217 99 54)" strokeWidth="1.2" strokeLinecap="round" />
+      </g>
+
+      <circle cx="12" cy="12" r="1.2" className="fill-text-base" />
+    </svg>
+  )
 }
 
 type AppNavbarProps = {
@@ -247,8 +285,8 @@ export function AppNavbar({
       </div>
 
       <div className="theme-shell-card relative flex h-12 items-center gap-2 rounded-[14px] p-2">
-        <div className="theme-shell-subtle flex h-8 items-center justify-center gap-1 rounded-[8px] px-2">
-          <WatchBold size={16} />
+        <div className="theme-shell-subtle flex h-9 items-center justify-center gap-1.5 rounded-[8px] px-2.5">
+          <AnalogClockIcon size={24} />
           <span className="text-[14px] font-medium leading-none">
             {currentTime?.split(' ')[0] ?? '--:--:--'}
           </span>

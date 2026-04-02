@@ -311,7 +311,7 @@ export function InvoicesList() {
                     </p>
                     <StatusBadge status={displayStatus} />
                   </div>
-                  <p className="mt-0.5 text-[11px] text-[var(--text-soft-subtle)]">
+                  <p className="mt-0.5 text-[11px] text-text-muted">
                     Due {invoice.due_date} · Updated {new Date(invoice.updated_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -325,7 +325,7 @@ export function InvoicesList() {
                           event.stopPropagation()
                           handleEdit(invoice)
                         }}
-                        className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-[var(--surface-chip)] hover:text-[var(--tertiary)]"
+                        className="rounded-[6px] p-1.5 text-text-brand hover:bg-[var(--surface-chip)] hover:text-text-base"
                         aria-label="Edit"
                       >
                         <EditBold size={14} />
@@ -342,7 +342,7 @@ export function InvoicesList() {
                           event.stopPropagation()
                           handleCopyLink(invoice)
                         }}
-                        className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-[var(--surface-chip)] hover:text-[var(--tertiary)]"
+                        className="rounded-[6px] p-1.5 text-text-brand hover:bg-[var(--surface-chip)] hover:text-text-base"
                         aria-label="Copy share link"
                       >
                         {copiedId === invoice.id ? (
@@ -365,7 +365,7 @@ export function InvoicesList() {
                           event.stopPropagation()
                           handleDownload(invoice)
                         }}
-                        className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-[var(--surface-chip)] hover:text-[var(--tertiary)]"
+                        className="rounded-[6px] p-1.5 text-text-brand hover:bg-[var(--surface-chip)] hover:text-text-base"
                         aria-label="Download PDF"
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -387,7 +387,7 @@ export function InvoicesList() {
                             event.stopPropagation()
                             handleMarkPaid(invoice.id)
                           }}
-                          className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-feedback-success-base/10 hover:text-feedback-success-text"
+                          className="rounded-[6px] p-1.5 text-text-brand hover:bg-feedback-success-base/10 hover:text-feedback-success-text"
                           aria-label="Mark as paid"
                         >
                           <TickCircleBold size={14} />
@@ -404,7 +404,7 @@ export function InvoicesList() {
                           event.stopPropagation()
                           handleDelete(invoice.id)
                         }}
-                        className="rounded-[6px] p-1.5 text-[var(--text-soft-muted)] hover:bg-[var(--surface-danger-soft)] hover:text-[var(--text-danger-soft)]"
+                        className="rounded-[6px] p-1.5 text-text-brand hover:bg-[var(--surface-danger-soft)] hover:text-[var(--text-danger-soft)]"
                         aria-label="Delete"
                       >
                         <TrashBold size={14} />
