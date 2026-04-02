@@ -4,7 +4,7 @@ import { AppNavbar } from '@/components/layout/AppNavbar'
 export default function PrivacyPage() {
   return (
     <div className="theme-page-shell h-screen overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,var(--dot-color)_1px,transparent_1px)] bg-[length:16px_16px]" />
+      <div className="dots-background" />
 
       <AppNavbar
         topClassName="top-8"

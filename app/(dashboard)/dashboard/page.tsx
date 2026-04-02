@@ -226,7 +226,7 @@ function DashboardContent() {
   return (
     <TooltipProvider delayDuration={180}>
     <div className="theme-page-shell">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,var(--dot-color)_1px,transparent_1px)] bg-[length:16px_16px]" />
+      <div className="dots-background" />
 
       <AppNavbar
         topClassName="top-8"
