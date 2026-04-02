@@ -69,6 +69,7 @@ export function ContractsList() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [copyErrorId, setCopyErrorId] = useState<string | null>(null)
   const [previewContract, setPreviewContract] = useState<Contract | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   const getClientName = (clientId: string | null) => {
     if (!clientId) return null
@@ -133,17 +134,19 @@ export function ContractsList() {
 
   const handleDelete = async (id: string) => {
     try {
+      setActionError(null)
       await deleteMutation.mutateAsync(id)
-    } catch {
-      // silently fail
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'Failed to delete contract')
     }
   }
 
   const handleMarkSigned = async (id: string) => {
     try {
+      setActionError(null)
       await updateMutation.mutateAsync({ id, data: { status: 'signed' } })
-    } catch {
-      // silently fail
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'Failed to update contract status')
     }
   }
 
@@ -264,6 +267,10 @@ export function ContractsList() {
           </button>
         )}
       </div>
+
+      {actionError && (
+        <p className="text-[12px] text-feedback-error-text">{actionError}</p>
+      )}
 
       {/* List */}
       {previewContract ? (

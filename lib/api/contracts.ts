@@ -289,13 +289,38 @@ export async function updateContract(
 export async function deleteContract(id: string): Promise<void> {
   const supabase = createSupabaseClient()
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('contracts')
     .delete()
     .eq('id', id)
+    .select('id')
 
-  if (error) {
-    throw toContractApiError('delete contract', error.message)
+  if (!error && data && data.length > 0) {
+    return
+  }
+
+  // Fallback path for legacy/strict schemas: unlink related invoices first, then retry delete.
+  const { error: unlinkError } = await supabase
+    .from('invoices')
+    .update({ contract_id: null })
+    .eq('contract_id', id)
+
+  if (unlinkError) {
+    throw toContractApiError('delete contract', unlinkError.message)
+  }
+
+  const { data: retryData, error: retryError } = await supabase
+    .from('contracts')
+    .delete()
+    .eq('id', id)
+    .select('id')
+
+  if (retryError) {
+    throw toContractApiError('delete contract', retryError.message)
+  }
+
+  if (!retryData || retryData.length === 0) {
+    throw new Error('Failed to delete contract: Contract not found or not permitted')
   }
 }
 
