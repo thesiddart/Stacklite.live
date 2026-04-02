@@ -23,6 +23,15 @@ import type { InvoiceFormData, UpdateInvoiceFormData } from '@/lib/validations/i
 
 const INVOICES_QUERY_KEY = 'invoices'
 
+function isAuthError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false
+  }
+
+  const message = error.message.toLowerCase()
+  return message.includes('not authenticated') || message.includes('jwt') || message.includes('session')
+}
+
 function guestToInvoice(g: GuestInvoice): Invoice {
   return {
     id: g.id,
@@ -96,36 +105,51 @@ export function useCreateInvoice() {
   const queryClient = useQueryClient()
   const isGuest = useSessionStore((s) => s.isGuest)
 
+  const createGuestInvoice = (data: InvoiceFormData) => {
+    const now = new Date().toISOString()
+    const guestInvoice: GuestInvoice = {
+      id: nanoid(),
+      client_id: data.client_id || null,
+      contract_id: data.contract_id || null,
+      invoice_number: data.invoice_number,
+      issue_date: data.issue_date,
+      due_date: data.due_date,
+      line_items: data.line_items || [],
+      currency: data.currency || 'USD',
+      tax_rate: data.tax_rate ?? null,
+      discount_type: data.discount_type ?? null,
+      discount_value: data.discount_value ?? null,
+      subtotal: data.subtotal || 0,
+      total: data.total || 0,
+      payment_method: data.payment_method || null,
+      payment_instructions: data.payment_instructions || null,
+      notes_to_client: data.notes_to_client || null,
+      internal_notes: data.internal_notes || null,
+      status: (data.status as GuestInvoice['status']) || 'unpaid',
+      created_at: now,
+      updated_at: now,
+    }
+    useGuestStore.getState().addInvoice(guestInvoice)
+    return guestToInvoice(guestInvoice)
+  }
+
   return useMutation({
     mutationFn: async (data: InvoiceFormData) => {
       if (isGuest) {
-        const now = new Date().toISOString()
-        const guestInvoice: GuestInvoice = {
-          id: nanoid(),
-          client_id: data.client_id || null,
-          contract_id: data.contract_id || null,
-          invoice_number: data.invoice_number,
-          issue_date: data.issue_date,
-          due_date: data.due_date,
-          line_items: data.line_items || [],
-          currency: data.currency || 'USD',
-          tax_rate: data.tax_rate ?? null,
-          discount_type: data.discount_type ?? null,
-          discount_value: data.discount_value ?? null,
-          subtotal: data.subtotal || 0,
-          total: data.total || 0,
-          payment_method: data.payment_method || null,
-          payment_instructions: data.payment_instructions || null,
-          notes_to_client: data.notes_to_client || null,
-          internal_notes: data.internal_notes || null,
-          status: (data.status as GuestInvoice['status']) || 'unpaid',
-          created_at: now,
-          updated_at: now,
-        }
-        useGuestStore.getState().addInvoice(guestInvoice)
-        return guestToInvoice(guestInvoice)
+        return createGuestInvoice(data)
       }
-      return createInvoice(data)
+
+      try {
+        return await createInvoice(data)
+      } catch (error) {
+        if (!isAuthError(error)) {
+          throw error
+        }
+
+        // If auth session is missing, seamlessly continue in guest mode.
+        useSessionStore.getState().setGuest(true)
+        return createGuestInvoice(data)
+      }
     },
     onMutate: async () => {
       if (isGuest) return {}
@@ -180,7 +204,41 @@ export function useUpdateInvoice() {
           status: 'unpaid', created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
         })
       }
-      return updateInvoice(id, data)
+
+      try {
+        return await updateInvoice(id, data)
+      } catch (error) {
+        if (!isAuthError(error)) {
+          throw error
+        }
+
+        // Session expired/missing: switch to guest and keep the user's edit.
+        useSessionStore.getState().setGuest(true)
+        useGuestStore.getState().updateInvoice(id, {
+          client_id: data.client_id ?? undefined,
+          contract_id: data.contract_id ?? undefined,
+          invoice_number: data.invoice_number ?? undefined,
+          issue_date: data.issue_date ?? undefined,
+          due_date: data.due_date ?? undefined,
+          line_items: data.line_items ?? undefined,
+          currency: data.currency ?? undefined,
+          tax_rate: data.tax_rate ?? undefined,
+          discount_type: data.discount_type ?? undefined,
+          discount_value: data.discount_value ?? undefined,
+          subtotal: data.subtotal ?? undefined,
+          total: data.total ?? undefined,
+          payment_method: data.payment_method ?? undefined,
+          payment_instructions: data.payment_instructions ?? undefined,
+          notes_to_client: data.notes_to_client ?? undefined,
+          internal_notes: data.internal_notes ?? undefined,
+          status: (data.status as GuestInvoice['status']) ?? undefined,
+        })
+
+        const updated = useGuestStore.getState().invoices.find((i) => i.id === id)
+        if (updated) return guestToInvoice(updated)
+
+        throw new Error('Invoice not found in guest store after fallback')
+      }
     },
     onMutate: async ({ id }) => {
       if (isGuest) return {}

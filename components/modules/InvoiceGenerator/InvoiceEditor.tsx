@@ -27,6 +27,7 @@ export function InvoiceEditor() {
   const openWithAction = useSavePromptStore((s) => s.openWithAction)
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [isPreviewFocused, setIsPreviewFocused] = useState(false)
+  const [saveErrorMessage, setSaveErrorMessage] = useState('')
 
   const selectedClient = useMemo(
     () => clients.find((client) => client.id === formData.client_id),
@@ -51,10 +52,25 @@ export function InvoiceEditor() {
     return new Date().toISOString().slice(0, 10)
   }
 
+  const normalizeInvoiceStatus = (value: unknown): 'unpaid' | 'paid' | 'archived' => {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : ''
+    if (normalized === 'paid') return 'paid'
+    if (normalized === 'archived') return 'archived'
+    return 'unpaid'
+  }
+
+  const normalizeDiscountType = (value: unknown): 'flat' | 'percent' | null => {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : ''
+    if (normalized === 'flat') return 'flat'
+    if (normalized === 'percent' || normalized === 'percentage') return 'percent'
+    return null
+  }
+
   const handleSave = useCallback(async () => {
     if (!isDirty && saveStatus !== 'idle') return
 
     setSaveStatus('saving')
+    setSaveErrorMessage('')
 
     try {
       const rawItems = (formData.line_items || []) as InvoiceLineItem[]
@@ -76,6 +92,8 @@ export function InvoiceEditor() {
 
       const issueDate = normalizeDate(formData.issue_date)
       const dueDate = normalizeDate(formData.due_date)
+      const normalizedStatus = normalizeInvoiceStatus(formData.status)
+      const normalizedDiscountType = normalizeDiscountType(formData.discount_type)
 
       if (activeInvoiceId) {
         await updateMutation.mutateAsync({
@@ -85,6 +103,8 @@ export function InvoiceEditor() {
             issue_date: issueDate,
             due_date: dueDate,
             line_items: items,
+            discount_type: normalizedDiscountType,
+            status: normalizedStatus,
           },
         })
       } else {
@@ -97,7 +117,7 @@ export function InvoiceEditor() {
           line_items: items,
           currency: formData.currency || 'USD',
           tax_rate: formData.tax_rate ?? null,
-          discount_type: formData.discount_type ?? null,
+          discount_type: normalizedDiscountType,
           discount_value: formData.discount_value ?? null,
           subtotal: formData.subtotal || 0,
           total: formData.total || 0,
@@ -105,14 +125,16 @@ export function InvoiceEditor() {
           payment_instructions: formData.payment_instructions || null,
           notes_to_client: formData.notes_to_client || null,
           internal_notes: formData.internal_notes || null,
-          status: formData.status || 'unpaid',
+          status: normalizedStatus,
         })
         useInvoiceStore.getState().setActiveInvoice(created.id)
       }
       setSaveStatus('saved')
+      setSaveErrorMessage('')
       useInvoiceStore.setState({ isDirty: false })
-    } catch {
+    } catch (error) {
       setSaveStatus('error')
+      setSaveErrorMessage(error instanceof Error ? error.message : 'Failed to save invoice')
     }
   }, [activeInvoiceId, createMutation, formData, isDirty, saveStatus, setSaveStatus, updateMutation])
 
@@ -266,6 +288,12 @@ export function InvoiceEditor() {
           </button>
         </div>
       </div>
+
+      {saveStatus === 'error' && saveErrorMessage ? (
+        <p className="text-[12px] leading-none text-[var(--feedback-error-text)]">
+          {saveErrorMessage}
+        </p>
+      ) : null}
 
       {/* Two column layout */}
       {isPreviewFocused ? (

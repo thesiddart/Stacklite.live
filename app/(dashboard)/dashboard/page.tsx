@@ -306,7 +306,7 @@ function DashboardContent() {
         ) : (
           <>
             <div
-              className={`theme-shell-card flex w-full flex-col gap-[10px] overflow-hidden rounded-[14px] p-4 transition-[height,max-height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              className={`theme-shell-card flex w-full min-h-[341px] flex-col gap-[10px] overflow-hidden rounded-[14px] p-4 transition-[height,max-height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                 isClientPanelExpanded
                   ? 'h-[min(640px,calc(100vh-240px))]'
                   : 'max-h-[min(600px,calc(100vh-240px))]'

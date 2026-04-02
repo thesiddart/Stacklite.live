@@ -84,6 +84,12 @@ export async function createInvoice(formData: InvoiceFormData): Promise<Invoice>
   const supabase = createSupabaseClient()
   const validated = invoiceSchema.parse(formData)
 
+  const discountTypeCandidates = [
+    validated.discount_type ?? null,
+    validated.discount_type === 'percent' ? 'percentage' : null,
+    null,
+  ].filter((value, index, array) => array.indexOf(value) === index)
+
   const { data: { user }, error: userError } = await supabase.auth.getUser()
 
   if (userError || !user) {
@@ -184,12 +190,14 @@ export async function createInvoice(formData: InvoiceFormData): Promise<Invoice>
     return null
   }
 
-  try {
-    const created = await tryInsert(fullInsertData, true)
-    if (created) return created
-  } catch (error) {
-    if (!(error instanceof Error) || error.message !== '__legacy_fallback__') {
-      throw error
+  for (const discountType of discountTypeCandidates) {
+    try {
+      const created = await tryInsert({ ...fullInsertData, discount_type: discountType }, true)
+      if (created) return created
+    } catch (error) {
+      if (!(error instanceof Error) || error.message !== '__legacy_fallback__') {
+        throw error
+      }
     }
   }
 
@@ -245,18 +253,73 @@ export async function updateInvoice(
   if (validated.internal_notes !== undefined) updateData.internal_notes = validated.internal_notes
   if (validated.status !== undefined) updateData.status = validated.status
 
-  const { data, error } = await supabase
-    .from('invoices')
-    .update(updateData)
-    .eq('id', id)
-    .select()
-    .single()
+  const performUpdate = async (payload: InvoiceUpdate) => {
+    const { data, error } = await supabase
+      .from('invoices')
+      .update(payload)
+      .eq('id', id)
+      .select()
+      .single()
 
-  if (error) {
-    throw toInvoiceApiError('update invoice', error.message)
+    if (error) {
+      throw toInvoiceApiError('update invoice', error.message)
+    }
+
+    return data as Invoice
   }
 
-  return data as Invoice
+  try {
+    return await performUpdate(updateData)
+  } catch (error) {
+    if (!(error instanceof Error)) {
+      throw error
+    }
+
+    const message = error.message.toLowerCase()
+    const isStatusConstraintError = /status/.test(message) && /check|constraint|invalid input value/.test(message)
+    const isDiscountConstraintError = /discount/.test(message) && /check|constraint|invalid input value/.test(message)
+
+    if (!isStatusConstraintError && !isDiscountConstraintError) {
+      throw error
+    }
+
+    const statusFallbacks = [
+      updateData.status,
+      'unpaid',
+      'sent',
+      'draft',
+      'paid',
+      'archived',
+    ].filter((value, index, array): value is string => Boolean(value) && array.indexOf(value) === index)
+
+    const discountFallbacks = [
+      updateData.discount_type,
+      updateData.discount_type === 'percent' ? 'percentage' : undefined,
+      null,
+    ].filter((value, index, array) => array.indexOf(value) === index)
+
+    for (const status of statusFallbacks) {
+      for (const discountType of discountFallbacks) {
+        try {
+          return await performUpdate({ ...updateData, status, discount_type: discountType })
+        } catch (fallbackError) {
+          if (!(fallbackError instanceof Error)) {
+            throw fallbackError
+          }
+
+          const fallbackMessage = fallbackError.message.toLowerCase()
+          const stillStatusConstraint = /status/.test(fallbackMessage) && /check|constraint|invalid input value/.test(fallbackMessage)
+          const stillDiscountConstraint = /discount/.test(fallbackMessage) && /check|constraint|invalid input value/.test(fallbackMessage)
+
+          if (!stillStatusConstraint && !stillDiscountConstraint) {
+            throw fallbackError
+          }
+        }
+      }
+    }
+
+    throw error
+  }
 }
 
 export async function deleteInvoice(id: string): Promise<void> {

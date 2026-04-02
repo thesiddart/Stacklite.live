@@ -52,6 +52,20 @@ function formatCurrency(value: number, currency: string) {
   }).format(value)
 }
 
+function normalizeInvoiceStatus(value: string | null | undefined): 'unpaid' | 'paid' | 'archived' {
+  const normalized = (value ?? '').trim().toLowerCase()
+  if (normalized === 'paid') return 'paid'
+  if (normalized === 'archived') return 'archived'
+  return 'unpaid'
+}
+
+function normalizeDiscountType(value: string | null | undefined): 'flat' | 'percent' | null {
+  const normalized = (value ?? '').trim().toLowerCase()
+  if (normalized === 'flat') return 'flat'
+  if (normalized === 'percent' || normalized === 'percentage') return 'percent'
+  return null
+}
+
 export function InvoicesList() {
   const isGuest = useSessionStore((s) => s.isGuest)
   const openWithAction = useSavePromptStore((s) => s.openWithAction)
@@ -88,7 +102,7 @@ export function InvoicesList() {
         : [],
       currency: invoice.currency,
       tax_rate: invoice.tax_rate || null,
-      discount_type: (invoice.discount_type as 'flat' | 'percent') || null,
+      discount_type: normalizeDiscountType(invoice.discount_type),
       discount_value: invoice.discount_value || null,
       subtotal: invoice.subtotal,
       total: invoice.total,
@@ -96,7 +110,7 @@ export function InvoicesList() {
       payment_instructions: invoice.payment_instructions,
       notes_to_client: invoice.notes_to_client,
       internal_notes: invoice.internal_notes,
-      status: (invoice.status as 'unpaid' | 'paid' | 'archived') || 'unpaid',
+      status: normalizeInvoiceStatus(invoice.status),
     })
 
     setView('editor')
@@ -302,7 +316,7 @@ export function InvoicesList() {
         </div>
       ) : invoices.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-          <DocumentText1Bold size={28} className="text-text-muted" />
+          <DocumentText1Bold size={28} className="text-[var(--primary)]" />
           <p className="text-[13px] text-text-muted">No invoices yet</p>
           <button
             type="button"
