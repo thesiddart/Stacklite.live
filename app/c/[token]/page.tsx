@@ -1,8 +1,16 @@
 import React from 'react'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import type { Database, Contract as ContractRow } from '@/lib/types/database'
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 interface ContractClauses {
   revision?: { on: boolean; text: string }

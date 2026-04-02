@@ -1,5 +1,11 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { AppNavbar } from '@/components/layout/AppNavbar'
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description: 'How Stacklite collects, uses, and protects your data.',
+}
 
 export default function PrivacyPage() {
   return (

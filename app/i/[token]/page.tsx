@@ -1,7 +1,15 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import type { Database, Invoice as InvoiceRow } from '@/lib/types/database'
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 interface InvoiceLineItem {
   id: string
