@@ -13,6 +13,30 @@ function toContractApiError(action: string, message: string): Error {
   return new Error(`Failed to ${action}: ${message}`)
 }
 
+function isLegacyContractConstraintOrSchemaError(message: string): boolean {
+  const lower = message.toLowerCase()
+
+  return (
+    lower.includes('contracts_status_check')
+    || lower.includes('status')
+    || lower.includes('column') && lower.includes('contracts') && lower.includes('does not exist')
+  )
+}
+
+function toLegacyContractStatus(status: string): string {
+  if (status === 'sent') return 'active'
+  if (status === 'signed') return 'completed'
+  if (status === 'archived') return 'cancelled'
+  return status
+}
+
+function toLegacyDeliverablesText(deliverables: Array<{ text: string }>): string {
+  return deliverables
+    .map((item) => item.text?.trim() || '')
+    .filter((text) => text.length > 0)
+    .join('\n')
+}
+
 function getContractNumber(): string {
   const now = new Date()
   const year = now.getFullYear()
@@ -143,6 +167,32 @@ export async function createContract(formData: ContractFormData): Promise<Contra
     .single()
 
   if (error) {
+    if (isLegacyContractConstraintOrSchemaError(error.message)) {
+      const legacyInsertData: ContractInsert = {
+        user_id: user.id,
+        contract_number: getContractNumber(),
+        project_description: validated.scope || validated.project_name || '',
+        client_id: validated.client_id,
+        start_date: validated.start_date,
+        end_date: validated.end_date,
+        payment_terms: validated.payment_method,
+        deliverables: toLegacyDeliverablesText(validated.deliverables),
+        total_amount: validated.total_fee,
+        currency: validated.currency,
+        status: toLegacyContractStatus(validated.status || 'sent'),
+      }
+
+      const { data: legacyData, error: legacyError } = await supabase
+        .from('contracts')
+        .insert(legacyInsertData)
+        .select()
+        .single()
+
+      if (!legacyError) {
+        return legacyData as Contract
+      }
+    }
+
     throw toContractApiError('create contract', error.message)
   }
 
@@ -198,6 +248,35 @@ export async function updateContract(
     .single()
 
   if (error) {
+    if (isLegacyContractConstraintOrSchemaError(error.message)) {
+      const legacyUpdateData: ContractUpdate = {}
+
+      if (validated.client_id !== undefined) legacyUpdateData.client_id = validated.client_id
+      if (validated.project_name !== undefined || validated.scope !== undefined) {
+        legacyUpdateData.project_description = validated.scope || validated.project_name || ''
+      }
+      if (validated.start_date !== undefined) legacyUpdateData.start_date = validated.start_date
+      if (validated.end_date !== undefined) legacyUpdateData.end_date = validated.end_date
+      if (validated.payment_method !== undefined) legacyUpdateData.payment_terms = validated.payment_method
+      if (validated.deliverables !== undefined) {
+        legacyUpdateData.deliverables = toLegacyDeliverablesText(validated.deliverables)
+      }
+      if (validated.total_fee !== undefined) legacyUpdateData.total_amount = validated.total_fee
+      if (validated.currency !== undefined) legacyUpdateData.currency = validated.currency
+      if (validated.status !== undefined) legacyUpdateData.status = toLegacyContractStatus(validated.status)
+
+      const { data: legacyData, error: legacyError } = await supabase
+        .from('contracts')
+        .update(legacyUpdateData)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (!legacyError) {
+        return legacyData as Contract
+      }
+    }
+
     throw toContractApiError('update contract', error.message)
   }
 
