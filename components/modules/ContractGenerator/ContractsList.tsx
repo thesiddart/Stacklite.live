@@ -21,7 +21,6 @@ import { useProfile } from '@/hooks/useProfile'
 import { useContractStore } from '@/stores/contractStore'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useSavePromptStore } from '@/stores/savePromptStore'
-import { Modal } from '@/components/ui/Modal'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { generateContractPDF } from '@/lib/pdf/generateContractPDF'
 import type { Contract } from '@/lib/types/database'
@@ -225,10 +224,6 @@ export function ContractsList() {
     setView('templates')
   }
 
-  const pendingDeleteContract = pendingDeleteContractId
-    ? contracts.find((contract) => contract.id === pendingDeleteContractId) || null
-    : null
-
   const clauseLabelMap: Record<string, string> = {
     revision: 'Revisions',
     ip: 'Intellectual Property',
@@ -247,293 +242,266 @@ export function ContractsList() {
 
   return (
     <TooltipProvider delayDuration={180}>
-    <div className="flex h-full flex-col gap-3">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        {previewContract ? (
-          <button
-            type="button"
-            onClick={() => setPreviewContract(null)}
-            className="text-[14px] font-semibold text-text-base hover:text-[var(--tertiary)]"
-          >
-            ← Back
-          </button>
-        ) : (
-          <h3 className="text-[14px] font-semibold text-text-base">
-            Contracts
-          </h3>
+      <div className="flex h-full flex-col gap-3">
+        <div className="flex items-center justify-between">
+          {previewContract ? (
+            <button
+              type="button"
+              onClick={() => setPreviewContract(null)}
+              className="text-[14px] font-semibold text-text-base hover:text-[var(--tertiary)]"
+            >
+              {'<- Back'}
+            </button>
+          ) : (
+            <h3 className="text-[14px] font-semibold text-text-base">Contracts</h3>
+          )}
+          {!previewContract && (
+            <button
+              type="button"
+              onClick={handleNewContract}
+              className="inline-flex items-center gap-1 rounded-[8px] bg-[var(--primary)] px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:opacity-90"
+            >
+              <AddCircleBold size={14} />
+              New
+            </button>
+          )}
+        </div>
+
+        {actionError && (
+          <p className="text-[12px] text-feedback-error-text">{actionError}</p>
         )}
-        {!previewContract && (
-          <button
-            type="button"
-            onClick={handleNewContract}
-            className="inline-flex items-center gap-1 rounded-[8px] bg-[var(--primary)] px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:opacity-90"
-          >
-            <AddCircleBold size={14} />
-            New
-          </button>
+
+        {previewContract ? (
+          <div className="min-h-0 flex-1 overflow-y-auto rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-4 theme-scrollbar">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Service Agreement</p>
+            <h2 className="mt-2 text-[20px] font-bold text-text-base">{previewContract.project_name || 'Untitled Contract'}</h2>
+            <p className="mt-1 text-[13px] text-text-muted">
+              Between Siddhartha Dwivedi and {getClientName(previewContract.client_id) || 'Client'}
+            </p>
+
+            <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Scope of Work</p>
+              <p className="mt-2 whitespace-pre-line text-[14px] leading-[22px] text-text-base">{previewContract.scope || 'No scope provided.'}</p>
+            </div>
+
+            <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Deliverables</p>
+              <ul className="mt-2 space-y-1.5">
+                {(Array.isArray(previewContract.deliverables)
+                  ? (previewContract.deliverables as Array<{ text?: string }>).map((d) => d.text || '').filter(Boolean)
+                  : []
+                ).map((item, index) => (
+                  <li key={index} className="text-[14px] text-text-base">- {item}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Timeline</p>
+              <p className="mt-2 text-[14px] text-text-base">{previewContract.start_date || 'TBD'} - {previewContract.end_date || 'TBD'}</p>
+            </div>
+
+            <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Payment Terms</p>
+              <p className="mt-2 text-[18px] font-bold text-text-base">
+                {previewContract.currency} {Number(previewContract.total_fee || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+              <p className="mt-1 text-[14px] text-text-muted">{previewContract.payment_structure || 'Custom payment terms'}</p>
+              <p className="mt-1 text-[13px] text-text-muted">Via {previewContract.payment_method || 'Bank transfer'}.</p>
+            </div>
+
+            <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Terms & Conditions</p>
+              <ol className="mt-3 space-y-3">
+                {Object.entries((previewContract.clauses && typeof previewContract.clauses === 'object'
+                  ? (previewContract.clauses as Record<string, { on?: boolean; text?: string }>)
+                  : {}
+                ))
+                  .filter(([, c]) => Boolean(c?.on && c?.text))
+                  .map(([key, clause], index) => (
+                    <li key={key} className="text-[14px] leading-[22px] text-text-muted">
+                      <span className="font-semibold text-text-base">{index + 1}. {clauseLabelMap[key] || key}.</span>{' '}
+                      {clause?.text}
+                    </li>
+                  ))}
+              </ol>
+            </div>
+          </div>
+        ) : contracts.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
+            <DocumentText1Bold size={28} className="text-[var(--tertiary)]" />
+            <p className="text-[13px] text-text-muted">No contracts yet</p>
+            <button
+              type="button"
+              onClick={handleNewContract}
+              className="text-[12px] font-medium text-[var(--tertiary)] hover:text-[var(--primary)]"
+            >
+              Create your first contract -&gt;
+            </button>
+          </div>
+        ) : (
+          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1 theme-scrollbar">
+            {contracts.map((contract) => {
+              const clientName = getClientName(contract.client_id)
+              const displayStatus = contract.status === 'signed' ? 'signed' : contract.status === 'archived' ? 'archived' : 'sent'
+
+              return (
+                <div
+                  key={contract.id}
+                  className="group flex cursor-pointer items-center justify-between rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-3 transition-all duration-200 hover:border-[var(--primary)]"
+                  onClick={() => {
+                    if (pendingDeleteContractId === contract.id) return
+                    setPreviewContract(contract)
+                  }}
+                >
+                  <div className="min-w-0 flex-1">
+                    {pendingDeleteContractId === contract.id ? (
+                      <div className="space-y-3">
+                        <p className="text-[13px] font-medium text-text-base">Are you sure want to delete this?</p>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              void handleDelete(contract.id)
+                            }}
+                            className="rounded-[8px] bg-feedback-error-base px-3 py-1.5 text-[12px] font-medium text-white transition-opacity hover:opacity-90"
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              setPendingDeleteContractId(null)
+                            }}
+                            className="rounded-[8px] border border-border-base bg-background-base px-3 py-1.5 text-[12px] font-medium text-text-base transition-colors hover:bg-background-muted"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-[13px] font-medium text-text-base">
+                            {clientName ? `${clientName} - ${contract.project_name || 'Untitled'}` : contract.project_name || 'Untitled Contract'}
+                          </p>
+                          <StatusBadge status={displayStatus} />
+                        </div>
+                        <p className="mt-0.5 text-[11px] text-text-muted">Updated {new Date(contract.updated_at).toLocaleDateString()}</p>
+                      </>
+                    )}
+                  </div>
+
+                  {pendingDeleteContractId !== contract.id && (
+                    <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              handleEdit(contract)
+                            }}
+                            className="rounded-[6px] p-1.5 text-text-brand hover:bg-[var(--surface-chip)] hover:text-text-base"
+                            aria-label="Edit"
+                          >
+                            <EditBold size={14} />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Edit</TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              handleCopyLink(contract)
+                            }}
+                            className="rounded-[6px] p-1.5 text-text-brand hover:bg-[var(--surface-chip)] hover:text-text-base"
+                            aria-label="Copy share link"
+                          >
+                            {copiedId === contract.id ? (
+                              <span className="text-[11px] font-medium text-[var(--feedback-success-text)]">Copied!</span>
+                            ) : copyErrorId === contract.id ? (
+                              <span className="text-[11px] font-medium text-feedback-errorText">Failed</span>
+                            ) : (
+                              <LinkBold size={14} />
+                            )}
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {copyErrorId === contract.id ? 'Failed to copy link' : copiedId === contract.id ? 'Link copied' : 'Copy share link'}
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              handleDownload(contract)
+                            }}
+                            className="rounded-[6px] p-1.5 text-text-brand hover:bg-[var(--surface-chip)] hover:text-text-base"
+                            aria-label="Download PDF"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                              <path d="M12 3V14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              <path d="M8 10L12 14L16 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              <path d="M4 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                            </svg>
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Download PDF</TooltipContent>
+                      </Tooltip>
+
+                      {displayStatus !== 'signed' && displayStatus !== 'archived' && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                handleMarkSigned(contract.id)
+                              }}
+                              className="rounded-[6px] p-1.5 text-text-brand hover:bg-feedback-success-base/10 hover:text-feedback-success-text"
+                              aria-label="Mark as signed"
+                            >
+                              <TickCircleBold size={14} />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Mark as signed</TooltipContent>
+                        </Tooltip>
+                      )}
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              setPendingDeleteContractId(contract.id)
+                            }}
+                            className="rounded-[6px] p-1.5 text-text-brand hover:bg-feedback-error-bg hover:text-feedback-error-text"
+                            aria-label="Delete"
+                          >
+                            <TrashBold size={14} />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         )}
       </div>
-
-      {actionError && (
-        <p className="text-[12px] text-feedback-error-text">{actionError}</p>
-      )}
-
-      {/* List */}
-      {previewContract ? (
-        <div className="min-h-0 flex-1 overflow-y-auto rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-4 theme-scrollbar">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
-            Service Agreement
-          </p>
-          <h2 className="mt-2 text-[20px] font-bold text-text-base">
-            {previewContract.project_name || 'Untitled Contract'}
-          </h2>
-          <p className="mt-1 text-[13px] text-text-muted">
-            Between Siddhartha Dwivedi and {getClientName(previewContract.client_id) || 'Client'}
-          </p>
-
-          <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Scope of Work</p>
-            <p className="mt-2 whitespace-pre-line text-[14px] leading-[22px] text-text-base">{previewContract.scope || 'No scope provided.'}</p>
-          </div>
-
-          <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Deliverables</p>
-            <ul className="mt-2 space-y-1.5">
-              {(Array.isArray(previewContract.deliverables)
-                ? (previewContract.deliverables as Array<{ text?: string }>).map((d) => d.text || '').filter(Boolean)
-                : []
-              ).map((item, index) => (
-                <li key={index} className="text-[14px] text-text-base">• {item}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Timeline</p>
-            <p className="mt-2 text-[14px] text-text-base">{previewContract.start_date || 'TBD'} — {previewContract.end_date || 'TBD'}</p>
-          </div>
-
-          <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Payment Terms</p>
-            <p className="mt-2 text-[18px] font-bold text-text-base">
-              {previewContract.currency} {Number(previewContract.total_fee || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-            <p className="mt-1 text-[14px] text-text-muted">{previewContract.payment_structure || 'Custom payment terms'}</p>
-            <p className="mt-1 text-[13px] text-text-muted">Via {previewContract.payment_method || 'Bank transfer'}.</p>
-          </div>
-
-          <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Terms & Conditions</p>
-            <ol className="mt-3 space-y-3">
-              {Object.entries((previewContract.clauses && typeof previewContract.clauses === 'object'
-                ? (previewContract.clauses as Record<string, { on?: boolean; text?: string }>)
-                : {}
-              ))
-                .filter(([, c]) => Boolean(c?.on && c?.text))
-                .map(([key, clause], index) => (
-                  <li key={key} className="text-[14px] leading-[22px] text-text-muted">
-                    <span className="font-semibold text-text-base">{index + 1}. {clauseLabelMap[key] || key}.</span>{' '}
-                    {clause?.text}
-                  </li>
-                ))}
-            </ol>
-          </div>
-        </div>
-      ) : contracts.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-          <DocumentText1Bold size={28} className="text-[var(--tertiary)]" />
-          <p className="text-[13px] text-text-muted">No contracts yet</p>
-          <button
-            type="button"
-            onClick={handleNewContract}
-            className="text-[12px] font-medium text-[var(--tertiary)] hover:text-[var(--primary)]"
-          >
-            Create your first contract →
-          </button>
-        </div>
-      ) : (
-        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1 theme-scrollbar">
-          {contracts.map((contract) => {
-            const clientName = getClientName(contract.client_id)
-            const displayStatus = contract.status === 'signed'
-              ? 'signed'
-              : contract.status === 'archived'
-                ? 'archived'
-                : 'sent'
-
-            return (
-              <div
-                key={contract.id}
-                className="group flex cursor-pointer items-center justify-between rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-3 transition-all duration-200 hover:border-[var(--primary)]"
-                onClick={() => setPreviewContract(contract)}
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate text-[13px] font-medium text-text-base">
-                      {clientName
-                        ? `${clientName} — ${contract.project_name || 'Untitled'}`
-                        : contract.project_name || 'Untitled Contract'}
-                    </p>
-                    <StatusBadge status={displayStatus} />
-                  </div>
-                  <p className="mt-0.5 text-[11px] text-text-muted">
-                    Updated {new Date(contract.updated_at).toLocaleDateString()}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          handleEdit(contract)
-                        }}
-                        className="rounded-[6px] p-1.5 text-text-brand hover:bg-[var(--surface-chip)] hover:text-text-base"
-                        aria-label="Edit"
-                      >
-                        <EditBold size={14} />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Edit</TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          handleCopyLink(contract)
-                        }}
-                        className="rounded-[6px] p-1.5 text-text-brand hover:bg-[var(--surface-chip)] hover:text-text-base"
-                        aria-label="Copy share link"
-                      >
-                        {copiedId === contract.id ? (
-                          <span className="text-[11px] font-medium text-[var(--feedback-success-text)]">
-                            Copied!
-                          </span>
-                        ) : copyErrorId === contract.id ? (
-                          <span className="text-[11px] font-medium text-feedback-errorText">
-                            Failed
-                          </span>
-                        ) : (
-                          <LinkBold size={14} />
-                        )}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {copyErrorId === contract.id
-                        ? 'Failed to copy link'
-                        : copiedId === contract.id
-                          ? 'Link copied'
-                          : 'Copy share link'}
-                    </TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          handleDownload(contract)
-                        }}
-                        className="rounded-[6px] p-1.5 text-text-brand hover:bg-[var(--surface-chip)] hover:text-text-base"
-                        aria-label="Download PDF"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                          <path d="M12 3V14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M8 10L12 14L16 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M4 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                        </svg>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Download PDF</TooltipContent>
-                  </Tooltip>
-
-                  {displayStatus !== 'signed' && displayStatus !== 'archived' && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            handleMarkSigned(contract.id)
-                          }}
-                          className="rounded-[6px] p-1.5 text-text-brand hover:bg-feedback-success-base/10 hover:text-feedback-success-text"
-                          aria-label="Mark as signed"
-                        >
-                          <TickCircleBold size={14} />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>Mark as signed</TooltipContent>
-                    </Tooltip>
-                  )}
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          setPendingDeleteContractId(contract.id)
-                        }}
-                        className="rounded-[6px] p-1.5 text-text-brand hover:bg-feedback-error-bg hover:text-feedback-error-text"
-                        aria-label="Delete"
-                      >
-                        <TrashBold size={14} />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Delete</TooltipContent>
-                  </Tooltip>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      <Modal
-        isOpen={Boolean(pendingDeleteContractId)}
-        onClose={() => setPendingDeleteContractId(null)}
-        title="Delete Contract"
-        size="sm"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-text-base">
-            Delete this contract? This cannot be undone.
-          </p>
-          {pendingDeleteContract && (
-            <p className="rounded-md bg-background-muted px-3 py-2 text-xs text-text-muted">
-              {pendingDeleteContract.project_name || 'Untitled Contract'}
-            </p>
-          )}
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setPendingDeleteContractId(null)}
-              className="rounded-[8px] border border-border-base bg-background-base px-3 py-1.5 text-[12px] font-medium text-text-base transition-colors hover:bg-background-muted"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (pendingDeleteContractId) {
-                  void handleDelete(pendingDeleteContractId)
-                }
-              }}
-              className="rounded-[8px] bg-feedback-error-base px-3 py-1.5 text-[12px] font-medium text-white transition-opacity hover:opacity-90"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      </Modal>
-    </div>
     </TooltipProvider>
   )
 }
