@@ -21,6 +21,7 @@ import { useProfile } from '@/hooks/useProfile'
 import { useContractStore } from '@/stores/contractStore'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useSavePromptStore } from '@/stores/savePromptStore'
+import { Modal } from '@/components/ui/Modal'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { generateContractPDF } from '@/lib/pdf/generateContractPDF'
 import type { Contract } from '@/lib/types/database'
@@ -70,6 +71,7 @@ export function ContractsList() {
   const [copyErrorId, setCopyErrorId] = useState<string | null>(null)
   const [previewContract, setPreviewContract] = useState<Contract | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [pendingDeleteContractId, setPendingDeleteContractId] = useState<string | null>(null)
 
   const getClientName = (clientId: string | null) => {
     if (!clientId) return null
@@ -136,6 +138,7 @@ export function ContractsList() {
     try {
       setActionError(null)
       await deleteMutation.mutateAsync(id)
+      setPendingDeleteContractId(null)
     } catch (error) {
       setActionError(error instanceof Error ? error.message : 'Failed to delete contract')
     }
@@ -221,6 +224,10 @@ export function ContractsList() {
     resetForm()
     setView('templates')
   }
+
+  const pendingDeleteContract = pendingDeleteContractId
+    ? contracts.find((contract) => contract.id === pendingDeleteContractId) || null
+    : null
 
   const clauseLabelMap: Record<string, string> = {
     revision: 'Revisions',
@@ -472,7 +479,7 @@ export function ContractsList() {
                         type="button"
                         onClick={(event) => {
                           event.stopPropagation()
-                          handleDelete(contract.id)
+                          setPendingDeleteContractId(contract.id)
                         }}
                         className="rounded-[6px] p-1.5 text-text-brand hover:bg-feedback-error-bg hover:text-feedback-error-text"
                         aria-label="Delete"
@@ -488,6 +495,44 @@ export function ContractsList() {
           })}
         </div>
       )}
+
+      <Modal
+        isOpen={Boolean(pendingDeleteContractId)}
+        onClose={() => setPendingDeleteContractId(null)}
+        title="Delete Contract"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-text-base">
+            Delete this contract? This cannot be undone.
+          </p>
+          {pendingDeleteContract && (
+            <p className="rounded-md bg-background-muted px-3 py-2 text-xs text-text-muted">
+              {pendingDeleteContract.project_name || 'Untitled Contract'}
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setPendingDeleteContractId(null)}
+              className="rounded-[8px] border border-border-base bg-background-base px-3 py-1.5 text-[12px] font-medium text-text-base transition-colors hover:bg-background-muted"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (pendingDeleteContractId) {
+                  void handleDelete(pendingDeleteContractId)
+                }
+              }}
+              className="rounded-[8px] bg-feedback-error-base px-3 py-1.5 text-[12px] font-medium text-white transition-opacity hover:opacity-90"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
     </TooltipProvider>
   )
