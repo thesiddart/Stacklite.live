@@ -37,6 +37,15 @@ function toLegacyDeliverablesText(deliverables: Array<{ text: string }>): string
     .join('\n')
 }
 
+function isMissingInvoiceContractIdColumn(message: string): boolean {
+  const lower = message.toLowerCase()
+
+  return (
+    lower.includes("could not find the 'contract_id' column")
+    || (lower.includes('column') && lower.includes('contract_id') && lower.includes('does not exist'))
+  )
+}
+
 function getContractNumber(): string {
   const now = new Date()
   const year = now.getFullYear()
@@ -305,7 +314,7 @@ export async function deleteContract(id: string): Promise<void> {
     .update({ contract_id: null })
     .eq('contract_id', id)
 
-  if (unlinkError) {
+  if (unlinkError && !isMissingInvoiceContractIdColumn(unlinkError.message)) {
     throw toContractApiError('delete contract', unlinkError.message)
   }
 
