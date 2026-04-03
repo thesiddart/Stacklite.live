@@ -234,14 +234,16 @@ export function InvoiceEditor() {
             <button
               type="button"
               onClick={() => setIsPreviewFocused(false)}
-              className="rounded-[8px] border border-border-base bg-background-base px-3 py-1.5 text-[12px] font-medium text-text-base transition-colors hover:bg-background-muted"
+              className="rounded-[8px] border border-border-base bg-background-base px-3 py-1.5 text-[14px] font-medium leading-none text-text-base transition-colors hover:bg-background-muted"
             >
-              ← Back to form
+              ← Edit Invoice
             </button>
           )}
-          <h3 className="text-[14px] font-semibold text-text-base">
-            {activeInvoiceId ? 'Edit Invoice' : 'New Invoice'}
-          </h3>
+          {!isPreviewFocused && (
+            <h3 className="text-[14px] font-semibold text-text-base">
+              {activeInvoiceId ? 'Edit Invoice' : 'New Invoice'}
+            </h3>
+          )}
           <span
             className={`text-[11px] font-medium transition-opacity duration-300 ${
               saveStatus === 'saving'
@@ -297,13 +299,11 @@ export function InvoiceEditor() {
 
       {/* Two column layout */}
       {isPreviewFocused ? (
-        <div className="min-h-0 flex-1 overflow-hidden rounded-[14px] border border-[var(--surface-panel-border)] bg-[var(--surface-panel-strong)] p-4">
-          <InvoicePreview />
-        </div>
+        <InvoicePreview />
       ) : (
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden lg:grid-cols-2">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden lg:grid-cols-[2fr_3fr]">
           {/* Left: Form */}
-          <div className="min-h-0 overflow-hidden rounded-[14px] border border-[var(--surface-panel-border)] bg-[var(--surface-panel-strong)] p-4">
+          <div className="min-h-0 overflow-hidden rounded-[14px] border border-[var(--surface-panel-border)] p-4">
             <InvoiceForm />
           </div>
 

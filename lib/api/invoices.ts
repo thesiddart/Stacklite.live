@@ -57,7 +57,7 @@ export async function getInvoiceByToken(token: string): Promise<Invoice | null> 
     .from('invoices')
     .select('*, clients(name, email, company_name)')
     .eq('share_token', token)
-    .neq('status', 'draft')
+    .in('status', ['unpaid', 'paid'])
     .single()
 
   if (error) {
@@ -84,12 +84,6 @@ export async function createInvoice(formData: InvoiceFormData): Promise<Invoice>
   const supabase = createSupabaseClient()
   const validated = invoiceSchema.parse(formData)
 
-  const discountTypeCandidates = [
-    validated.discount_type ?? null,
-    validated.discount_type === 'percent' ? 'percentage' : null,
-    null,
-  ].filter((value, index, array) => array.indexOf(value) === index)
-
   const { data: { user }, error: userError } = await supabase.auth.getUser()
 
   if (userError || !user) {
@@ -110,10 +104,11 @@ export async function createInvoice(formData: InvoiceFormData): Promise<Invoice>
 
   let invoiceNumber = validated.invoice_number || await getNextInvoiceNumber(supabase)
 
-  const fullInsertData = {
+  const buildInsertData = (): InvoiceInsert => ({
     user_id: user.id,
     client_id: validated.client_id,
     contract_id: validated.contract_id,
+    invoice_number: invoiceNumber,
     issue_date: validated.issue_date,
     due_date: validated.due_date,
     line_items: JSON.parse(JSON.stringify(validated.line_items)),
@@ -130,94 +125,30 @@ export async function createInvoice(formData: InvoiceFormData): Promise<Invoice>
     payment_instructions: validated.payment_instructions,
     notes_to_client: validated.notes_to_client,
     internal_notes: validated.internal_notes,
-  }
+    status: validated.status || 'unpaid',
+  })
 
-  const legacyInsertData = {
-    user_id: user.id,
-    client_id: validated.client_id,
-    issue_date: validated.issue_date,
-    due_date: validated.due_date,
-    subtotal: validated.subtotal,
-    tax_rate: validated.tax_rate ?? 0,
-    tax_amount: validated.tax_rate
-      ? parseFloat(((validated.subtotal * validated.tax_rate) / 100).toFixed(2))
-      : 0,
-    total: validated.total,
-    currency: validated.currency,
-    notes: validated.notes_to_client,
-    terms: validated.payment_instructions || validated.payment_method,
-  }
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const { data, error } = await supabase
+      .from('invoices')
+      .insert(buildInsertData())
+      .select()
+      .single()
 
-  const statusCandidates = [validated.status || 'unpaid', 'sent', 'draft']
-  let lastError: Error | null = null
-
-  const tryInsert = async (base: Record<string, unknown>, allowLegacyColumnErrors: boolean) => {
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      for (const status of statusCandidates) {
-        const payload = { ...base, invoice_number: invoiceNumber, status } as InvoiceInsert
-        const { data, error } = await supabase
-          .from('invoices')
-          .insert(payload)
-          .select()
-          .single()
-
-        if (!error) {
-          return data as Invoice
-        }
-
-        const message = error.message || ''
-        lastError = toInvoiceApiError('create invoice', message)
-
-        const hasMissingColumnError =
-          /column .* does not exist/i.test(message) ||
-          /could not find the '.*' column/i.test(message)
-
-        if (/duplicate key value|unique constraint/i.test(message) && /invoice_number/i.test(message)) {
-          invoiceNumber = await getNextInvoiceNumber(supabase)
-          break
-        }
-
-        if (allowLegacyColumnErrors && hasMissingColumnError) {
-          throw new Error('__legacy_fallback__')
-        }
-
-        if (!/status|check|constraint|invalid input value|duplicate key value|unique constraint|could not find the '.*' column|column .* does not exist/i.test(message)) {
-          throw lastError
-        }
-      }
+    if (!error) {
+      return data as Invoice
     }
 
-    return null
-  }
-
-  for (const discountType of discountTypeCandidates) {
-    try {
-      const created = await tryInsert({ ...fullInsertData, discount_type: discountType }, true)
-      if (created) return created
-    } catch (error) {
-      if (!(error instanceof Error) || error.message !== '__legacy_fallback__') {
-        throw error
-      }
-    }
-  }
-
-  const createdLegacy = await tryInsert(legacyInsertData, false)
-  if (createdLegacy) {
-    // Best-effort backfill invoice_items on older schemas.
-    if (validated.line_items.length > 0) {
-      const legacyItems = validated.line_items.map((item) => ({
-        invoice_id: createdLegacy.id,
-        description: item.description,
-        quantity: item.qty,
-        rate: item.rate,
-      }))
-      await supabase.from('invoice_items').insert(legacyItems)
+    const message = error.message || ''
+    if (/duplicate key value|unique constraint/i.test(message) && /invoice_number/i.test(message)) {
+      invoiceNumber = await getNextInvoiceNumber(supabase)
+      continue
     }
 
-    return createdLegacy
+    throw toInvoiceApiError('create invoice', message)
   }
 
-  throw lastError || new Error('Failed to create invoice')
+  throw new Error('Failed to create invoice after retrying invoice number generation')
 }
 
 export async function updateInvoice(
@@ -226,11 +157,14 @@ export async function updateInvoice(
 ): Promise<Invoice> {
   const supabase = createSupabaseClient()
   const validated = updateInvoiceSchema.parse(formData)
+  const hasContractIdInPayload = Object.prototype.hasOwnProperty.call(formData, 'contract_id')
 
   const updateData: InvoiceUpdate = {}
 
   if (validated.client_id !== undefined) updateData.client_id = validated.client_id
-  if (validated.contract_id !== undefined) updateData.contract_id = validated.contract_id
+  if (hasContractIdInPayload && validated.contract_id !== undefined) {
+    updateData.contract_id = validated.contract_id
+  }
   if (validated.invoice_number !== undefined) updateData.invoice_number = validated.invoice_number
   if (validated.issue_date !== undefined) updateData.issue_date = validated.issue_date
   if (validated.due_date !== undefined) updateData.due_date = validated.due_date
@@ -268,58 +202,7 @@ export async function updateInvoice(
     return data as Invoice
   }
 
-  try {
-    return await performUpdate(updateData)
-  } catch (error) {
-    if (!(error instanceof Error)) {
-      throw error
-    }
-
-    const message = error.message.toLowerCase()
-    const isStatusConstraintError = /status/.test(message) && /check|constraint|invalid input value/.test(message)
-    const isDiscountConstraintError = /discount/.test(message) && /check|constraint|invalid input value/.test(message)
-
-    if (!isStatusConstraintError && !isDiscountConstraintError) {
-      throw error
-    }
-
-    const statusFallbacks = [
-      updateData.status,
-      'unpaid',
-      'sent',
-      'draft',
-      'paid',
-      'archived',
-    ].filter((value, index, array): value is string => Boolean(value) && array.indexOf(value) === index)
-
-    const discountFallbacks = [
-      updateData.discount_type,
-      updateData.discount_type === 'percent' ? 'percentage' : undefined,
-      null,
-    ].filter((value, index, array) => array.indexOf(value) === index)
-
-    for (const status of statusFallbacks) {
-      for (const discountType of discountFallbacks) {
-        try {
-          return await performUpdate({ ...updateData, status, discount_type: discountType })
-        } catch (fallbackError) {
-          if (!(fallbackError instanceof Error)) {
-            throw fallbackError
-          }
-
-          const fallbackMessage = fallbackError.message.toLowerCase()
-          const stillStatusConstraint = /status/.test(fallbackMessage) && /check|constraint|invalid input value/.test(fallbackMessage)
-          const stillDiscountConstraint = /discount/.test(fallbackMessage) && /check|constraint|invalid input value/.test(fallbackMessage)
-
-          if (!stillStatusConstraint && !stillDiscountConstraint) {
-            throw fallbackError
-          }
-        }
-      }
-    }
-
-    throw error
-  }
+  return performUpdate(updateData)
 }
 
 export async function deleteInvoice(id: string): Promise<void> {

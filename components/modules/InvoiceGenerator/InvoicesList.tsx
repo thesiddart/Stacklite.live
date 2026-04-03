@@ -21,6 +21,7 @@ import { useInvoiceStore } from '@/stores/invoiceStore'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useSavePromptStore } from '@/stores/savePromptStore'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { InvoicePreview } from './InvoicePreview'
 import { getDisplayStatus, generateInvoiceNumber } from '@/lib/utils/invoiceCalculations'
 import { downloadInvoicePdf as saveInvoicePdf } from '@/lib/utils/pdfDownload'
 import type { Invoice } from '@/lib/types/database'
@@ -82,15 +83,7 @@ export function InvoicesList() {
   const [actionError, setActionError] = useState<string | null>(null)
   const [pendingDeleteInvoiceId, setPendingDeleteInvoiceId] = useState<string | null>(null)
 
-  const getClientName = (clientId: string | null) => {
-    if (!clientId) return null
-    return clients.find((c) => c.id === clientId)?.name || null
-  }
-
-  const handleEdit = (invoice: Invoice) => {
-    resetForm()
-    setActiveInvoice(invoice.id)
-
+  const syncInvoiceToForm = (invoice: Invoice) => {
     updateFormData({
       client_id: invoice.client_id,
       contract_id: invoice.contract_id,
@@ -112,8 +105,26 @@ export function InvoicesList() {
       internal_notes: invoice.internal_notes,
       status: normalizeInvoiceStatus(invoice.status),
     })
+  }
+
+  const getClientName = (clientId: string | null) => {
+    if (!clientId) return null
+    return clients.find((c) => c.id === clientId)?.name || null
+  }
+
+  const handleEdit = (invoice: Invoice) => {
+    resetForm()
+    setActiveInvoice(invoice.id)
+    syncInvoiceToForm(invoice)
 
     setView('editor')
+  }
+
+  const handlePreviewFromList = (invoice: Invoice) => {
+    resetForm()
+    setActiveInvoice(invoice.id)
+    syncInvoiceToForm(invoice)
+    setPreviewInvoice(invoice)
   }
 
   const handleCopyLink = async (invoice: Invoice) => {
@@ -234,19 +245,44 @@ export function InvoicesList() {
       {/* Header */}
       <div className="flex items-center justify-between">
         {previewInvoice ? (
-          <button
-            type="button"
-            onClick={() => setPreviewInvoice(null)}
-            className="text-[14px] font-semibold text-text-base hover:text-[var(--tertiary)]"
-          >
-            ← Back
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPreviewInvoice(null)}
+              className="rounded-[8px] border border-border-base bg-background-base px-3 py-1.5 text-[14px] font-medium leading-none text-text-base transition-colors hover:bg-background-muted"
+            >
+              &larr; Invoices
+            </button>
+            <span className="text-[11px] font-medium text-[var(--feedback-success-text)]">Saved</span>
+          </div>
         ) : (
           <h3 className="text-[14px] font-semibold text-text-base">
             Invoices
           </h3>
         )}
-        {!previewInvoice && (
+        {previewInvoice ? (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleDownload(previewInvoice)}
+              aria-label="Download PDF"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] border border-border-base bg-background-base text-text-base transition-colors hover:bg-background-muted"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 3V14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M8 10L12 14L16 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M4 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleEdit(previewInvoice)}
+              className="rounded-[8px] bg-[var(--primary)] px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:opacity-90"
+            >
+              Edit
+            </button>
+          </div>
+        ) : (
           <button
             type="button"
             onClick={handleNewInvoice}
@@ -264,56 +300,7 @@ export function InvoicesList() {
 
       {/* List */}
       {previewInvoice ? (
-        <div className="min-h-0 flex-1 overflow-y-auto rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-4 theme-scrollbar">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Invoice</p>
-          <h2 className="mt-2 text-[20px] font-bold text-text-base">{previewInvoice.invoice_number}</h2>
-          <p className="mt-1 text-[13px] text-text-muted">Issued {previewInvoice.issue_date} · Due {previewInvoice.due_date}</p>
-
-          <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Bill To</p>
-            <p className="mt-2 text-[14px] font-medium text-text-base">{getClientName(previewInvoice.client_id) || 'Client'}</p>
-          </div>
-
-          <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Line Items</p>
-            <div className="mt-2 space-y-2">
-              {(Array.isArray(previewInvoice.line_items)
-                ? (previewInvoice.line_items as unknown as InvoiceLineItem[])
-                : []
-              ).map((item) => (
-                <div key={item.id} className="grid grid-cols-[1fr_50px_90px_100px] gap-2 text-[13px] text-text-base">
-                  <span>{item.description || 'Item'}</span>
-                  <span className="text-right">{item.qty}</span>
-                  <span className="text-right">{formatCurrency(item.rate, previewInvoice.currency)}</span>
-                  <span className="text-right">{formatCurrency(item.amount, previewInvoice.currency)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-            <div className="ml-auto w-full max-w-[240px] space-y-1 text-[13px]">
-              <div className="flex justify-between text-text-muted"><span>Subtotal</span><span>{formatCurrency(previewInvoice.subtotal, previewInvoice.currency)}</span></div>
-              <div className="flex justify-between text-text-muted"><span>Tax</span><span>{formatCurrency(previewInvoice.tax_amount || 0, previewInvoice.currency)}</span></div>
-              <div className="flex justify-between border-t border-[var(--surface-divider)] pt-1 font-semibold text-text-base"><span>Total</span><span>{formatCurrency(previewInvoice.total, previewInvoice.currency)}</span></div>
-            </div>
-          </div>
-
-          {(previewInvoice.payment_method || previewInvoice.payment_instructions) && (
-            <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Payment</p>
-              {previewInvoice.payment_method && <p className="mt-2 text-[14px] text-text-base">{previewInvoice.payment_method}</p>}
-              {previewInvoice.payment_instructions && <p className="mt-1 whitespace-pre-line text-[13px] text-text-muted">{previewInvoice.payment_instructions}</p>}
-            </div>
-          )}
-
-          {previewInvoice.notes_to_client && (
-            <div className="mt-5 border-t border-[var(--surface-divider)] pt-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Notes</p>
-              <p className="mt-2 whitespace-pre-line text-[14px] leading-[22px] text-text-base">{previewInvoice.notes_to_client}</p>
-            </div>
-          )}
-        </div>
+        <InvoicePreview />
       ) : invoices.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
           <DocumentText1Bold size={28} className="text-[var(--primary)]" />
@@ -343,7 +330,7 @@ export function InvoicesList() {
                   if (pendingDeleteInvoiceId === invoice.id) {
                     return
                   }
-                  setPreviewInvoice(invoice)
+                  handlePreviewFromList(invoice)
                 }}
               >
                 <div className="min-w-0 flex-1">

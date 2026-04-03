@@ -229,10 +229,8 @@ export interface Database {
           currency: string
           payment_method: string | null
           payment_instructions: string | null
-          notes: string | null
           notes_to_client: string | null
           internal_notes: string | null
-          terms: string | null
           status: string
           paid_at: string | null
           pdf_url: string | null
@@ -258,10 +256,8 @@ export interface Database {
           currency?: string
           payment_method?: string | null
           payment_instructions?: string | null
-          notes?: string | null
           notes_to_client?: string | null
           internal_notes?: string | null
-          terms?: string | null
           status?: string
           paid_at?: string | null
           pdf_url?: string | null
@@ -287,43 +283,14 @@ export interface Database {
           currency?: string
           payment_method?: string | null
           payment_instructions?: string | null
-          notes?: string | null
           notes_to_client?: string | null
           internal_notes?: string | null
-          terms?: string | null
           status?: string
           paid_at?: string | null
           pdf_url?: string | null
           share_token?: string
           created_at?: string
           updated_at?: string
-        }
-      }
-      invoice_items: {
-        Row: {
-          id: string
-          invoice_id: string
-          description: string
-          quantity: number
-          rate: number
-          amount: number
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          invoice_id: string
-          description: string
-          quantity?: number
-          rate: number
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          invoice_id?: string
-          description?: string
-          quantity?: number
-          rate?: number
-          created_at?: string
         }
       }
       time_logs: {
@@ -383,10 +350,6 @@ export type ContractUpdate = Database['public']['Tables']['contracts']['Update']
 export type Invoice = Database['public']['Tables']['invoices']['Row']
 export type InvoiceInsert = Database['public']['Tables']['invoices']['Insert']
 export type InvoiceUpdate = Database['public']['Tables']['invoices']['Update']
-
-export type InvoiceItem = Database['public']['Tables']['invoice_items']['Row']
-export type InvoiceItemInsert = Database['public']['Tables']['invoice_items']['Insert']
-export type InvoiceItemUpdate = Database['public']['Tables']['invoice_items']['Update']
 
 export type TimeLog = Database['public']['Tables']['time_logs']['Row']
 export type TimeLogInsert = Database['public']['Tables']['time_logs']['Insert']

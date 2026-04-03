@@ -59,7 +59,7 @@ export default async function SharedInvoicePage({
     .from('invoices')
     .select('*')
     .eq('share_token', token)
-    .neq('status', 'draft')
+    .in('status', ['unpaid', 'paid'])
     .maybeSingle()
 
   let invoice = invoiceData
@@ -80,7 +80,7 @@ export default async function SharedInvoicePage({
         .from('invoices')
         .select('*')
         .eq('share_token', token)
-        .neq('status', 'draft')
+        .in('status', ['unpaid', 'paid'])
         .maybeSingle()
 
       invoice = adminInvoice

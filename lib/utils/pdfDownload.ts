@@ -176,7 +176,6 @@ export function downloadInvoicePdf(fileName: string, data: InvoicePdfData) {
   commands.push({ kind: 'text', text: data.invoiceNumber, x: 50, y, size: 22, color: textDark, bold: true })
   y -= 18
   commands.push({ kind: 'text', text: `Issued ${data.issueDate} · Due ${data.dueDate}`, x: 50, y, size: 11, color: textMuted })
-  commands.push({ kind: 'text', text: data.status.toUpperCase(), x: 460, y, size: 11, color: success, bold: true })
   y -= 16
   commands.push({ kind: 'line', x1: 50, y1: y, x2: 560, y2: y, width: 1, color: border })
 

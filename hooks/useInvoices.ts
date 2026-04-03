@@ -23,15 +23,6 @@ import type { InvoiceFormData, UpdateInvoiceFormData } from '@/lib/validations/i
 
 const INVOICES_QUERY_KEY = 'invoices'
 
-function isAuthError(error: unknown): boolean {
-  if (!(error instanceof Error)) {
-    return false
-  }
-
-  const message = error.message.toLowerCase()
-  return message.includes('not authenticated') || message.includes('jwt') || message.includes('session')
-}
-
 function guestToInvoice(g: GuestInvoice): Invoice {
   return {
     id: g.id,
@@ -51,10 +42,8 @@ function guestToInvoice(g: GuestInvoice): Invoice {
     currency: g.currency,
     payment_method: g.payment_method,
     payment_instructions: g.payment_instructions,
-    notes: g.notes_to_client,
     notes_to_client: g.notes_to_client,
     internal_notes: g.internal_notes,
-    terms: null,
     status: g.status,
     paid_at: null,
     pdf_url: null,
@@ -139,17 +128,7 @@ export function useCreateInvoice() {
         return createGuestInvoice(data)
       }
 
-      try {
-        return await createInvoice(data)
-      } catch (error) {
-        if (!isAuthError(error)) {
-          throw error
-        }
-
-        // If auth session is missing, seamlessly continue in guest mode.
-        useSessionStore.getState().setGuest(true)
-        return createGuestInvoice(data)
-      }
+      return createInvoice(data)
     },
     onMutate: async () => {
       if (isGuest) return {}
@@ -205,40 +184,7 @@ export function useUpdateInvoice() {
         })
       }
 
-      try {
-        return await updateInvoice(id, data)
-      } catch (error) {
-        if (!isAuthError(error)) {
-          throw error
-        }
-
-        // Session expired/missing: switch to guest and keep the user's edit.
-        useSessionStore.getState().setGuest(true)
-        useGuestStore.getState().updateInvoice(id, {
-          client_id: data.client_id ?? undefined,
-          contract_id: data.contract_id ?? undefined,
-          invoice_number: data.invoice_number ?? undefined,
-          issue_date: data.issue_date ?? undefined,
-          due_date: data.due_date ?? undefined,
-          line_items: data.line_items ?? undefined,
-          currency: data.currency ?? undefined,
-          tax_rate: data.tax_rate ?? undefined,
-          discount_type: data.discount_type ?? undefined,
-          discount_value: data.discount_value ?? undefined,
-          subtotal: data.subtotal ?? undefined,
-          total: data.total ?? undefined,
-          payment_method: data.payment_method ?? undefined,
-          payment_instructions: data.payment_instructions ?? undefined,
-          notes_to_client: data.notes_to_client ?? undefined,
-          internal_notes: data.internal_notes ?? undefined,
-          status: (data.status as GuestInvoice['status']) ?? undefined,
-        })
-
-        const updated = useGuestStore.getState().invoices.find((i) => i.id === id)
-        if (updated) return guestToInvoice(updated)
-
-        throw new Error('Invoice not found in guest store after fallback')
-      }
+      return updateInvoice(id, data)
     },
     onMutate: async ({ id }) => {
       if (isGuest) return {}

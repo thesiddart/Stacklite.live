@@ -75,18 +75,25 @@ export interface Invoice {
   id: string
   userId: string
   clientId: string | null
+  contractId: string | null
   invoiceNumber: string
   issueDate: string
   dueDate: string
   lineItems: InvoiceLineItem[]
   taxRate: number
-  discount: number
+  discountType: 'flat' | 'percent' | null
+  discountValue: number | null
   subtotal: number
   tax: number
   total: number
-  status: 'unpaid' | 'paid' | 'overdue'
-  notes: string | null
-  terms: string | null
+  currency: string
+  paymentMethod: string | null
+  paymentInstructions: string | null
+  notesToClient: string | null
+  internalNotes: string | null
+  status: 'unpaid' | 'paid' | 'archived'
+  paidAt: string | null
+  shareToken: string | null
   pdfUrl: string | null
   createdAt: string
   updatedAt: string

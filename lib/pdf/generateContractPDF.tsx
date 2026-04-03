@@ -1,5 +1,3 @@
-import './fonts'
-
 import React from 'react'
 import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer'
 
@@ -30,7 +28,7 @@ export interface ContractPdfData {
 
 const styles = StyleSheet.create({
   page: {
-    fontFamily: 'Inter',
+    fontFamily: 'Helvetica',
     fontSize: 10,
     color: '#1a2018',
     backgroundColor: '#ffffff',
@@ -247,7 +245,7 @@ function ContractDocument({ data }: { data: ContractPdfData }) {
                 </Text>
                 {data.deliverables.map((deliverable, index) => (
                   <Text key={index} style={{ ...styles.sectionValue, marginLeft: 8 }}>
-                    • {deliverable.text}
+                    - {deliverable.text}
                   </Text>
                 ))}
               </>
@@ -290,7 +288,7 @@ function ContractDocument({ data }: { data: ContractPdfData }) {
                 </Text>
                 {data.milestones.map((milestone, index) => (
                   <Text key={index} style={{ ...styles.sectionValue, marginLeft: 8 }}>
-                    • {milestone.label} — {milestone.date}
+                    - {milestone.label} - {milestone.date}
                   </Text>
                 ))}
               </>

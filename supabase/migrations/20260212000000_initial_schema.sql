@@ -98,74 +98,6 @@ create policy "Users can manage their own contracts"
   with check (auth.uid() = user_id);
 
 -- =====================================================
--- INVOICES TABLE
--- =====================================================
-create table if not exists public.invoices (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references public.profiles(id) on delete cascade not null,
-  client_id uuid references public.clients(id) on delete set null,
-  invoice_number text not null,
-  issue_date date not null,
-  due_date date not null,
-  subtotal numeric(10,2) default 0 not null,
-  tax_rate numeric(5,2) default 0,
-  tax_amount numeric(10,2) default 0,
-  total numeric(10,2) not null,
-  currency text default 'USD',
-  notes text,
-  terms text,
-  status text default 'draft' check (status in ('draft', 'sent', 'paid', 'overdue', 'cancelled')),
-  paid_at timestamp with time zone,
-  pdf_url text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  unique(user_id, invoice_number)
-);
-
--- Indexes for invoices
-create index invoices_user_id_idx on public.invoices(user_id);
-create index invoices_client_id_idx on public.invoices(client_id);
-create index invoices_created_at_idx on public.invoices(created_at desc);
-create index invoices_status_idx on public.invoices(status);
-
--- RLS Policies for invoices
-alter table public.invoices enable row level security;
-
-create policy "Users can manage their own invoices"
-  on public.invoices for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
--- =====================================================
--- INVOICE ITEMS TABLE
--- =====================================================
-create table if not exists public.invoice_items (
-  id uuid default gen_random_uuid() primary key,
-  invoice_id uuid references public.invoices(id) on delete cascade not null,
-  description text not null,
-  quantity numeric(10,2) default 1 not null,
-  rate numeric(10,2) not null,
-  amount numeric(10,2) generated always as (quantity * rate) stored,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- Index for invoice_items
-create index invoice_items_invoice_id_idx on public.invoice_items(invoice_id);
-
--- RLS Policies for invoice_items
-alter table public.invoice_items enable row level security;
-
-create policy "Users can manage their own invoice items"
-  on public.invoice_items for all
-  using (
-    exists (
-      select 1 from public.invoices
-      where invoices.id = invoice_items.invoice_id
-      and invoices.user_id = auth.uid()
-    )
-  );
-
--- =====================================================
 -- TIME LOGS TABLE
 -- =====================================================
 create table if not exists public.time_logs (
@@ -222,11 +154,6 @@ create trigger set_updated_at
 
 create trigger set_updated_at
   before update on public.contracts
-  for each row
-  execute function public.handle_updated_at();
-
-create trigger set_updated_at
-  before update on public.invoices
   for each row
   execute function public.handle_updated_at();
 

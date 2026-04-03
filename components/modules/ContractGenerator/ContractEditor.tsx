@@ -228,7 +228,7 @@ export function ContractEditor() {
           <ContractPreview />
         </div>
       ) : (
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden lg:grid-cols-2">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden lg:grid-cols-[2fr_3fr]">
           {/* Left: Form */}
           <div className="min-h-0 overflow-hidden rounded-[14px] border border-[var(--surface-panel-border)] bg-[var(--surface-panel-strong)] p-4">
             <ContractForm onSave={handleSave} />

@@ -135,6 +135,13 @@ function DashboardContent() {
   const isEditingClientOpen = editingClient !== null
   const isClientPanelExpanded = isClientFormOpen || isClientFormMounted
   const shouldShowCenterPanel = !isClientFormOpen && activeDockTab !== null
+  const isCenterFormActive =
+    (activeDockTab === 'contract' && contractView === 'editor') ||
+    (activeDockTab === 'invoice' && invoiceView === 'editor')
+  const previousClientsCollapseStateRef = useRef<boolean | null>(null)
+  const previousTimeTrackerCollapseStateRef = useRef<boolean | null>(null)
+  const isClientsPanelCollapsed = isCenterFormActive || isClientsCollapsed
+  const isTimeTrackerPanelCollapsed = isCenterFormActive || isTimeTrackerCollapsed
   const centerPanelTitle = activeDockTab === 'invoice'
         ? 'Invoice Generator'
         : activeDockTab === 'income'
@@ -266,6 +273,39 @@ function DashboardContent() {
     }
   }, [isClientFormOpen])
 
+  useEffect(() => {
+    if (isCenterFormActive) {
+      if (previousClientsCollapseStateRef.current === null) {
+        previousClientsCollapseStateRef.current = isClientsCollapsed
+      }
+
+      if (previousTimeTrackerCollapseStateRef.current === null) {
+        previousTimeTrackerCollapseStateRef.current = isTimeTrackerCollapsed
+      }
+
+      setIsClientsCollapsed(true)
+      setIsTimeTrackerCollapsed(true)
+      return
+    }
+
+    if (
+      previousClientsCollapseStateRef.current === null &&
+      previousTimeTrackerCollapseStateRef.current === null
+    ) {
+      return
+    }
+
+    if (previousClientsCollapseStateRef.current !== null) {
+      setIsClientsCollapsed(previousClientsCollapseStateRef.current)
+      previousClientsCollapseStateRef.current = null
+    }
+
+    if (previousTimeTrackerCollapseStateRef.current !== null) {
+      setIsTimeTrackerCollapsed(previousTimeTrackerCollapseStateRef.current)
+      previousTimeTrackerCollapseStateRef.current = null
+    }
+  }, [isCenterFormActive, isClientsCollapsed, isTimeTrackerCollapsed])
+
   return (
     <TooltipProvider delayDuration={180}>
     <div className="theme-page-shell">
@@ -284,7 +324,7 @@ function DashboardContent() {
 
       <section
         className={`absolute z-10 flex flex-col ${
-          isClientsCollapsed
+          isClientsPanelCollapsed
             ? 'left-[50px] top-[calc(50%+188px)] items-start gap-2'
             : `bottom-28 left-[50px] items-center gap-4 transition-[bottom,width,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
               isClientPanelExpanded
@@ -293,10 +333,16 @@ function DashboardContent() {
             }`
         }`}
       >
-        {isClientsCollapsed ? (
+        {isClientsPanelCollapsed ? (
           <button
             type="button"
-            onClick={() => setIsClientsCollapsed(false)}
+            onClick={() => {
+              if (isCenterFormActive) {
+                return
+              }
+
+              setIsClientsCollapsed(false)
+            }}
             className="theme-shell-chip inline-flex h-8 w-fit items-center gap-1 rounded-[8px] px-2"
             aria-label="Expand Manage Clients"
           >
@@ -458,7 +504,11 @@ function DashboardContent() {
 
       <section
         aria-hidden={!shouldShowCenterPanel}
-        className={`absolute bottom-28 left-1/2 top-[120px] z-10 flex w-[min(90%,700px)] -translate-x-1/2 flex-col gap-2 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] max-h-[calc(100vh-200px)] lg:w-[min(50vw,900px)] ${
+        className={`absolute z-10 flex flex-col gap-2 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          isCenterFormActive
+            ? 'bottom-28 left-[214px] right-[214px] top-[120px] w-auto translate-x-0'
+            : 'bottom-28 left-1/2 top-[120px] w-[min(90%,700px)] -translate-x-1/2 max-h-[calc(100vh-200px)] lg:w-[min(50vw,900px)]'
+        } ${
           shouldShowCenterPanel
             ? 'pointer-events-auto opacity-100 translate-y-0 scale-100'
             : 'pointer-events-none opacity-0 translate-y-3 scale-[0.98]'
@@ -533,16 +583,22 @@ function DashboardContent() {
       </section>
 
       <section
-        className={`absolute z-10 flex flex-col ${
-          isTimeTrackerCollapsed
+        className={`absolute z-[5] flex flex-col ${
+          isTimeTrackerPanelCollapsed
             ? 'right-[50px] top-[calc(50%+188px)] items-end gap-2'
             : 'bottom-28 right-[50px] w-[289px] translate-y-0 items-center gap-4 transition-[bottom,width,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]'
         }`}
       >
-        {isTimeTrackerCollapsed ? (
+        {isTimeTrackerPanelCollapsed ? (
           <button
             type="button"
-            onClick={() => setIsTimeTrackerCollapsed(false)}
+            onClick={() => {
+              if (isCenterFormActive) {
+                return
+              }
+
+              setIsTimeTrackerCollapsed(false)
+            }}
             className="theme-shell-chip inline-flex h-8 w-fit items-center gap-1 rounded-[8px] px-2"
             aria-label="Expand Time Tracker"
           >
