@@ -344,6 +344,15 @@ export async function deleteTimeLog(id: string): Promise<void> {
   }
 }
 
+export async function deleteTimeLogsByClientId(clientId: string): Promise<void> {
+  const { supabase } = await getAuthenticatedUser()
+  const { error } = await supabase.from('time_logs').delete().eq('client_id', clientId)
+
+  if (error) {
+    throw toTimeLogApiError('delete client time entries', error.message)
+  }
+}
+
 export async function getTimeLogSummary(): Promise<TimeLogSummary> {
   const timeLogs = await getTimeLogs()
   const now = Date.now()

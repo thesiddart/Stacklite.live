@@ -26,6 +26,9 @@ function LoginPageContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [needsVerificationHelp, setNeedsVerificationHelp] = useState(false)
+  const [attempts, setAttempts] = useState(0)
+  const [isLocked, setIsLocked] = useState(false)
+  const [forgotFeedback, setForgotFeedback] = useState('')
   const [oauthLoadingProvider, setOauthLoadingProvider] = useState<'google' | 'github' | null>(
     null
   )
@@ -34,7 +37,14 @@ function LoginPageContent() {
 
   const handleEmailSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+
+    if (isLocked) {
+      setError('Too many attempts. Please wait 15 minutes before trying again.')
+      return
+    }
+
     setError('')
+    setForgotFeedback('')
     setNeedsVerificationHelp(false)
     setIsLoading(true)
 
@@ -58,10 +68,51 @@ function LoginPageContent() {
         setNeedsVerificationHelp(true)
         setError('Your email is not verified yet. Please verify your inbox email before signing in.')
       } else {
-        setError(message)
+        const nextAttempts = attempts + 1
+        setAttempts(nextAttempts)
+
+        if (nextAttempts >= 5) {
+          setIsLocked(true)
+          setError('Too many attempts. Please wait 15 minutes before trying again.')
+          window.setTimeout(() => {
+            setIsLocked(false)
+            setAttempts(0)
+          }, 15 * 60 * 1000)
+        } else {
+          setError(`${message} (${5 - nextAttempts} attempts remaining)`)
+        }
       }
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleForgotPassword = async () => {
+    const trimmedEmail = email.trim().toLowerCase()
+    setError('')
+    setForgotFeedback('')
+
+    if (!trimmedEmail) {
+      setError('Enter your email first to reset password.')
+      return
+    }
+
+    try {
+      const supabase = createClient()
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || window.location.origin
+      const redirectUrl = `${appUrl}/auth/reset-password`
+
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+        redirectTo: redirectUrl,
+      })
+
+      if (resetError) {
+        throw resetError
+      }
+
+      setForgotFeedback('Password reset email sent. Check your inbox and spam folder.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Could not send password reset email.')
     }
   }
 
@@ -165,6 +216,12 @@ function LoginPageContent() {
                 </div>
               )}
 
+              {forgotFeedback && (
+                <div className="rounded-md border border-feedback-success-base/40 bg-feedback-success-base/10 p-md">
+                  <p className="text-sm text-feedback-success-text">{forgotFeedback}</p>
+                </div>
+              )}
+
               {needsVerificationHelp && (
                 <div className="rounded-md border border-[var(--primary)]/40 bg-[var(--primary)]/10 p-md">
                   <p className="text-sm text-[var(--tertiary)]">
@@ -202,9 +259,15 @@ function LoginPageContent() {
                   <label className="text-[14px] font-medium leading-4 text-text-base">
                     Password<span className="text-text-brand">*</span>
                   </label>
-                  <Link href="#" className="text-[14px] leading-none text-text-muted underline">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleForgotPassword()
+                    }}
+                    className="text-[14px] leading-none text-text-muted underline"
+                  >
                     Forgot your password?
-                  </Link>
+                  </button>
                 </div>
                 <div className="relative">
                   <input
@@ -241,10 +304,10 @@ function LoginPageContent() {
               <button
                 type="submit"
                 form="login-form"
-                disabled={isLoading}
+                disabled={isLoading || isLocked}
                 className="flex h-10 w-full items-center justify-center rounded-full bg-[var(--primary)] px-8 py-2 text-[14px] font-medium leading-4 text-[var(--base-white)] transition-all hover:opacity-90 disabled:opacity-60"
               >
-                {isLoading ? 'Signing In...' : 'Sign In'}
+                {isLocked ? 'Too many attempts' : isLoading ? 'Signing In...' : 'Sign In'}
               </button>
 
               <Link href="/signup" className="block">
@@ -255,6 +318,18 @@ function LoginPageContent() {
                   Create New Account
                 </button>
               </Link>
+
+              <p className="text-center text-xs text-text-muted">
+                By continuing, you agree to our{' '}
+                <Link href="/terms" className="text-[var(--primary)] hover:underline">
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link href="/privacy" className="text-text-brand hover:underline">
+                  Privacy Policy
+                </Link>
+                . For support: <a href="mailto:hello@siddart.net" className="text-[var(--primary)] hover:underline">hello@siddart.net</a>
+              </p>
             </div>
           </div>
         </section>

@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import { CloseCircleBold, ColorfilterBold, EditBold, LoginBold, MusicCircleBold, TrashBold, UserBold } from 'sicons'
 import { useAuth } from '@/hooks/useAuth'
 import { useDeleteAccount, useProfile, useUpdateProfile } from '@/hooks/useProfile'
+import { useSessionStore } from '@/stores/sessionStore'
 import { SignInButton } from '@/components/layout/SignInButton'
 import { SavePromptModal } from '@/components/layout/SavePromptModal'
 
@@ -103,6 +104,7 @@ export function AppNavbar({
 }: AppNavbarProps) {
   const pathname = usePathname()
   const { user } = useAuth()
+  const isGuest = useSessionStore((s) => s.isGuest)
   const { data: profile } = useProfile(Boolean(user))
   const updateProfileMutation = useUpdateProfile()
   const deleteAccountMutation = useDeleteAccount()
@@ -308,6 +310,11 @@ export function AppNavbar({
           </div>
         </Link>
         <span className="text-[14px] font-medium leading-none text-text-base">Beta</span>
+        {isGuest && !isAuthOrPublicSharePage ? (
+          <span className="inline-flex h-8 items-center rounded-[8px] bg-feedback-error-base/12 px-3 text-[12px] font-medium leading-none text-feedback-error-text">
+            Guest Mode
+          </span>
+        ) : null}
       </div>
 
       <div className="theme-shell-card relative flex h-12 items-center gap-2 rounded-[14px] p-2">

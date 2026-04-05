@@ -8,8 +8,10 @@ import {
   deleteClient,
   searchClients,
 } from '@/lib/api/clients'
+import { deleteTimeLogsByClientId } from '@/lib/api/timeLogs'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useGuestStore } from '@/stores/guestStore'
+import { track } from '@/lib/analytics'
 import type { Client } from '@/lib/types/database'
 import type { GuestClient } from '@/lib/types/guest'
 import type { ClientFormData, UpdateClientFormData } from '@/lib/validations/client'
@@ -196,6 +198,7 @@ export function useCreateClient() {
       }
     },
     onSuccess: () => {
+      track('client_added')
       queryClient.invalidateQueries({ queryKey: [CLIENTS_QUERY_KEY] })
     },
   })
@@ -221,10 +224,24 @@ export function useUpdateClient() {
           tags: data.tags || null,
           is_active: data.is_active,
         })
+
+        if (data.is_active === false) {
+          useGuestStore.setState((state) => ({
+            timeEntries: state.timeEntries.filter((entry) => entry.client_id !== id),
+          }))
+        }
+
         const updated = useGuestStore.getState().clients.find((c) => c.id === id)
         return updated ? guestToClient(updated) : guestToClient({ id, name: data.name || '', email: null, phone: null, company_name: null, address: null, notes: null, tags: null, is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       }
-      return updateClient(id, data)
+
+      const updated = await updateClient(id, data)
+
+      if (data.is_active === false) {
+        await deleteTimeLogsByClientId(id)
+      }
+
+      return updated
     },
     onMutate: async ({ id, data }) => {
       if (isGuest) return {}
@@ -263,6 +280,7 @@ export function useUpdateClient() {
         queryClient.setQueryData([CLIENTS_QUERY_KEY, id], data)
       }
       queryClient.invalidateQueries({ queryKey: [CLIENTS_QUERY_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['time-logs'] })
     },
   })
 }
@@ -277,9 +295,13 @@ export function useDeleteClient() {
   return useMutation({
     mutationFn: async (id: string) => {
       if (isGuest) {
+        useGuestStore.setState((state) => ({
+          timeEntries: state.timeEntries.filter((entry) => entry.client_id !== id),
+        }))
         useGuestStore.getState().deleteClient(id)
         return
       }
+      await deleteTimeLogsByClientId(id)
       return deleteClient(id)
     },
     onMutate: async (id) => {
@@ -301,6 +323,7 @@ export function useDeleteClient() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [CLIENTS_QUERY_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['time-logs'] })
     },
   })
 }

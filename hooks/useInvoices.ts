@@ -12,6 +12,7 @@ import {
 } from '@/lib/api/invoices'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useGuestStore } from '@/stores/guestStore'
+import { track } from '@/lib/analytics'
 import type { Invoice } from '@/lib/types/database'
 import type { GuestInvoice } from '@/lib/types/guest'
 import type { InvoiceFormData, UpdateInvoiceFormData } from '@/lib/validations/invoice'
@@ -142,6 +143,8 @@ export function useCreateInvoice() {
       }
     },
     onSuccess: () => {
+      track('invoice_created')
+      track('invoice_saved')
       queryClient.invalidateQueries({ queryKey: [INVOICES_QUERY_KEY] })
     },
   })
@@ -205,6 +208,7 @@ export function useUpdateInvoice() {
       if (!isGuest) {
         queryClient.setQueryData([INVOICES_QUERY_KEY, id], data)
       }
+      track('invoice_saved')
       queryClient.invalidateQueries({ queryKey: [INVOICES_QUERY_KEY] })
     },
   })
@@ -258,6 +262,7 @@ export function useGenerateInvoiceShareLink() {
     },
     onSuccess: () => {
       if (!isGuest) {
+        track('invoice_shared')
         queryClient.invalidateQueries({ queryKey: [INVOICES_QUERY_KEY] })
       }
     },
@@ -278,6 +283,7 @@ export function useMarkInvoicePaid() {
       return markInvoicePaid(id)
     },
     onSuccess: () => {
+      track('invoice_marked_paid')
       queryClient.invalidateQueries({ queryKey: [INVOICES_QUERY_KEY] })
     },
   })

@@ -11,6 +11,7 @@ import {
 } from '@/lib/api/contracts'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useGuestStore } from '@/stores/guestStore'
+import { track } from '@/lib/analytics'
 import type { Contract } from '@/lib/types/database'
 import type { GuestContract } from '@/lib/types/guest'
 import type { ContractFormData, UpdateContractFormData } from '@/lib/validations/contract'
@@ -147,6 +148,8 @@ export function useCreateContract() {
       }
     },
     onSuccess: () => {
+      track('contract_created')
+      track('contract_saved')
       queryClient.invalidateQueries({ queryKey: [CONTRACTS_QUERY_KEY] })
     },
   })
@@ -219,6 +222,7 @@ export function useUpdateContract() {
       if (!isGuest) {
         queryClient.setQueryData([CONTRACTS_QUERY_KEY, id], data)
       }
+      track('contract_saved')
       queryClient.invalidateQueries({ queryKey: [CONTRACTS_QUERY_KEY] })
     },
   })
@@ -279,6 +283,7 @@ export function useGenerateShareLink() {
     },
     onSuccess: () => {
       if (!isGuest) {
+        track('contract_shared')
         queryClient.invalidateQueries({ queryKey: [CONTRACTS_QUERY_KEY] })
       }
     },

@@ -10,6 +10,7 @@ import {
   EditBold,
   PeopleBold,
   Timer1Bold,
+  TrashBold,
   WalletBold,
 } from 'sicons'
 import { AppNavbar } from '@/components/layout/AppNavbar'
@@ -20,6 +21,7 @@ import { InvoiceGenerator } from '@/components/modules/InvoiceGenerator'
 import { IncomeTracker } from '@/components/modules/IncomeTracker'
 import { TimeTracker } from '@/components/modules/TimeTracker'
 import { useClients } from '@/hooks/useClients'
+import { useDeleteClient } from '@/hooks/useClients'
 import { useContracts } from '@/hooks/useContracts'
 import { useTimeLogs } from '@/hooks/useTimeLogs'
 import { useInvoices } from '@/hooks/useInvoices'
@@ -55,6 +57,7 @@ function DashboardContent() {
   const invoiceView = useInvoiceStore((s) => s.view)
   const setInvoiceView = useInvoiceStore((s) => s.setView)
   const { data: clients = [], isLoading: isClientsLoading } = useClients()
+  const deleteClientMutation = useDeleteClient()
   const { data: contracts = [] } = useContracts()
   const { data: invoices = [] } = useInvoices()
   const { data: timeLogs = [] } = useTimeLogs()
@@ -168,6 +171,18 @@ function DashboardContent() {
       invoices,
       timeLogs,
     })
+  }
+
+  const handleDeleteClient = async (client: Client) => {
+    const confirmed = window.confirm(
+      `Delete ${client.name}? This will also remove all associated time tasks.`
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    await deleteClientMutation.mutateAsync(client.id)
   }
 
   const openInvoiceFromIncome = (invoiceId: string) => {
@@ -443,17 +458,29 @@ function DashboardContent() {
                               <h3 className="min-w-0 flex-1 truncate text-[16px] font-medium leading-none text-text-base">
                                 {client.name}
                               </h3>
-                              <button
-                                type="button"
-                                aria-label={`Edit ${client.name}`}
-                                onClick={() => {
-                                  setIsCreateClientOpen(false)
-                                  setEditingClient(client)
-                                }}
-                                className="inline-flex shrink-0 items-center justify-center text-text-base transition-colors hover:text-[var(--tertiary)]"
-                              >
-                                <EditBold size={16} />
-                              </button>
+                              <div className="inline-flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  aria-label={`Edit ${client.name}`}
+                                  onClick={() => {
+                                    setIsCreateClientOpen(false)
+                                    setEditingClient(client)
+                                  }}
+                                  className="inline-flex shrink-0 items-center justify-center text-text-base transition-colors hover:text-[var(--tertiary)]"
+                                >
+                                  <EditBold size={16} />
+                                </button>
+                                <button
+                                  type="button"
+                                  aria-label={`Delete ${client.name}`}
+                                  onClick={() => {
+                                    void handleDeleteClient(client)
+                                  }}
+                                  className="inline-flex shrink-0 items-center justify-center text-text-base transition-colors hover:text-[var(--tertiary)]"
+                                >
+                                  <TrashBold size={16} />
+                                </button>
+                              </div>
                             </div>
 
                             <div className="w-full">

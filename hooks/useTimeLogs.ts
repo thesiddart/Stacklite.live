@@ -15,6 +15,7 @@ import {
 import type { TimeLogSummary } from '@/lib/api/timeLogs'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useGuestStore } from '@/stores/guestStore'
+import { track } from '@/lib/analytics'
 import type { GuestTimeEntry } from '@/lib/types/guest'
 import type { ManualTimeLogInput, StartTimeLogInput, UpdateTimeLogInput } from '@/lib/validations/timeLog'
 import { isSameDay, isSameWeek } from '@/lib/utils/time'
@@ -112,6 +113,7 @@ export function useCreateRunningTimeLog() {
       return createRunningTimeLog(data)
     },
     onSuccess: async () => {
+      track('timer_started')
       await invalidateTimeLogQueries(queryClient)
     },
   })
@@ -145,6 +147,7 @@ export function useCreateManualTimeLog() {
       return createManualTimeLog(data)
     },
     onSuccess: async () => {
+      track('timer_stopped')
       await invalidateTimeLogQueries(queryClient)
     },
   })
@@ -167,6 +170,7 @@ export function useUpdateTimeLog() {
       return updateTimeLog(data)
     },
     onSuccess: async () => {
+      track('timer_stopped')
       await invalidateTimeLogQueries(queryClient)
     },
   })

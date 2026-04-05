@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { AppNavbar } from '@/components/layout/AppNavbar'
+import { track } from '@/lib/analytics'
 
 function normalizeEmail(value: string): string {
   return value.trim().toLowerCase()
@@ -82,12 +83,14 @@ function SignupPageContent() {
       if (error) throw error
 
       if (data.session) {
+        track('signup_completed')
         router.push('/dashboard')
         router.refresh()
         return
       }
 
       if (data.user) {
+        track('signup_completed')
         setNeedsEmailVerification(true)
       }
     } catch (err: unknown) {
@@ -490,6 +493,18 @@ function SignupPageContent() {
                     >
                       Already have an account? Sign In
                     </Link>
+
+                    <p className="text-center text-xs text-text-muted">
+                      By continuing, you agree to our{' '}
+                      <Link href="/terms" className="text-[var(--primary)] hover:underline">
+                        Terms of Service
+                      </Link>{' '}
+                      and{' '}
+                      <Link href="/privacy" className="text-text-brand hover:underline">
+                        Privacy Policy
+                      </Link>
+                      . For support: <a href="mailto:hello@siddart.net" className="text-[var(--primary)] hover:underline">hello@siddart.net</a>
+                    </p>
                   </div>
                 </form>
               </>

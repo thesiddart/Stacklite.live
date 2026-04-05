@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
+    "tree:update": "sh scripts/update-tree.sh",
     "test": "vitest run",
     "test:watch": "vitest"
   },

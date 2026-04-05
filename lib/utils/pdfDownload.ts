@@ -1,3 +1,5 @@
+import { track } from '@/lib/analytics'
+
 function escapePdfText(value: string): string {
   return value
     .replaceAll('\\', '\\\\')
@@ -164,6 +166,8 @@ export interface InvoicePdfData {
 }
 
 export function downloadInvoicePdf(fileName: string, data: InvoicePdfData) {
+  track('invoice_downloaded')
+
   const textDark: Rgb = [0.102, 0.086, 0.239]
   const textMuted: Rgb = [0.486, 0.447, 0.533]
   const border: Rgb = [0.910, 0.894, 0.965]

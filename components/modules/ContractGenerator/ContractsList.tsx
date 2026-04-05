@@ -58,7 +58,11 @@ function StatusBadge({ status }: { status: string }) {
 export function ContractsList() {
   const isGuest = useSessionStore((s) => s.isGuest)
   const openWithAction = useSavePromptStore((s) => s.openWithAction)
-  const { data: contracts = [], isLoading } = useContracts()
+  const {
+    data: contracts = [],
+    isLoading,
+    error: contractsError,
+  } = useContracts()
   const { data: clients = [] } = useClients()
   const { user } = useAuth()
   const { data: profile } = useProfile(Boolean(user))
@@ -236,7 +240,27 @@ export function ContractsList() {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-[13px] text-text-muted">Loading contracts...</p>
+        <p className="text-[13px] text-text-muted">Loading your contracts...</p>
+      </div>
+    )
+  }
+
+  if (contractsError) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="flex max-w-[360px] flex-col items-center gap-3 text-center">
+          <h3 className="text-[16px] font-semibold text-text-base">Couldn&apos;t load contracts</h3>
+          <p className="text-[13px] text-text-muted">
+            Something went wrong on our end. Try refreshing the page.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="inline-flex h-8 items-center justify-center rounded-[8px] bg-[var(--primary)] px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:opacity-90"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
     )
   }
@@ -329,15 +353,19 @@ export function ContractsList() {
             </div>
           </div>
         ) : contracts.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
             <DocumentText1Bold size={28} className="text-[var(--tertiary)]" />
-            <p className="text-[13px] text-text-muted">No contracts yet</p>
+            <h3 className="text-[14px] font-medium text-text-base">No contracts yet.</h3>
+            <p className="max-w-[360px] text-[12px] text-text-muted">
+              Create your first contract to share with a client. It takes less than 2 minutes.
+            </p>
             <button
               type="button"
               onClick={handleNewContract}
-              className="text-[12px] font-medium text-[var(--tertiary)] hover:text-[var(--primary)]"
+              className="inline-flex items-center gap-1 rounded-[8px] bg-[var(--primary)] px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:opacity-90"
             >
-              Create your first contract -&gt;
+              <AddCircleBold size={14} />
+              New contract
             </button>
           </div>
         ) : (

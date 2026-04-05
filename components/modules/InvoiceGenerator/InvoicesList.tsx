@@ -70,7 +70,11 @@ function normalizeDiscountType(value: string | null | undefined): 'flat' | 'perc
 export function InvoicesList() {
   const isGuest = useSessionStore((s) => s.isGuest)
   const openWithAction = useSavePromptStore((s) => s.openWithAction)
-  const { data: invoices = [], isLoading } = useInvoices()
+  const {
+    data: invoices = [],
+    isLoading,
+    error: invoicesError,
+  } = useInvoices()
   const { data: clients = [] } = useClients()
   const deleteMutation = useDeleteInvoice()
   const shareMutation = useGenerateInvoiceShareLink()
@@ -234,7 +238,27 @@ export function InvoicesList() {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-[13px] text-text-muted">Loading invoices...</p>
+        <p className="text-[13px] text-text-muted">Loading your invoices...</p>
+      </div>
+    )
+  }
+
+  if (invoicesError) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="flex max-w-[360px] flex-col items-center gap-3 text-center">
+          <h3 className="text-[16px] font-semibold text-text-base">Couldn&apos;t load invoices</h3>
+          <p className="text-[13px] text-text-muted">
+            Something went wrong. Try refreshing or check your connection.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="inline-flex h-8 items-center justify-center rounded-[8px] bg-[var(--primary)] px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:opacity-90"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
     )
   }
@@ -302,15 +326,19 @@ export function InvoicesList() {
       {previewInvoice ? (
         <InvoicePreview />
       ) : invoices.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-          <DocumentText1Bold size={28} className="text-[var(--primary)]" />
-          <p className="text-[13px] text-text-muted">No invoices yet</p>
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
+          <DocumentText1Bold size={28} className="text-[var(--tertiary)]" />
+          <h3 className="text-[14px] font-medium text-text-base">No invoices yet.</h3>
+          <p className="max-w-[420px] text-[12px] text-text-muted">
+            Create an invoice and send it to your client in minutes. Your income tracker will update automatically when you mark one as paid.
+          </p>
           <button
             type="button"
             onClick={handleNewInvoice}
-            className="text-[12px] font-medium text-[var(--tertiary)] hover:text-[var(--primary)]"
+            className="inline-flex items-center gap-1 rounded-[8px] bg-[var(--primary)] px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:opacity-90"
           >
-            Create your first invoice →
+            <AddCircleBold size={14} />
+            New invoice
           </button>
         </div>
       ) : (

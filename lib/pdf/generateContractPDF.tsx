@@ -1,5 +1,6 @@
 import React from 'react'
 import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer'
+import { track } from '@/lib/analytics'
 
 type ClauseEntry = {
   key: string
@@ -337,6 +338,7 @@ function ContractDocument({ data }: { data: ContractPdfData }) {
 
 export async function generateContractPDF(data: ContractPdfData): Promise<void> {
   const blob = await pdf(<ContractDocument data={data} />).toBlob()
+  track('contract_downloaded')
 
   const safeClientName = (data.clientName || 'Client').replace(/\s+/g, '_')
   const safeProjectName = (data.projectName || 'Contract').replace(/\s+/g, '_')

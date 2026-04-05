@@ -11,6 +11,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { useGuestStore } from '@/stores/guestStore'
 import { useSessionStore } from '@/stores/sessionStore'
+import { track } from '@/lib/analytics'
 
 export async function migrateGuestData(userId: string): Promise<void> {
   const supabase = createClient()
@@ -100,6 +101,7 @@ export async function migrateGuestData(userId: string): Promise<void> {
     // 4. All done — clear guest data and exit guest mode
     guest.clearAll()
     useSessionStore.getState().setGuest(false)
+    track('guest_converted_to_account')
 
     // Remove guest cookie
     document.cookie = 'stacklite-guest=; path=/; max-age=0; SameSite=Lax'

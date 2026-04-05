@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Chart2Bold } from 'sicons'
+import { AddCircleBold, Chart2Bold } from 'sicons'
 import { Select } from '@/components/ui/Select'
 import { useIncomeData, type IncomeFilter } from '@/hooks/useIncomeData'
 import { StatCards } from './StatCards'
@@ -66,9 +66,10 @@ export function IncomeTracker({
           <button
             type="button"
             onClick={() => onOpenInvoiceGenerator?.()}
-            className="mt-4 rounded-[8px] bg-[var(--primary)] px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:opacity-90"
+            className="mt-4 inline-flex h-8 items-center justify-center gap-1 rounded-[8px] bg-[var(--primary)] px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:opacity-90"
           >
-            Go to Invoice Generator →
+            <AddCircleBold size={14} />
+            Create New
           </button>
         </section>
       ) : (

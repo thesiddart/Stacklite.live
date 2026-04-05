@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { QueryProvider } from "@/components/QueryProvider";
+import { CookieBanner } from "@/components/legal/CookieBanner";
 
 export const metadata: Metadata = {
   title: {
@@ -52,7 +54,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
+        <Script
+          defer
+          data-domain="stacklite.live"
+          src="https://plausible.io/js/script.js"
+          strategy="afterInteractive"
+        />
         <QueryProvider>{children}</QueryProvider>
+        <CookieBanner />
       </body>
     </html>
   );

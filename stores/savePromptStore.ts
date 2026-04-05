@@ -6,6 +6,7 @@
  */
 
 import { create } from 'zustand'
+import { track } from '@/lib/analytics'
 
 interface SavePromptState {
   isOpen: boolean
@@ -18,7 +19,13 @@ interface SavePromptState {
 export const useSavePromptStore = create<SavePromptState>((set) => ({
   isOpen: false,
   pendingAction: null,
-  openWithAction: (action) => set({ isOpen: true, pendingAction: action }),
-  openSavePrompt: () => set({ isOpen: true, pendingAction: null }),
+  openWithAction: (action) => {
+    track('guest_save_prompt_shown')
+    set({ isOpen: true, pendingAction: action })
+  },
+  openSavePrompt: () => {
+    track('guest_save_prompt_shown')
+    set({ isOpen: true, pendingAction: null })
+  },
   close: () => set({ isOpen: false, pendingAction: null }),
 }))
