@@ -13,6 +13,7 @@ export {
 } from './Card'
 export { Textarea } from './Textarea'
 export { Modal } from './Modal'
+export { DatePicker } from './DatePicker'
 export {
 	Dropdown,
 	DropdownTrigger,

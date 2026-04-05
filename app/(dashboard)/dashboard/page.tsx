@@ -150,6 +150,8 @@ function DashboardContent() {
         : activeDockTab === 'income'
           ? 'Income Tracker'
           : 'Contract Generator'
+  const shouldShowContractBackButton =
+    activeDockTab === 'contract' && contractView === 'templates'
   const CenterPanelIcon = activeDockTab === 'invoice'
       ? WalletBold
       : activeDockTab === 'income'
@@ -553,7 +555,18 @@ function DashboardContent() {
               </div>
             </div>
 
-            {((activeDockTab === 'contract' && contractView === 'editor') ||
+            {shouldShowContractBackButton && (
+              <button
+                type="button"
+                onClick={() => setContractView('list')}
+                className="theme-shell-chip-strong inline-flex h-8 w-8 items-center justify-center rounded-[3px] text-[var(--tertiary)] transition-colors duration-200 hover:text-[var(--primary)]"
+                aria-label="Back from Contract Generator"
+              >
+                <CloseCircleBold size={16} />
+              </button>
+            )}
+
+            {!shouldShowContractBackButton && ((activeDockTab === 'contract' && contractView === 'editor') ||
               (activeDockTab === 'invoice' && invoiceView === 'editor')) && (
               <button
                 type="button"

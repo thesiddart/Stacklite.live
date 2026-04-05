@@ -8,6 +8,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { AppNavbar } from '@/components/layout/AppNavbar'
 import { track } from '@/lib/analytics'
+import { SmsBold, UserBold } from 'sicons'
 
 function normalizeEmail(value: string): string {
   return value.trim().toLowerCase()
@@ -201,41 +202,19 @@ function SignupPageContent() {
         showProfileButton
       />
 
-      {/* Main Content */}
-      <div className="absolute left-1/2 top-1/2 z-10 w-[693px] max-w-[calc(100%-32px)] -translate-x-1/2 -translate-y-1/2">
-        {/* Sign Up Tab */}
-        <div className="flex items-center mb-2">
+      <main className="absolute left-1/2 top-1/2 z-10 flex w-[693px] max-w-[calc(100%-32px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-2">
+        <div className="flex items-center">
           <div className="theme-shell-chip flex h-8 items-center gap-1 rounded-lg px-2">
-            {needsEmailVerification ? (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M2.6665 4.33325C2.6665 3.96506 2.96498 3.66659 3.33317 3.66659H12.6665C13.0347 3.66659 13.3332 3.96506 13.3332 4.33325V11.6666C13.3332 12.0348 13.0347 12.3333 12.6665 12.3333H3.33317C2.96498 12.3333 2.6665 12.0348 2.6665 11.6666V4.33325Z"
-                  stroke="var(--tertiary)"
-                  strokeWidth="1.5"
-                />
-                <path
-                  d="M3.3335 4.33325L8.00016 8.33325L12.6668 4.33325"
-                  stroke="var(--tertiary)"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 8C9.65685 8 11 6.65685 11 5C11 3.34315 9.65685 2 8 2C6.34315 2 5 3.34315 5 5C5 6.65685 6.34315 8 8 8Z" stroke="var(--tertiary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M13.5998 14C13.5998 11.79 11.0798 10 7.9998 10C4.9198 10 2.3998 11.79 2.3998 14" stroke="var(--tertiary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            )}
+            {needsEmailVerification ? <SmsBold size={16} /> : <UserBold size={16} />}
             <p className="text-sm font-medium text-[var(--tertiary)]">
               {needsEmailVerification ? 'verify your email' : 'Sign Up'}
             </p>
           </div>
         </div>
 
-        {/* Form Card */}
-        <div className="theme-shell-panel rounded-[14px] px-4 py-[59px]">
-          <div className="w-[510px] max-w-full mx-auto flex flex-col gap-6">
+        <section className="theme-shell-panel relative w-full rounded-[14px] p-6">
+          <div className="mx-auto flex w-[510px] max-w-full flex-col gap-6">
+
             {/* Error Message */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3">
@@ -487,31 +466,33 @@ function SignupPageContent() {
                       {isLoading ? 'Creating account...' : 'Create Account'}
                     </button>
 
-                    <Link
-                      href="/login"
-                      className="flex h-10 items-center justify-center rounded-full border border-[var(--primary)] px-8 py-2 text-xs font-medium text-text-muted transition-all hover:bg-[var(--surface-overlay)]"
-                    >
-                      Already have an account? Sign In
+                    <Link href="/login" className="block">
+                      <button
+                        type="button"
+                        className="flex h-10 w-full items-center justify-center rounded-full border border-[var(--primary)] px-8 py-2 text-[12px] font-medium leading-[12px] text-text-muted transition-all hover:bg-[var(--surface-overlay)]"
+                      >
+                        Already have an account? Sign In
+                      </button>
                     </Link>
 
                     <p className="text-center text-xs text-text-muted">
                       By continuing, you agree to our{' '}
-                      <Link href="/terms" className="text-[var(--primary)] hover:underline">
+                      <Link href="/terms" className="!text-[var(--primary)] hover:underline">
                         Terms of Service
                       </Link>{' '}
                       and{' '}
-                      <Link href="/privacy" className="text-text-brand hover:underline">
+                      <Link href="/privacy" className="!text-[var(--primary)] hover:underline">
                         Privacy Policy
                       </Link>
-                      . For support: <a href="mailto:hello@siddart.net" className="text-[var(--primary)] hover:underline">hello@siddart.net</a>
+                      . For support: <a href="mailto:hello@siddart.net" className="!text-[var(--primary)] hover:underline">hello@siddart.net</a>
                     </p>
                   </div>
                 </form>
               </>
             )}
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { useCreateClient, useUpdateClient } from '@/hooks/useClients'
 import { clientSchema, updateClientSchema } from '@/lib/validations/client'
 import type { ClientFormData, UpdateClientFormData } from '@/lib/validations/client'
@@ -422,6 +423,21 @@ export function ClientForm({
     }
   }
 
+  const handleDateChange = (name: keyof ClientFormState, nextValue: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: nextValue,
+    }))
+
+    if (errors[name]) {
+      setErrors((prev) => {
+        const nextErrors = { ...prev }
+        delete nextErrors[name]
+        return nextErrors
+      })
+    }
+  }
+
   const formContent = (
     <form
       onSubmit={handleSubmit}
@@ -628,12 +644,11 @@ export function ClientForm({
               <option value="development">development</option>
               <option value="custom">custom</option>
             </Select>
-            <Input
+            <DatePicker
               label="Last Contacted"
               name="last_contacted_at"
-              type="date"
               value={formData.last_contacted_at}
-              onChange={handleChange}
+              onChange={(nextValue) => handleDateChange('last_contacted_at', nextValue)}
               error={errors.last_contacted_at}
               className={authInputClassName}
               required

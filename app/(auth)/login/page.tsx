@@ -173,8 +173,9 @@ function LoginPageContent() {
           </div>
         </div>
 
-        <section className="theme-shell-panel w-full rounded-[14px] px-4 py-[59px]">
+        <section className="theme-shell-panel relative w-full rounded-[14px] p-6">
           <div className="mx-auto flex w-[510px] max-w-full flex-col gap-6">
+
             <div className="grid w-full grid-cols-1 gap-2 md:grid-cols-2">
               <button
                 type="button"
@@ -321,14 +322,14 @@ function LoginPageContent() {
 
               <p className="text-center text-xs text-text-muted">
                 By continuing, you agree to our{' '}
-                <Link href="/terms" className="text-[var(--primary)] hover:underline">
+                <Link href="/terms" className="!text-[var(--primary)] hover:underline">
                   Terms of Service
                 </Link>{' '}
                 and{' '}
-                <Link href="/privacy" className="text-text-brand hover:underline">
+                <Link href="/privacy" className="!text-[var(--primary)] hover:underline">
                   Privacy Policy
                 </Link>
-                . For support: <a href="mailto:hello@siddart.net" className="text-[var(--primary)] hover:underline">hello@siddart.net</a>
+                . For support: <a href="mailto:hello@siddart.net" className="!text-[var(--primary)] hover:underline">hello@siddart.net</a>
               </p>
             </div>
           </div>
