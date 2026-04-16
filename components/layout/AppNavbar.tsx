@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useId, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -108,8 +108,15 @@ export function AppNavbar({
   const { data: profile } = useProfile(Boolean(user))
   const updateProfileMutation = useUpdateProfile()
   const deleteAccountMutation = useDeleteAccount()
-  const [currentTime, setCurrentTime] = useState<string | null>(null)
-  const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark'>('light')
+  const [currentTime, setCurrentTime] = useState<string>(() => formatWorkspaceTime(new Date()))
+  const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window === 'undefined') {
+      return 'light'
+    }
+
+    const storedTheme = window.localStorage.getItem('stacklite-theme')
+    return storedTheme === 'dark' || storedTheme === 'light' ? storedTheme : 'light'
+  })
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false)
   const [isMusicMenuOpen, setIsMusicMenuOpen] = useState(false)
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
@@ -118,13 +125,13 @@ export function AppNavbar({
   const [profileError, setProfileError] = useState('')
   const [profileSuccess, setProfileSuccess] = useState('')
   const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false)
-  const [profileForm, setProfileForm] = useState({
-    full_name: '',
-    email: '',
-    company_name: '',
-    company_address: '',
-    tax_id: '',
-  })
+  const [profileForm, setProfileForm] = useState(() => ({
+    full_name: profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '',
+    email: profile?.email || user?.email || '',
+    company_name: profile?.company_name || '',
+    company_address: profile?.company_address || '',
+    tax_id: profile?.tax_id || '',
+  }))
   const musicMenuRef = useRef<HTMLDivElement | null>(null)
   const themeMenuRef = useRef<HTMLDivElement | null>(null)
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
@@ -138,7 +145,6 @@ export function AppNavbar({
     || user?.user_metadata?.name
     || user?.email?.split('@')[0]
     || 'Profile'
-  const profileEmail = profile?.email || user?.email || ''
   const profilePhoto = photoPreview || user?.user_metadata?.avatar_url || null
   const profileInitial = profileName.charAt(0).toUpperCase()
   const logoSrc = selectedTheme === 'dark' ? '/logo-dark.svg' : '/logo-light.svg'
@@ -148,17 +154,28 @@ export function AppNavbar({
     || pathname.startsWith('/c/')
     || pathname.startsWith('/i/')
 
-  useEffect(() => {
-    const storedTheme = window.localStorage.getItem('stacklite-theme')
-    if (storedTheme === 'dark' || storedTheme === 'light') {
-      setSelectedTheme(storedTheme)
-      document.documentElement.classList.toggle('dark', storedTheme === 'dark')
-    }
+  const syncProfileFormFromSource = useCallback(() => {
+    setProfileForm({
+      full_name: profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '',
+      email: profile?.email || user?.email || '',
+      company_name: profile?.company_name || '',
+      company_address: profile?.company_address || '',
+      tax_id: profile?.tax_id || '',
+    })
+  }, [profile, user])
+
+  const closeProfileMenu = useCallback(() => {
+    setIsProfileMenuOpen(false)
+    setProfileView('menu')
+    setProfileError('')
+    setProfileSuccess('')
   }, [])
 
   useEffect(() => {
-    setCurrentTime(formatWorkspaceTime(new Date()))
+    document.documentElement.classList.toggle('dark', selectedTheme === 'dark')
+  }, [selectedTheme])
 
+  useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(formatWorkspaceTime(new Date()))
     }, 1000)
@@ -186,8 +203,7 @@ export function AppNavbar({
       }
 
       if (!clickedInProfileMenu) {
-        setIsProfileMenuOpen(false)
-        setProfileView('menu')
+        closeProfileMenu()
       }
     }
 
@@ -195,8 +211,7 @@ export function AppNavbar({
       if (event.key === 'Escape') {
         setIsThemeMenuOpen(false)
         setIsMusicMenuOpen(false)
-        setIsProfileMenuOpen(false)
-        setProfileView('menu')
+        closeProfileMenu()
       }
     }
 
@@ -207,36 +222,13 @@ export function AppNavbar({
       document.removeEventListener('mousedown', handleOutsideClick)
       document.removeEventListener('keydown', handleEscape)
     }
-  }, [])
+  }, [closeProfileMenu])
 
   const handleThemeChange = (theme: 'light' | 'dark') => {
     setSelectedTheme(theme)
     setIsThemeMenuOpen(false)
     window.localStorage.setItem('stacklite-theme', theme)
-    document.documentElement.classList.toggle('dark', theme === 'dark')
   }
-
-  useEffect(() => {
-    if (!profile && !user) {
-      return
-    }
-
-    setProfileForm({
-      full_name: profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '',
-      email: profile?.email || user?.email || '',
-      company_name: profile?.company_name || '',
-      company_address: profile?.company_address || '',
-      tax_id: profile?.tax_id || '',
-    })
-  }, [profile, user])
-
-  useEffect(() => {
-    if (!isProfileMenuOpen) {
-      setProfileView('menu')
-      setProfileError('')
-      setProfileSuccess('')
-    }
-  }, [isProfileMenuOpen])
 
   const handleProfileFieldChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -336,7 +328,7 @@ export function AppNavbar({
               onClick={() => {
                 setIsThemeMenuOpen((prev) => !prev)
                 setIsMusicMenuOpen(false)
-                setIsProfileMenuOpen(false)
+                closeProfileMenu()
               }}
               className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[var(--primary)] text-white"
             >
@@ -368,7 +360,7 @@ export function AppNavbar({
                     }`}
                   >
                     <div className="flex h-[92px] items-center justify-center bg-background-emphasis">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-button-primary text-button-primaryFg shadow-md">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-button-primary text-button-primary-fg shadow-md">
                         <ColorfilterBold size={28} />
                       </div>
                     </div>
@@ -387,7 +379,7 @@ export function AppNavbar({
                     }`}
                   >
                     <div className="flex h-[92px] items-center justify-center bg-background-highlight">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-button-secondary text-button-secondaryFg shadow-md">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-button-secondary text-button-secondary-fg shadow-md">
                         <ColorfilterBold size={28} />
                       </div>
                     </div>
@@ -408,7 +400,7 @@ export function AppNavbar({
               aria-label="Music"
               onClick={() => {
                 setIsMusicMenuOpen((prev) => !prev)
-                setIsProfileMenuOpen(false)
+                closeProfileMenu()
               }}
               className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[var(--primary)] text-white"
             >
@@ -445,6 +437,13 @@ export function AppNavbar({
 
                 setIsProfileMenuOpen((prev) => !prev)
                 setIsMusicMenuOpen(false)
+
+                if (!isProfileMenuOpen) {
+                  setProfileView('menu')
+                  setProfileError('')
+                  setProfileSuccess('')
+                  syncProfileFormFromSource()
+                }
               }}
               className={`flex h-8 w-8 items-center justify-center rounded-[8px] bg-[var(--primary)] text-white ${
                 showProfileActiveBorder && isProfileMenuOpen
@@ -661,8 +660,7 @@ export function AppNavbar({
                       type="button"
                       onClick={() => {
                         onOpenPrivacyPolicy?.()
-                        setIsProfileMenuOpen(false)
-                        setProfileView('menu')
+                        closeProfileMenu()
                       }}
                       className="flex h-8 w-full items-center gap-1 rounded-[8px] px-2 text-left transition-colors duration-200 hover:bg-[var(--surface-chip)]"
                     >
@@ -673,8 +671,7 @@ export function AppNavbar({
                       type="button"
                       onClick={() => {
                         onDownloadReport?.()
-                        setIsProfileMenuOpen(false)
-                        setProfileView('menu')
+                        closeProfileMenu()
                       }}
                       className="flex h-8 w-full items-center gap-1 rounded-[8px] px-2 text-left transition-colors duration-200 hover:bg-[var(--surface-chip)]"
                     >

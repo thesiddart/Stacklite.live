@@ -1,3 +1,5 @@
+import { hasAcceptedCookieConsent } from '@/lib/cookieConsent'
+
 export type TrackEvent =
   | 'contract_created'
   | 'contract_saved'
@@ -22,7 +24,11 @@ declare global {
 }
 
 export function track(event: TrackEvent, props?: Record<string, string>) {
-  if (typeof window !== 'undefined' && typeof window.plausible === 'function') {
+  if (
+    typeof window !== 'undefined' &&
+    hasAcceptedCookieConsent() &&
+    typeof window.plausible === 'function'
+  ) {
     window.plausible(event, props ? { props } : undefined)
   }
 }

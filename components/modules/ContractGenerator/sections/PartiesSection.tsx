@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useContractStore } from '@/stores/contractStore'
 import { useClients } from '@/hooks/useClients'
 import { useProfile } from '@/hooks/useProfile'
@@ -13,11 +13,51 @@ export function PartiesSection() {
   const { user } = useAuth()
   const { data: profile } = useProfile(Boolean(user))
 
-  const freelancerName = profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || ''
-  const freelancerEmail = profile?.email || user?.email || ''
-  const freelancerLocation = profile?.company_address || ''
+  const freelancerNameDefault = profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || ''
+  const freelancerEmailDefault = profile?.email || user?.email || ''
+  const freelancerLocationDefault = profile?.company_address || ''
 
   const selectedClient = clients.find((c) => c.id === formData.client_id)
+
+  useEffect(() => {
+    const nextData: Record<string, string> = {}
+
+    if (!formData.freelancer_name && freelancerNameDefault) {
+      nextData.freelancer_name = freelancerNameDefault
+    }
+
+    if (!formData.freelancer_email && freelancerEmailDefault) {
+      nextData.freelancer_email = freelancerEmailDefault
+    }
+
+    if (!formData.freelancer_location && freelancerLocationDefault) {
+      nextData.freelancer_location = freelancerLocationDefault
+    }
+
+    if (!formData.client_name && selectedClient?.name) {
+      nextData.client_name = selectedClient.name
+    }
+
+    if (!formData.client_email && selectedClient?.email) {
+      nextData.client_email = selectedClient.email
+    }
+
+    if (Object.keys(nextData).length > 0) {
+      updateFormData(nextData)
+    }
+  }, [
+    formData.client_email,
+    formData.client_name,
+    formData.freelancer_email,
+    formData.freelancer_location,
+    formData.freelancer_name,
+    freelancerEmailDefault,
+    freelancerLocationDefault,
+    freelancerNameDefault,
+    selectedClient?.email,
+    selectedClient?.name,
+    updateFormData,
+  ])
 
   return (
     <div className="space-y-4">
@@ -30,7 +70,7 @@ export function PartiesSection() {
         </p>
       </div>
 
-      {/* Freelancer info — auto-filled from profile */}
+      {/* Freelancer info */}
       <div className="rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-panel-strong)] p-3">
         <p className="text-[11px] font-medium uppercase tracking-wider text-text-muted">
           Freelancer
@@ -42,9 +82,10 @@ export function PartiesSection() {
             </label>
             <input
               type="text"
-              value={freelancerName}
-              readOnly
-              className="theme-shell-field h-8 w-full cursor-not-allowed rounded-[6px] px-3 text-[13px] opacity-70"
+              value={formData.freelancer_name || ''}
+              onChange={(e) => updateFormData({ freelancer_name: e.target.value })}
+              placeholder="Your full name"
+              className="theme-shell-field h-8 w-full rounded-[6px] px-3 text-[13px]"
             />
           </div>
           <div>
@@ -53,28 +94,28 @@ export function PartiesSection() {
             </label>
             <input
               type="email"
-              value={freelancerEmail}
-              readOnly
-              className="theme-shell-field h-8 w-full cursor-not-allowed rounded-[6px] px-3 text-[13px] opacity-70"
+              value={formData.freelancer_email || ''}
+              onChange={(e) => updateFormData({ freelancer_email: e.target.value })}
+              placeholder="you@example.com"
+              className="theme-shell-field h-8 w-full rounded-[6px] px-3 text-[13px]"
             />
           </div>
-          {freelancerLocation && (
-            <div>
-              <label className="mb-1 block text-[12px] font-medium text-text-base">
-                Location
-              </label>
-              <input
-                type="text"
-                value={freelancerLocation}
-                readOnly
-                className="theme-shell-field h-8 w-full cursor-not-allowed rounded-[6px] px-3 text-[13px] opacity-70"
-              />
-            </div>
-          )}
+          <div>
+            <label className="mb-1 block text-[12px] font-medium text-text-base">
+              Location
+            </label>
+            <input
+              type="text"
+              value={formData.freelancer_location || ''}
+              onChange={(e) => updateFormData({ freelancer_location: e.target.value })}
+              placeholder="City, Country"
+              className="theme-shell-field h-8 w-full rounded-[6px] px-3 text-[13px]"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Client selection */}
+      {/* Client selection or custom input */}
       <div className="rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-panel-strong)] p-3">
         <p className="text-[11px] font-medium uppercase tracking-wider text-text-muted">
           Client
@@ -86,10 +127,19 @@ export function PartiesSection() {
             </label>
             <Select
               value={formData.client_id || ''}
-              onChange={(e) => updateFormData({ client_id: e.target.value || null })}
+              onChange={(e) => {
+                const clientId = e.target.value || null
+                const nextClient = clients.find((client) => client.id === clientId)
+
+                updateFormData({
+                  client_id: clientId,
+                  client_name: nextClient?.name || formData.client_name || '',
+                  client_email: nextClient?.email || formData.client_email || '',
+                })
+              }}
               className="h-8 rounded-[6px] px-3 text-[13px]"
             >
-              <option value="">Choose a client</option>
+              <option value="">No saved client (use custom below)</option>
               {isClientsLoading && <option disabled>Loading...</option>}
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
@@ -100,9 +150,35 @@ export function PartiesSection() {
             </Select>
             {clients.length === 0 && !isClientsLoading && (
               <p className="mt-1 text-[11px] text-text-muted">
-                No clients yet. Add one via the Client Manager first.
+                No clients yet. You can still proceed by filling custom client details below.
               </p>
             )}
+          </div>
+
+          <div>
+            <label className="mb-1 block text-[12px] font-medium text-text-base">
+              Client name
+            </label>
+            <input
+              type="text"
+              value={formData.client_name || ''}
+              onChange={(e) => updateFormData({ client_name: e.target.value })}
+              placeholder="Client or company name"
+              className="theme-shell-field h-8 w-full rounded-[6px] px-3 text-[13px]"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-[12px] font-medium text-text-base">
+              Client email
+            </label>
+            <input
+              type="email"
+              value={formData.client_email || ''}
+              onChange={(e) => updateFormData({ client_email: e.target.value })}
+              placeholder="client@example.com"
+              className="theme-shell-field h-8 w-full rounded-[6px] px-3 text-[13px]"
+            />
           </div>
 
           {/* Auto-filled client info */}

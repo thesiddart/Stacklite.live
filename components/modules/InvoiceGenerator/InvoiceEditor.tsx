@@ -153,12 +153,6 @@ export function InvoiceEditor() {
     }
   }, [isDirty, formData, handleSave])
 
-  useEffect(() => {
-    if (isDirty) {
-      setIsPreviewFocused(false)
-    }
-  }, [isDirty])
-
   const handlePreview = () => {
     setIsPreviewFocused(true)
   }
@@ -224,13 +218,14 @@ export function InvoiceEditor() {
 
   const isSaveReadyForPreview = saveStatus === 'saved' && !isDirty
   const isSaving = saveStatus === 'saving'
+  const shouldShowPreview = isPreviewFocused && !isDirty
 
   return (
     <div className="relative flex h-full flex-col gap-3 overflow-visible">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {isPreviewFocused && (
+          {shouldShowPreview && (
             <button
               type="button"
               onClick={() => setIsPreviewFocused(false)}
@@ -239,7 +234,7 @@ export function InvoiceEditor() {
               ← Edit Invoice
             </button>
           )}
-          {!isPreviewFocused && (
+          {!shouldShowPreview && (
             <h3 className="text-[14px] font-semibold text-text-base">
               {activeInvoiceId ? 'Edit Invoice' : 'New Invoice'}
             </h3>
@@ -298,7 +293,7 @@ export function InvoiceEditor() {
       ) : null}
 
       {/* Two column layout */}
-      {isPreviewFocused ? (
+      {shouldShowPreview ? (
         <InvoicePreview />
       ) : (
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden lg:grid-cols-[2fr_3fr]">

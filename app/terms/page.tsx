@@ -81,8 +81,8 @@ export default function TermsPage() {
           <section className="mt-8 space-y-3">
             <h2 className="text-xl font-semibold text-text-base">7. Guest Mode</h2>
             <p className="text-sm text-text-base">
-              In guest mode, data is stored locally in your browser. We are not responsible for data loss from browser
-              storage clearing or shared device use.
+              In guest mode, data is stored temporarily in your browser for up to 24 hours, after which it is
+              automatically deleted. Create an account to save your work permanently.
             </p>
           </section>
 

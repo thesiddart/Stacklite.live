@@ -122,7 +122,7 @@ export function ClientManager({ variant = 'dashboard' }: ClientManagerProps) {
                   {searchQuery ? 'No clients match this search.' : 'Add a client to get started.'}
                 </p>
                 <p className="mt-xs text-sm text-text-muted">
-                  They'll be available across contracts, invoices, and time tracking.
+                  They&apos;ll be available across contracts, invoices, and time tracking.
                 </p>
                 {!searchQuery && (
                   <div className="mt-lg">

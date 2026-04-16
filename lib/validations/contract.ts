@@ -38,6 +38,10 @@ const optionalTrimmedString = (max: number, message: string) =>
     .union([z.string().max(max, message), z.null(), z.undefined()])
     .transform((value) => emptyToNull(value))
 
+const optionalEmail = z
+  .union([z.string().email('Invalid email address'), z.literal(''), z.null(), z.undefined()])
+  .transform((value) => emptyToNull(value))
+
 const deliverableItemSchema = z.object({
   text: z.string().min(1, 'Deliverable text is required'),
 })
@@ -126,6 +130,16 @@ export const contractSchema = z.object({
     .optional()
     .default('sent')
     .transform((value) => normalizeStatus(value)),
+
+  freelancer_name: optionalTrimmedString(255, 'Freelancer name must be less than 255 characters'),
+
+  freelancer_email: optionalEmail,
+
+  freelancer_location: optionalTrimmedString(255, 'Freelancer location must be less than 255 characters'),
+
+  client_name: optionalTrimmedString(255, 'Client name must be less than 255 characters'),
+
+  client_email: optionalEmail,
 })
 
 export const updateContractSchema = contractSchema.partial()

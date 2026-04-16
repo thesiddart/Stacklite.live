@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { z } from 'zod'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
@@ -102,7 +102,14 @@ function getCountryOptions(): string[] {
     .filter((name): name is string => Boolean(name))
     .sort((a, b) => a.localeCompare(b))
 
-  return names.length > 0 ? names : ['United States', 'India', 'Nepal']
+  const currentCountry = getCurrentCountryName()
+  const baseNames = names.length > 0 ? names : ['United States', 'India', 'Nepal']
+
+  if (currentCountry && !baseNames.includes(currentCountry)) {
+    return [currentCountry, ...baseNames].sort((a, b) => a.localeCompare(b))
+  }
+
+  return baseNames
 }
 
 function getCurrentCountryName(): string | null {
@@ -171,7 +178,7 @@ const getInitialFormData = (mode: 'create' | 'edit', client?: Client | null): Cl
     preferred_contact_method: '',
     payment_currency: 'USD',
     payment_terms: '',
-    country: '',
+    country: mode === 'create' ? (getCurrentCountryName() || '') : '',
     state_province: '',
     postal_code: '',
     is_active: true,
@@ -198,7 +205,7 @@ export function ClientForm({
   const updateMutation = useUpdateClient()
   const [formData, setFormData] = useState<ClientFormState>(() => getInitialFormData(mode, client))
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [countryOptions, setCountryOptions] = useState<string[]>(() => getCountryOptions())
+  const countryOptions = useMemo(() => getCountryOptions(), [])
 
   const stateOptions = COUNTRY_STATE_MAP[formData.country] || []
   const tagSelectValue = getTagSelectValue(formData.tags)
@@ -208,26 +215,13 @@ export function ClientForm({
       return
     }
 
-    setFormData(getInitialFormData(mode, client))
-    setErrors({})
+    const timeoutId = window.setTimeout(() => {
+      setFormData(getInitialFormData(mode, client))
+      setErrors({})
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
   }, [client, isOpen, mode])
-
-  useEffect(() => {
-    setCountryOptions(getCountryOptions())
-  }, [])
-
-  useEffect(() => {
-    if (!isOpen || mode !== 'create') return
-
-    const currentCountry = getCurrentCountryName()
-
-    if (currentCountry && !formData.country) {
-      setFormData((prev) => ({ ...prev, country: currentCountry }))
-      if (!countryOptions.includes(currentCountry)) {
-        setCountryOptions((prev) => [currentCountry, ...prev].sort((a, b) => a.localeCompare(b)))
-      }
-    }
-  }, [countryOptions, formData.country, isOpen, mode])
   
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>

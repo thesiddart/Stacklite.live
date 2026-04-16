@@ -1,55 +1,31 @@
 /**
  * Guest Data Store
- * All module data persisted in localStorage via Zustand persist.
+ * All module data is persisted in localStorage via Zustand persist.
+ * Data expires automatically after 24 hours from first guest write.
  * Key: 'stacklite-guest-data'
  */
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { GuestClient, GuestContract, GuestInvoice, GuestTimeEntry } from '@/lib/types/guest'
+import type { GuestStore } from '@/lib/types/guest'
 
-interface GuestState {
-  // Data
-  clients: GuestClient[]
-  contracts: GuestContract[]
-  invoices: GuestInvoice[]
-  timeEntries: GuestTimeEntry[]
+const TTL_MS = 24 * 60 * 60 * 1000
 
-  // Clients
-  addClient: (client: GuestClient) => void
-  updateClient: (id: string, data: Partial<GuestClient>) => void
-  deleteClient: (id: string) => void
-
-  // Contracts
-  addContract: (contract: GuestContract) => void
-  updateContract: (id: string, data: Partial<GuestContract>) => void
-  deleteContract: (id: string) => void
-
-  // Invoices
-  addInvoice: (invoice: GuestInvoice) => void
-  updateInvoice: (id: string, data: Partial<GuestInvoice>) => void
-  deleteInvoice: (id: string) => void
-
-  // Time Entries
-  addTimeEntry: (entry: GuestTimeEntry) => void
-  updateTimeEntry: (id: string, data: Partial<GuestTimeEntry>) => void
-  deleteTimeEntry: (id: string) => void
-
-  // Clear all (used after successful migration)
-  clearAll: () => void
-}
-
-export const useGuestStore = create<GuestState>()(
+export const useGuestStore = create<GuestStore>()(
   persist(
     (set) => ({
       clients: [],
       contracts: [],
       invoices: [],
       timeEntries: [],
+      createdAt: null,
 
       // Clients
       addClient: (client) =>
-        set((s) => ({ clients: [...s.clients, client] })),
+        set((s) => ({
+          clients: [...s.clients, client],
+          createdAt: s.createdAt ?? Date.now(),
+        })),
       updateClient: (id, data) =>
         set((s) => ({
           clients: s.clients.map((c) =>
@@ -61,7 +37,10 @@ export const useGuestStore = create<GuestState>()(
 
       // Contracts
       addContract: (contract) =>
-        set((s) => ({ contracts: [...s.contracts, contract] })),
+        set((s) => ({
+          contracts: [...s.contracts, contract],
+          createdAt: s.createdAt ?? Date.now(),
+        })),
       updateContract: (id, data) =>
         set((s) => ({
           contracts: s.contracts.map((c) =>
@@ -73,7 +52,10 @@ export const useGuestStore = create<GuestState>()(
 
       // Invoices
       addInvoice: (invoice) =>
-        set((s) => ({ invoices: [...s.invoices, invoice] })),
+        set((s) => ({
+          invoices: [...s.invoices, invoice],
+          createdAt: s.createdAt ?? Date.now(),
+        })),
       updateInvoice: (id, data) =>
         set((s) => ({
           invoices: s.invoices.map((i) =>
@@ -85,7 +67,10 @@ export const useGuestStore = create<GuestState>()(
 
       // Time Entries
       addTimeEntry: (entry) =>
-        set((s) => ({ timeEntries: [...s.timeEntries, entry] })),
+        set((s) => ({
+          timeEntries: [...s.timeEntries, entry],
+          createdAt: s.createdAt ?? Date.now(),
+        })),
       updateTimeEntry: (id, data) =>
         set((s) => ({
           timeEntries: s.timeEntries.map((e) =>
@@ -96,8 +81,20 @@ export const useGuestStore = create<GuestState>()(
         set((s) => ({ timeEntries: s.timeEntries.filter((e) => e.id !== id) })),
 
       // Clear all
-      clearAll: () => set({ clients: [], contracts: [], invoices: [], timeEntries: [] }),
+      clearAll: () => set({ clients: [], contracts: [], invoices: [], timeEntries: [], createdAt: null }),
     }),
-    { name: 'stacklite-guest-data' }
+    {
+      name: 'stacklite-guest-data',
+      version: 2,
+      onRehydrateStorage: () => (state) => {
+        if (!state?.createdAt) {
+          return
+        }
+
+        if (Date.now() - state.createdAt > TTL_MS) {
+          useGuestStore.getState().clearAll()
+        }
+      },
+    }
   )
 )

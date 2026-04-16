@@ -1,29 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-
-const CONSENT_KEY = 'stacklite-cookie-consent'
-
-type ConsentValue = 'accepted' | 'declined'
-
-function readConsent(): ConsentValue | null {
-  if (typeof window === 'undefined') return null
-  const value = window.localStorage.getItem(CONSENT_KEY)
-  if (value === 'accepted' || value === 'declined') return value
-  return null
-}
+import { useState } from 'react'
+import { readCookieConsent, type ConsentValue, writeCookieConsent } from '@/lib/cookieConsent'
 
 export function CookieBanner() {
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    if (!readConsent()) {
-      setVisible(true)
-    }
-  }, [])
+  const [visible, setVisible] = useState(() => !readCookieConsent())
 
   const setConsent = (value: ConsentValue) => {
-    window.localStorage.setItem(CONSENT_KEY, value)
+    writeCookieConsent(value)
     setVisible(false)
   }
 
@@ -41,7 +25,7 @@ export function CookieBanner() {
       <div className="flex gap-2">
         <button
           onClick={() => setConsent('accepted')}
-          className="flex-1 rounded-lg bg-button-primary px-4 py-2 text-sm font-medium text-button-primaryFg"
+          className="flex-1 rounded-lg bg-button-primary px-4 py-2 text-sm font-medium text-button-primary-fg"
           type="button"
         >
           Accept

@@ -98,8 +98,8 @@ export function DatePicker({
   const [showMonthMenu, setShowMonthMenu] = useState(false)
   const [showYearMenu, setShowYearMenu] = useState(false)
   const [viewDate, setViewDate] = useState<Date>(() => selectedDate ?? new Date())
-  const [isMounted, setIsMounted] = useState(false)
   const [popupPosition, setPopupPosition] = useState<{ top: number; left: number } | null>(null)
+  const isMounted = typeof window !== 'undefined'
 
   const updatePopupPosition = () => {
     if (!triggerRef.current || typeof window === 'undefined') return
@@ -130,16 +130,6 @@ export function DatePicker({
       left: nextLeft,
     })
   }
-
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (selectedDate) {
-      setViewDate(selectedDate)
-    }
-  }, [selectedDate])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -228,6 +218,9 @@ export function DatePicker({
           disabled={disabled}
           className={cn(buttonBaseClass, className)}
           onClick={() => {
+            if (!isOpen) {
+              setViewDate(selectedDate ?? new Date())
+            }
             setIsOpen((prev) => {
               const nextOpen = !prev
               if (nextOpen) {
@@ -260,6 +253,7 @@ export function DatePicker({
           createPortal(
             <div
               ref={popupRef}
+              data-floating-ui="true"
               className="fixed z-[120] w-[320px] rounded-xl border border-border-base bg-background-base p-3 shadow-lg"
               style={{ top: popupPosition.top, left: popupPosition.left }}
             >

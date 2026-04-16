@@ -47,7 +47,7 @@ export function SavePromptModal() {
             Save your work permanently
           </h2>
           <p className="mt-2 text-[13px] leading-relaxed text-text-muted">
-            You&apos;re working in guest mode — your work is saved in this browser.
+            You&apos;re working in guest mode — your work is saved for 24 hours.
             Create a free account to access it from anywhere, anytime.
           </p>
         </div>
@@ -70,7 +70,7 @@ export function SavePromptModal() {
         </div>
 
         <p className="mt-4 text-center text-[11px] text-text-disabled">
-          Your current work stays safe until you close this browser.
+          Guest data auto-expires after 24 hours.
         </p>
       </div>
     </div>

@@ -11,7 +11,7 @@ export default function NotFound() {
         </p>
         <Link
           href="/dashboard"
-          className="mt-6 inline-flex rounded-lg bg-button-primary px-4 py-2 text-sm font-medium text-button-primaryFg transition-opacity hover:opacity-90"
+          className="mt-6 inline-flex rounded-lg bg-button-primary px-4 py-2 text-sm font-medium text-button-primary-fg transition-opacity hover:opacity-90"
         >
           Back to workspace
         </Link>

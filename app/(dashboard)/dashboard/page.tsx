@@ -26,11 +26,11 @@ import { useContracts } from '@/hooks/useContracts'
 import { useTimeLogs } from '@/hooks/useTimeLogs'
 import { useInvoices } from '@/hooks/useInvoices'
 import { useAuth } from '@/hooks/useAuth'
+import { useCurrentTime } from '@/hooks/useCurrentTime'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useContractStore } from '@/stores/contractStore'
 import { useInvoiceStore } from '@/stores/invoiceStore'
 import type { Client } from '@/lib/types/database'
-import type { Invoice } from '@/lib/types/database'
 import type { InvoiceLineItem } from '@/lib/utils/invoiceCalculations'
 import { migrateGuestData } from '@/lib/migration/migrateGuestData'
 import { generateClientActivityReportPDF } from '@/lib/pdf/generateClientActivityReportPDF'
@@ -109,7 +109,7 @@ function DashboardContent() {
     return counts
   }, [timeLogs])
 
-  const now = Date.now()
+  const now = useCurrentTime()
   const dailyTotal = useMemo(() => {
     return timeLogs.reduce((sum, timeLog) => {
       const referenceTime = new Date(timeLog.start_time).getTime()
@@ -141,8 +141,6 @@ function DashboardContent() {
   const isCenterFormActive =
     (activeDockTab === 'contract' && contractView === 'editor') ||
     (activeDockTab === 'invoice' && invoiceView === 'editor')
-  const previousClientsCollapseStateRef = useRef<boolean | null>(null)
-  const previousTimeTrackerCollapseStateRef = useRef<boolean | null>(null)
   const isClientsPanelCollapsed = isCenterFormActive || isClientsCollapsed
   const isTimeTrackerPanelCollapsed = isCenterFormActive || isTimeTrackerCollapsed
   const centerPanelTitle = activeDockTab === 'invoice'
@@ -275,6 +273,10 @@ function DashboardContent() {
         return
       }
 
+      if (target instanceof Element && target.closest('[data-floating-ui="true"]')) {
+        return
+      }
+
       if (container.contains(target)) {
         return
       }
@@ -289,39 +291,6 @@ function DashboardContent() {
       document.removeEventListener('pointerdown', handlePointerDown)
     }
   }, [isClientFormOpen])
-
-  useEffect(() => {
-    if (isCenterFormActive) {
-      if (previousClientsCollapseStateRef.current === null) {
-        previousClientsCollapseStateRef.current = isClientsCollapsed
-      }
-
-      if (previousTimeTrackerCollapseStateRef.current === null) {
-        previousTimeTrackerCollapseStateRef.current = isTimeTrackerCollapsed
-      }
-
-      setIsClientsCollapsed(true)
-      setIsTimeTrackerCollapsed(true)
-      return
-    }
-
-    if (
-      previousClientsCollapseStateRef.current === null &&
-      previousTimeTrackerCollapseStateRef.current === null
-    ) {
-      return
-    }
-
-    if (previousClientsCollapseStateRef.current !== null) {
-      setIsClientsCollapsed(previousClientsCollapseStateRef.current)
-      previousClientsCollapseStateRef.current = null
-    }
-
-    if (previousTimeTrackerCollapseStateRef.current !== null) {
-      setIsTimeTrackerCollapsed(previousTimeTrackerCollapseStateRef.current)
-      previousTimeTrackerCollapseStateRef.current = null
-    }
-  }, [isCenterFormActive, isClientsCollapsed, isTimeTrackerCollapsed])
 
   return (
     <TooltipProvider delayDuration={180}>
@@ -447,7 +416,7 @@ function DashboardContent() {
                       </div>
                     ) : clients.length === 0 ? (
                       <div className="rounded-[10px] bg-[var(--surface-card-subtle)] p-3 text-[13px] text-text-muted">
-                        Add a client to get started. They'll be available across contracts, invoices, and time tracking.
+                        Add a client to get started. They&apos;ll be available across contracts, invoices, and time tracking.
                       </div>
                     ) : (
                       clients.map((client) => (

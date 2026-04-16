@@ -14,13 +14,17 @@ export function ContractPreview() {
   const { data: profile } = useProfile(Boolean(user))
 
   const freelancerName =
+    formData.freelancer_name ||
     profile?.full_name ||
     user?.user_metadata?.full_name ||
     user?.user_metadata?.name ||
     'Freelancer'
-  const freelancerEmail = profile?.email || user?.email || ''
+  const freelancerEmail = formData.freelancer_email || profile?.email || user?.email || ''
 
   const selectedClient = clients.find((c) => c.id === formData.client_id)
+  const clientName = formData.client_name || selectedClient?.name || 'Client'
+  const clientEmail = formData.client_email || selectedClient?.email || ''
+  const clientCompanyName = selectedClient?.company_name || null
   const clauses: ContractClauses = formData.clauses || DEFAULT_CLAUSES
   const deliverables = formData.deliverables || []
   const milestones = formData.milestones || []
@@ -56,7 +60,7 @@ export function ContractPreview() {
           </span>{' '}
           and{' '}
           <span className="font-medium text-text-base">
-            {selectedClient?.name || 'Client'}
+            {clientName}
           </span>
         </p>
       </div>
@@ -77,14 +81,14 @@ export function ContractPreview() {
             Client
           </p>
           <p className="mt-1 text-[13px] font-medium text-text-base">
-            {selectedClient?.name || 'Select a client'}
+            {clientName}
           </p>
           <p className="text-[12px] text-text-muted">
-            {selectedClient?.email || '—'}
+            {clientEmail || '—'}
           </p>
-          {selectedClient?.company_name && (
+          {clientCompanyName && (
             <p className="text-[12px] text-text-muted">
-              {selectedClient.company_name}
+              {clientCompanyName}
             </p>
           )}
         </div>
@@ -232,7 +236,7 @@ export function ContractPreview() {
         <div>
           <div className="mb-2 h-px w-full bg-[var(--text-soft-strong)]" />
           <p className="text-[12px] font-medium text-text-base">
-            {selectedClient?.name || 'Client'}
+            {clientName}
           </p>
           <p className="text-[11px] text-text-muted">Client</p>
           <p className="mt-1 text-[11px] text-text-muted">

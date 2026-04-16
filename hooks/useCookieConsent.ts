@@ -1,5 +1,7 @@
 'use client'
 
+import { readCookieConsent } from '@/lib/cookieConsent'
+
 export function useCookieConsent() {
   if (typeof window === 'undefined') {
     return {
@@ -9,7 +11,7 @@ export function useCookieConsent() {
     }
   }
 
-  const consent = window.localStorage.getItem('stacklite-cookie-consent')
+  const consent = readCookieConsent()
 
   return {
     hasConsented: consent === 'accepted',
