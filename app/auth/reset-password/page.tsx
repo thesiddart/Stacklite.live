@@ -88,7 +88,7 @@ export default function ResetPasswordPage() {
           <button
             onClick={handleReset}
             disabled={loading}
-            className="rounded-lg bg-button-primary py-3 text-sm font-medium text-button-primaryFg disabled:opacity-60"
+            className="rounded-lg bg-button-primary py-3 text-sm font-medium text-button-primary-fg disabled:opacity-60"
             type="button"
           >
             {loading ? 'Updating...' : 'Update Password'}

@@ -16,7 +16,7 @@ export default function SupportPage() {
         </p>
         <a
           href="mailto:hello@siddart.net"
-          className="inline-block rounded-lg bg-button-primary px-6 py-3 text-sm font-medium text-button-primaryFg"
+          className="inline-block rounded-lg bg-button-primary px-6 py-3 text-sm font-medium text-button-primary-fg"
         >
           hello@siddart.net
         </a>

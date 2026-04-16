@@ -64,6 +64,11 @@ export function ContractEditor() {
           payment_method: formData.payment_method || null,
           clauses: formData.clauses || DEFAULT_CLAUSES,
           status: formData.status || 'sent',
+          freelancer_name: formData.freelancer_name || null,
+          freelancer_email: formData.freelancer_email || null,
+          freelancer_location: formData.freelancer_location || null,
+          client_name: formData.client_name || null,
+          client_email: formData.client_email || null,
         })
         useContractStore.getState().setActiveContract(created.id)
       }
@@ -89,12 +94,6 @@ export function ContractEditor() {
     }
   }, [isDirty, formData, handleSave])
 
-  useEffect(() => {
-    if (isDirty) {
-      setIsPreviewFocused(false)
-    }
-  }, [isDirty])
-
   const handlePreview = () => {
     setIsPreviewFocused(true)
   }
@@ -118,20 +117,22 @@ export function ContractEditor() {
           .filter((entry): entry is { key: string; on: boolean; text: string } => entry !== null)
       : []
 
-    const clientName = selectedClient?.name || 'Client'
+    const clientName = formData.client_name || selectedClient?.name || 'Client'
     const freelancerName =
+      formData.freelancer_name ||
       profile?.full_name ||
       user?.user_metadata?.full_name ||
       user?.user_metadata?.name ||
       'Freelancer'
-    const freelancerEmail = profile?.email || user?.email || ''
+    const freelancerEmail = formData.freelancer_email || profile?.email || user?.email || ''
+    const clientEmail = formData.client_email || selectedClient?.email || undefined
 
     const action = () => {
       void generateContractPDF({
         freelancerName,
         freelancerEmail,
         clientName,
-        clientEmail: selectedClient?.email || undefined,
+        clientEmail,
         projectName: formData.project_name || 'Untitled Project',
         scope: formData.scope || undefined,
         deliverables: (formData.deliverables || []).map((item) => ({ text: item.text || '' })),

@@ -19,10 +19,9 @@ function formatCurrency(value: number, currency: string) {
 export function NprEquivalent({ amount, currency }: NprEquivalentProps) {
   const [nprValue, setNprValue] = useState<number | null>(null)
 
-  const now = new Date()
   const monthLabel = useMemo(
-    () => now.toLocaleString('en-US', { month: 'short', year: 'numeric' }),
-    [now]
+    () => new Date().toLocaleString('en-US', { month: 'short', year: 'numeric' }),
+    []
   )
 
   useEffect(() => {
@@ -34,7 +33,13 @@ export function NprEquivalent({ amount, currency }: NprEquivalentProps) {
         return
       }
 
-      const avgRate = await getMonthlyAverageRate(currency, 'NPR', now.getFullYear(), now.getMonth() + 1)
+      const currentDate = new Date()
+      const avgRate = await getMonthlyAverageRate(
+        currency,
+        'NPR',
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1
+      )
 
       if (cancelled) return
 
@@ -51,7 +56,7 @@ export function NprEquivalent({ amount, currency }: NprEquivalentProps) {
     return () => {
       cancelled = true
     }
-  }, [amount, currency, now])
+  }, [amount, currency])
 
   if (nprValue === null) return null
 

@@ -1,8 +1,34 @@
 /**
  * Guest Data Types
  * Mirror the Supabase schema but with client-generated IDs (nanoid).
- * Used exclusively in localStorage via guestStore.
+ * Used exclusively in guestStore.
  */
+
+export interface GuestStore {
+  clients: GuestClient[]
+  contracts: GuestContract[]
+  invoices: GuestInvoice[]
+  timeEntries: GuestTimeEntry[]
+  createdAt: number | null
+
+  addClient: (client: GuestClient) => void
+  updateClient: (id: string, data: Partial<GuestClient>) => void
+  deleteClient: (id: string) => void
+
+  addContract: (contract: GuestContract) => void
+  updateContract: (id: string, data: Partial<GuestContract>) => void
+  deleteContract: (id: string) => void
+
+  addInvoice: (invoice: GuestInvoice) => void
+  updateInvoice: (id: string, data: Partial<GuestInvoice>) => void
+  deleteInvoice: (id: string) => void
+
+  addTimeEntry: (entry: GuestTimeEntry) => void
+  updateTimeEntry: (id: string, data: Partial<GuestTimeEntry>) => void
+  deleteTimeEntry: (id: string) => void
+
+  clearAll: () => void
+}
 
 export interface GuestClient {
   id: string          // nanoid-generated

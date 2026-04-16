@@ -293,6 +293,35 @@ export interface Database {
           updated_at?: string
         }
       }
+      cookie_consents: {
+        Row: {
+          id: string
+          user_id: string
+          consent_status: 'accepted' | 'declined'
+          policy_version: string
+          source: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          consent_status: 'accepted' | 'declined'
+          policy_version?: string
+          source?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          consent_status?: 'accepted' | 'declined'
+          policy_version?: string
+          source?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
       time_logs: {
         Row: {
           id: string

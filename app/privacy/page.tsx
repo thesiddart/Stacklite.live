@@ -33,7 +33,7 @@ export default function PrivacyPage() {
             <p>
               Stacklite is operated by Siddhartha Dwivedi, an individual based in Kathmandu, Nepal.
               This Privacy Policy explains what information we collect, how we use it, and what rights you have over it when you
-              use Stacklite at stacklite.live ("the Service").
+              use Stacklite at stacklite.live (&quot;the Service&quot;).
             </p>
             <p>Please read this carefully. By using the Service, you agree to the practices described here.</p>
           </section>
@@ -94,12 +94,12 @@ export default function PrivacyPage() {
               <h3 className="text-lg font-semibold text-text-base">2.4 Guest Mode Data</h3>
               <p className="text-sm text-text-base">
                 If you use Stacklite without signing in (guest mode), all data you create - clients, contracts, invoices, time
-                entries - is stored locally in your browser using localStorage. This data:
+                entries - is stored locally in your browser for up to 24 hours. This data:
               </p>
               <ul className="list-disc space-y-2 pl-5 text-sm text-text-base">
                 <li>Never leaves your device while in guest mode</li>
                 <li>Is not sent to our servers</li>
-                <li>Is permanently deleted when you clear your browser storage</li>
+                <li>Is automatically and permanently deleted after 24 hours</li>
                 <li>Is migrated to our servers only if you choose to create an account</li>
               </ul>
             </div>
@@ -275,8 +275,8 @@ export default function PrivacyPage() {
             <div className="space-y-2 text-sm text-text-base">
               <h3 className="text-lg font-semibold">Local Storage</h3>
               <p>
-                In guest mode, we use your browser&apos;s localStorage to store your workspace data. This data never leaves your device
-                unless you create an account and choose to migrate it.
+                In guest mode, we use your browser&apos;s localStorage to store your workspace data for up to 24 hours. After 24 hours,
+                this data is automatically and permanently cleared from your device unless you create an account and choose to migrate it.
               </p>
               <p>We do not use local storage for tracking or advertising purposes.</p>
             </div>
@@ -359,7 +359,7 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold text-text-base">13. Changes to This Policy</h2>
             <p className="text-sm text-text-base">We may update this Privacy Policy from time to time. When we do:</p>
             <ul className="list-disc space-y-2 pl-5 text-sm text-text-base">
-              <li>We will update the "Last updated" date at the top of this page</li>
+              <li>We will update the &quot;Last updated&quot; date at the top of this page</li>
               <li>For significant changes, we will notify you by email (if you have an account) or by displaying a notice on the Service</li>
               <li>Continued use of the Service after changes constitutes acceptance of the updated policy</li>
             </ul>
@@ -414,7 +414,7 @@ export default function PrivacyPage() {
                     <td className="border-b border-border-muted px-4 py-3">Legal obligation</td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-3">Guest mode localStorage data</td>
+                    <td className="px-4 py-3">Guest mode localStorage data (up to 24 hours)</td>
                     <td className="px-4 py-3">Consent (implied by use)</td>
                   </tr>
                 </tbody>

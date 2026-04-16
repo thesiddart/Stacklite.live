@@ -217,8 +217,8 @@ function SignupPageContent() {
 
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="rounded-lg border border-feedback-error-base/40 bg-feedback-error-base/10 px-4 py-3">
+                <p className="text-sm text-feedback-error-text">{error}</p>
               </div>
             )}
 
@@ -234,14 +234,14 @@ function SignupPageContent() {
                 </p>
 
                 {verificationFeedback && (
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3">
-                    <p className="text-sm text-emerald-700">{verificationFeedback}</p>
+                  <div className="rounded-lg border border-feedback-success-base/40 bg-feedback-success-base/10 px-4 py-3">
+                    <p className="text-sm text-feedback-success-text">{verificationFeedback}</p>
                   </div>
                 )}
 
                 {verificationError && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-                    <p className="text-sm text-red-600">{verificationError}</p>
+                  <div className="rounded-lg border border-feedback-error-base/40 bg-feedback-error-base/10 px-4 py-3">
+                    <p className="text-sm text-feedback-error-text">{verificationError}</p>
                   </div>
                 )}
 
