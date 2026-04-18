@@ -10,6 +10,32 @@ function hasPlaceholderValue(value: string, placeholders: string[]) {
   return placeholders.some((placeholder) => value.includes(placeholder))
 }
 
+function getEnvAppUrlOrigin() {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim()
+  if (!appUrl) return ''
+
+  try {
+    return new URL(appUrl).origin
+  } catch {
+    return ''
+  }
+}
+
+export function getAuthRedirectOrigin() {
+  if (typeof window !== 'undefined') {
+    return window.location.origin
+  }
+
+  return getEnvAppUrlOrigin()
+}
+
+export function buildAuthRedirectUrl(pathnameWithQuery: string) {
+  const origin = getAuthRedirectOrigin()
+  if (!origin) return pathnameWithQuery
+
+  return new URL(pathnameWithQuery, origin).toString()
+}
+
 export function getSupabaseEnv() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()

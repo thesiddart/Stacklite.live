@@ -125,7 +125,13 @@ export async function getContractByToken(token: string): Promise<Contract | null
  */
 export async function createContract(formData: ContractFormData): Promise<Contract> {
   const supabase = createSupabaseClient()
-  const validated = contractSchema.parse(formData)
+  const parsed = contractSchema.safeParse(formData)
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0]
+    const path = issue?.path.join('.') || 'contract'
+    throw new Error(issue?.message ? `${path}: ${issue.message}` : 'Invalid contract data')
+  }
+  const validated = parsed.data
 
   const { data: { user }, error: userError } = await supabase.auth.getUser()
 
@@ -216,7 +222,13 @@ export async function updateContract(
   formData: UpdateContractFormData
 ): Promise<Contract> {
   const supabase = createSupabaseClient()
-  const validated = updateContractSchema.parse(formData)
+  const parsed = updateContractSchema.safeParse(formData)
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0]
+    const path = issue?.path.join('.') || 'contract'
+    throw new Error(issue?.message ? `${path}: ${issue.message}` : 'Invalid contract data')
+  }
+  const validated = parsed.data
 
   const updateData: ContractUpdate = {}
 

@@ -43,11 +43,17 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Protected routes
-  const protectedPaths = ['/clients', '/contracts', '/invoices', '/time']
+  const protectedPaths = ['/clients', '/contracts', '/invoices', '/time', '/income']
   const authPaths = ['/login', '/signup']
+  const authHandoffPaths = ['/auth/callback', '/auth/reset-password']
   
   const isProtectedPath = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))
   const isAuthPath = authPaths.some(path => request.nextUrl.pathname.startsWith(path))
+  const isAuthHandoffPath = authHandoffPaths.some(path => request.nextUrl.pathname.startsWith(path))
+
+  if (isAuthHandoffPath) {
+    return supabaseResponse
+  }
 
   // Redirect logic
   // Guest mode bypass — if the guest cookie is set, allow access to protected routes

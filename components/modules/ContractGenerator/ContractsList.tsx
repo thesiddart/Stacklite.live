@@ -25,6 +25,8 @@ import { useSavePromptStore } from '@/stores/savePromptStore'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { generateContractPDF } from '@/lib/pdf/generateContractPDF'
 import type { Contract } from '@/lib/types/database'
+import type { ContractFormData } from '@/lib/validations/contract'
+import { normalizeContractFormForSave } from '@/lib/utils/normalizeContractForm'
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
   sent: {
@@ -69,8 +71,7 @@ export function ContractsList() {
   const deleteMutation = useDeleteContract()
   const updateMutation = useUpdateContract()
   const shareMutation = useGenerateShareLink()
-  const { setView, setActiveContract, updateFormData, resetForm } =
-    useContractStore()
+  const { setView, loadContractForEdit, resetForm } = useContractStore()
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [copyErrorId, setCopyErrorId] = useState<string | null>(null)
   const [previewContract, setPreviewContract] = useState<Contract | null>(null)
@@ -83,32 +84,30 @@ export function ContractsList() {
   }
 
   const handleEdit = (contract: Contract) => {
-    resetForm()
-    setActiveContract(contract.id)
-
-    // Load contract data into the store
-    updateFormData({
+    const raw: Partial<ContractFormData> = {
       client_id: contract.client_id,
-      template_type: (contract.template_type as 'general' | 'design' | 'development' | 'retainer' | 'blank') || null,
+      template_type: (contract.template_type as ContractFormData['template_type']) || null,
       project_name: contract.project_name,
       scope: contract.scope,
       deliverables: Array.isArray(contract.deliverables)
-        ? (contract.deliverables as { text: string }[])
+        ? (contract.deliverables as ContractFormData['deliverables'])
         : [],
       exclusions: contract.exclusions,
       start_date: contract.start_date,
       end_date: contract.end_date,
       milestones: Array.isArray(contract.milestones)
-        ? (contract.milestones as { label: string; date: string }[])
+        ? (contract.milestones as ContractFormData['milestones'])
         : [],
       total_fee: contract.total_fee,
       currency: contract.currency,
-      payment_structure: (contract.payment_structure as 'full' | 'split' | 'milestone' | 'custom') || null,
+      payment_structure: (contract.payment_structure as ContractFormData['payment_structure']) || null,
       payment_method: contract.payment_method,
-      clauses: contract.clauses as ContractClausesType || undefined,
-      status: (contract.status as 'sent' | 'signed' | 'archived') || 'sent',
-    })
+      clauses: contract.clauses as ContractFormData['clauses'],
+      status: contract.status as ContractFormData['status'],
+    }
 
+    const normalized = normalizeContractFormForSave(raw)
+    loadContractForEdit(contract.id, normalized)
     setView('editor')
   }
 
@@ -548,13 +547,4 @@ export function ContractsList() {
       </div>
     </TooltipProvider>
   )
-}
-
-// Helper type for clause loading
-type ContractClausesType = {
-  revision: { on: boolean; text: string }
-  ip: { on: boolean; text: string }
-  termination: { on: boolean; text: string }
-  confidentiality: { on: boolean; text: string }
-  governingLaw: { on: boolean; text: string }
 }

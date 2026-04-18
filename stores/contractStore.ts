@@ -30,6 +30,7 @@ interface ContractState {
   resetForm: () => void
   setSaveStatus: (status: SaveStatus) => void
   loadTemplateDefaults: (type: TemplateType) => void
+  loadContractForEdit: (contractId: string, data: Partial<ContractFormData>) => void
 }
 
 const DEFAULT_CLAUSES: ContractClauses = {
@@ -181,6 +182,16 @@ export const useContractStore = create<ContractState>()((set, get) => ({
       view: 'editor',
     })
   },
+
+  /** Load an existing contract for editing without marking the form dirty */
+  loadContractForEdit: (contractId, data) =>
+    set({
+      activeContractId: contractId,
+      formData: data,
+      currentStep: 0,
+      isDirty: false,
+      saveStatus: 'idle',
+    }),
 }))
 
 export { DEFAULT_CLAUSES, TEMPLATE_DEFAULTS }
