@@ -3,12 +3,16 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { AppNavbar } from '@/components/layout/AppNavbar'
 import {
   DashboardShell,
   DashboardClientsPanel,
   DashboardCenterPanel,
   DashboardTimePanel,
   DashboardDockControls,
+  DashboardMobileModuleView,
+  DashboardMobileDockControls,
+  DashboardFloatingTimerPill,
 } from '@/components/workspace/dashboard'
 import { useClients } from '@/hooks/useClients'
 import { useDeleteClient } from '@/hooks/useClients'
@@ -18,6 +22,7 @@ import { useInvoices } from '@/hooks/useInvoices'
 import { useAuth } from '@/hooks/useAuth'
 import { useCurrentTime } from '@/hooks/useCurrentTime'
 import { useDashboardDeepLink } from '@/hooks/useDashboardDeepLink'
+import { useMobileDashboardLayout } from '@/hooks/useMobileDashboardLayout'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useContractStore } from '@/stores/contractStore'
 import { useInvoiceStore } from '@/stores/invoiceStore'
@@ -30,6 +35,12 @@ import {
   isSameDay,
   isSameWeek,
 } from '@/lib/utils/time'
+import {
+  parseWorkspaceModuleQueryParam,
+  workspaceModuleToMobileTab,
+  WORKSPACE_MODULE_QUERY_PARAM,
+} from '@/lib/navigation/workspaceModules'
+import { useMobileNavStore } from '@/stores/mobileNavStore'
 
 function DashboardContent() {
   const formTransitionMs = 220
@@ -51,6 +62,8 @@ function DashboardContent() {
     setContractView,
     setInvoiceView,
   })
+
+  const mobileLayout = useMobileDashboardLayout()
 
   const [isClientsCollapsed, setIsClientsCollapsed] = useState(false)
   const [isTimeTrackerCollapsed, setIsTimeTrackerCollapsed] = useState(false)
@@ -261,6 +274,67 @@ function DashboardContent() {
       document.removeEventListener('pointerdown', handlePointerDown)
     }
   }, [isClientFormOpen])
+
+  useEffect(() => {
+    if (!mobileLayout) {
+      return
+    }
+
+    const parsed = parseWorkspaceModuleQueryParam(searchParams.get(WORKSPACE_MODULE_QUERY_PARAM))
+    const mobileTab = workspaceModuleToMobileTab(parsed)
+
+    if (mobileTab) {
+      useMobileNavStore.getState().setActiveTab(mobileTab)
+    }
+  }, [mobileLayout, searchParams])
+
+  const handleMobileOpenInvoiceFromIncome = (invoiceId: string) => {
+    useMobileNavStore.getState().setActiveTab('invoices')
+    openInvoiceFromIncome(invoiceId)
+  }
+
+  const handleMobileOpenInvoiceGenerator = () => {
+    useMobileNavStore.getState().setActiveTab('invoices')
+    setActiveDockTab('invoice')
+    setInvoiceView('list')
+  }
+
+  if (mobileLayout) {
+    return (
+      <TooltipProvider delayDuration={180}>
+        <div className="theme-page-shell flex h-dvh flex-col overflow-hidden">
+          <div className="dots-background" aria-hidden />
+
+          <div className="relative z-10 flex min-h-0 flex-1 flex-col bg-[var(--surface-page)]">
+            <AppNavbar
+              compactForMobile
+              stackedLayout
+              topClassName="top-8"
+              zClassName="z-40"
+              showThemeButton
+              showProfileButton
+              showProfileDropdown
+              showProfileActiveBorder
+              onOpenPrivacyPolicy={handleOpenPrivacyPolicy}
+              onDownloadReport={handleDownloadReport}
+            />
+
+            {/* Doc: module → gap → bottom dock (same chip nav as desktop). px-4 = 16px inset; gap-4 = 16px above dock. */}
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
+              <DashboardMobileModuleView
+                onOpenInvoiceFromIncome={handleMobileOpenInvoiceFromIncome}
+                onOpenInvoiceGenerator={handleMobileOpenInvoiceGenerator}
+              />
+
+              <DashboardMobileDockControls />
+            </div>
+
+            <DashboardFloatingTimerPill />
+          </div>
+        </div>
+      </TooltipProvider>
+    )
+  }
 
   return (
     <TooltipProvider delayDuration={180}>

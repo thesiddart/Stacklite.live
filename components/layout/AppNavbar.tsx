@@ -72,6 +72,14 @@ function AnalogClockIcon({ size = 16 }: { size?: number }) {
 }
 
 type AppNavbarProps = {
+  /** When true: hide Beta, Guest, clock, theme (dashboard mobile plan). md+ unchanged. */
+  compactForMobile?: boolean
+  /**
+   * When true with compactForMobile: header is in normal flow (stacked under safe-area) instead of
+   * absolutely positioned — use on `/dashboard` mobile so module + dock get reliable flex layout.
+   * Guest badge stays visible on small screens when stacked (desktop canvas remains unchanged).
+   */
+  stackedLayout?: boolean
   topClassName?: string
   zClassName?: string
   showThemeButton?: boolean
@@ -88,6 +96,8 @@ type AppNavbarProps = {
 }
 
 export function AppNavbar({
+  compactForMobile = false,
+  stackedLayout = false,
   topClassName = 'top-[50px]',
   zClassName = 'z-40',
   showThemeButton = false,
@@ -315,24 +325,44 @@ export function AppNavbar({
   return (
     <>
     <header
-      className={`absolute left-0 right-0 ${topClassName} ${zClassName} flex w-full items-center justify-between px-6 sm:px-10 lg:px-[50px]`}
+      className={`${
+        stackedLayout && compactForMobile
+          ? `relative shrink-0 w-full bg-[var(--surface-page)] pt-[max(0.5rem,env(safe-area-inset-top,0px))] pb-2 ${zClassName}`
+          : `absolute left-0 right-0 ${topClassName} ${zClassName}`
+      } flex w-full items-center justify-between ${
+        compactForMobile ? 'px-4' : 'px-6 sm:px-10 lg:px-[50px]'
+      }`}
     >
-      <div className="flex items-center gap-3">
-        <Link href="/dashboard" aria-label="Go to dashboard" className="focus-visible:outline-none">
-          <div className="theme-shell-card flex h-12 items-center gap-[5.94px] rounded-[14px] p-2 transition-opacity hover:opacity-90">
-            <Image src={logoSrc} alt="Stacklite" width={161} height={44} className="h-8 w-auto" priority />
+      <div className="flex min-w-0 items-center gap-2 md:gap-3">
+        <Link href="/dashboard" aria-label="Go to dashboard" className="min-w-0 shrink-0 focus-visible:outline-none">
+          <div className="theme-shell-card flex h-11 max-w-[140px] items-center gap-[5.94px] rounded-[14px] p-2 transition-opacity hover:opacity-90 sm:h-12 md:max-w-none">
+            <Image src={logoSrc} alt="Stacklite" width={161} height={44} className="h-7 w-auto md:h-8" priority />
           </div>
         </Link>
-        <span className="text-[14px] font-medium leading-none text-text-base">Beta</span>
+        <span
+          className={`text-[14px] font-medium leading-none text-text-base ${
+            compactForMobile ? 'hidden md:inline' : ''
+          }`}
+        >
+          Beta
+        </span>
         {isGuest && !isAuthOrPublicSharePage ? (
-          <span className="inline-flex h-8 items-center rounded-[8px] bg-feedback-error-base/12 px-3 text-[12px] font-medium leading-none text-feedback-error-text">
+          <span
+            className={`inline-flex h-8 items-center rounded-[8px] bg-feedback-error-base/12 px-3 text-[12px] font-medium leading-none text-feedback-error-text ${
+              compactForMobile && !stackedLayout ? 'hidden md:inline-flex' : ''
+            }`}
+          >
             Guest Mode
           </span>
         ) : null}
       </div>
 
-      <div className="theme-shell-card relative flex h-12 items-center gap-2 rounded-[14px] p-2">
-        <div className="theme-shell-subtle flex h-9 items-center justify-center gap-1.5 rounded-[8px] px-2.5">
+      <div className="theme-shell-card relative flex h-11 shrink-0 items-center gap-1.5 rounded-[14px] p-2 md:h-12 md:gap-2">
+        <div
+          className={`theme-shell-subtle flex h-9 items-center justify-center gap-1.5 rounded-[8px] px-2.5 ${
+            compactForMobile ? 'hidden md:flex' : ''
+          }`}
+        >
           <AnalogClockIcon size={24} />
           <span className="text-[14px] font-medium leading-none">
             {currentTime?.split(' ')[0] ?? '--:--:--'}
@@ -343,7 +373,7 @@ export function AppNavbar({
         </div>
 
         {showThemeButton && (
-          <div ref={themeMenuRef} className="relative">
+          <div ref={themeMenuRef} className={`relative ${compactForMobile ? 'hidden md:block' : ''}`}>
             <button
               type="button"
               aria-label="Theme"

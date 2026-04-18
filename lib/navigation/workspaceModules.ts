@@ -77,6 +77,35 @@ export type LandingModuleCard = {
   description: string
 }
 
+/** Map URL `?module=` id to mobile bottom-nav tab (Time → null: use floating timer). */
+export type MobileDashboardTabId = 'contracts' | 'invoices' | 'clients' | 'income'
+
+export function workspaceModuleToMobileTab(
+  parsed: ParsedWorkspaceModule
+): MobileDashboardTabId | null {
+  if (parsed === null || parsed === 'invalid' || parsed === 'time') {
+    return null
+  }
+
+  if (parsed === 'contract') {
+    return 'contracts'
+  }
+
+  if (parsed === 'invoice') {
+    return 'invoices'
+  }
+
+  if (parsed === 'clients') {
+    return 'clients'
+  }
+
+  if (parsed === 'income') {
+    return 'income'
+  }
+
+  return null
+}
+
 export const LANDING_WORKSPACE_MODULE_CARDS: readonly LandingModuleCard[] = [
   {
     id: 'contract',

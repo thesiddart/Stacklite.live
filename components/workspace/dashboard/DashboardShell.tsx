@@ -16,7 +16,7 @@ export function DashboardShell({
 }: DashboardShellProps) {
   return (
     <div className="theme-page-shell">
-      <div className="dots-background" />
+      <div className="dots-background" aria-hidden />
 
       <AppNavbar
         topClassName="top-8"
