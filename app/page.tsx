@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { WorkspaceMock } from '@/components/landing/WorkspaceMock'
+import { buildDashboardUrlWithModule, LANDING_WORKSPACE_MODULE_CARDS } from '@/lib/navigation/workspaceModules'
 
 export const metadata: Metadata = {
   title: 'The freelancer operating system',
@@ -10,35 +11,6 @@ export const metadata: Metadata = {
     'Contracts, invoices, time tracking, and client management. Everything a freelancer needs in one calm workspace.',
   alternates: { canonical: '/' },
 }
-
-/** Opens the canvas workspace on /dashboard with the matching module (single-page modules, not standalone routes). */
-const allModules = [
-  {
-    name: 'Contract Generator',
-    description: 'Professional contracts in minutes with share-ready templates.',
-    module: 'contract',
-  },
-  {
-    name: 'Invoice Generator',
-    description: 'Line items, tax, discounts, and clean PDF export.',
-    module: 'invoice',
-  },
-  {
-    name: 'Time Tracker',
-    description: 'Track hours against clients and convert entries to invoices.',
-    module: 'time',
-  },
-  {
-    name: 'Client Manager',
-    description: 'Store client data once and auto-fill across modules.',
-    module: 'clients',
-  },
-  {
-    name: 'Income Tracker',
-    description: 'Monthly earnings, outstanding totals, and trend visibility.',
-    module: 'income',
-  },
-] as const
 
 const guestHighlights = [
   { title: 'Guest mode starts instantly', detail: 'All data saves for 24 hours in your browser while you explore.' },
@@ -130,12 +102,12 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-5">
-            {allModules.map((module) => (
-              <article key={module.name} className="rounded-xl border border-border-base bg-background-highlight p-4">
+            {LANDING_WORKSPACE_MODULE_CARDS.map((module) => (
+              <article key={module.id} className="rounded-xl border border-border-base bg-background-highlight p-4">
                 <h3 className="text-sm font-medium text-text-base">{module.name}</h3>
                 <p className="mt-2 text-xs leading-relaxed text-text-muted">{module.description}</p>
                 <Link
-                  href={`/dashboard?module=${module.module}`}
+                  href={buildDashboardUrlWithModule(module.id)}
                   className="mt-3 inline-block text-xs font-medium text-text-brand hover:text-link-hover"
                 >
                   Open module →

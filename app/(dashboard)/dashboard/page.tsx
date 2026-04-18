@@ -2,24 +2,14 @@
 
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import {
-  AddCircleBold,
-  Chart2Bold,
-  CloseCircleBold,
-  DocumentText1Bold,
-  EditBold,
-  PeopleBold,
-  Timer1Bold,
-  TrashBold,
-  WalletBold,
-} from 'sicons'
-import { AppNavbar } from '@/components/layout/AppNavbar'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { ClientForm } from '@/components/modules/ClientManager/ClientForm'
-import { ContractGenerator } from '@/components/modules/ContractGenerator'
-import { InvoiceGenerator } from '@/components/modules/InvoiceGenerator'
-import { IncomeTracker } from '@/components/modules/IncomeTracker'
-import { TimeTracker } from '@/components/modules/TimeTracker'
+  DashboardShell,
+  DashboardClientsPanel,
+  DashboardCenterPanel,
+  DashboardTimePanel,
+  DashboardDockControls,
+} from '@/components/workspace/dashboard'
 import { useClients } from '@/hooks/useClients'
 import { useDeleteClient } from '@/hooks/useClients'
 import { useContracts } from '@/hooks/useContracts'
@@ -27,6 +17,7 @@ import { useTimeLogs } from '@/hooks/useTimeLogs'
 import { useInvoices } from '@/hooks/useInvoices'
 import { useAuth } from '@/hooks/useAuth'
 import { useCurrentTime } from '@/hooks/useCurrentTime'
+import { useDashboardDeepLink } from '@/hooks/useDashboardDeepLink'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useContractStore } from '@/stores/contractStore'
 import { useInvoiceStore } from '@/stores/invoiceStore'
@@ -35,7 +26,6 @@ import type { InvoiceLineItem } from '@/lib/utils/invoiceCalculations'
 import { migrateGuestData } from '@/lib/migration/migrateGuestData'
 import { generateClientActivityReportPDF } from '@/lib/pdf/generateClientActivityReportPDF'
 import {
-  formatHoursAndMinutes,
   getTimeLogElapsedMilliseconds,
   isSameDay,
   isSameWeek,
@@ -45,35 +35,6 @@ function DashboardContent() {
   const formTransitionMs = 220
   const searchParams = useSearchParams()
   const router = useRouter()
-  const incomingModule = useMemo<
-    'contract' | 'invoice' | 'income' | 'clients' | 'time' | 'invalid' | null
-  >(() => {
-    const raw = searchParams.get('module')
-    if (!raw) {
-      return null
-    }
-
-    const key = raw.trim().toLowerCase()
-    if (key === 'contract' || key === 'invoice' || key === 'income' || key === 'clients' || key === 'time') {
-      return key
-    }
-
-    return 'invalid'
-  }, [searchParams])
-  const [isClientsCollapsed, setIsClientsCollapsed] = useState(false)
-  const [isTimeTrackerCollapsed, setIsTimeTrackerCollapsed] = useState(false)
-  const [activeDockTab, setActiveDockTab] = useState<'contract' | 'invoice' | 'income' | null>(() => {
-    if (incomingModule === 'contract') return 'contract'
-    if (incomingModule === 'invoice') return 'invoice'
-    if (incomingModule === 'income') return 'income'
-    if (incomingModule === 'clients' || incomingModule === 'time') return null
-    return 'contract'
-  })
-  const [isCreateClientOpen, setIsCreateClientOpen] = useState(false)
-  const [isClientFormMounted, setIsClientFormMounted] = useState(false)
-  const [isClientFormVisible, setIsClientFormVisible] = useState(false)
-  const [editingClient, setEditingClient] = useState<Client | null>(null)
-  const clientFormContainerRef = useRef<HTMLDivElement | null>(null)
   const initSession = useSessionStore((s) => s.initSession)
   const contractView = useContractStore((s) => s.view)
   const setContractView = useContractStore((s) => s.setView)
@@ -85,6 +46,20 @@ function DashboardContent() {
   const { data: invoices = [] } = useInvoices()
   const { data: timeLogs = [] } = useTimeLogs()
   const { user, isLoading: isAuthLoading } = useAuth()
+  const { initialDockTab } = useDashboardDeepLink({
+    contractsCount: contracts.length,
+    setContractView,
+    setInvoiceView,
+  })
+
+  const [isClientsCollapsed, setIsClientsCollapsed] = useState(false)
+  const [isTimeTrackerCollapsed, setIsTimeTrackerCollapsed] = useState(false)
+  const [activeDockTab, setActiveDockTab] = useState<'contract' | 'invoice' | 'income' | null>(() => initialDockTab)
+  const [isCreateClientOpen, setIsCreateClientOpen] = useState(false)
+  const [isClientFormMounted, setIsClientFormMounted] = useState(false)
+  const [isClientFormVisible, setIsClientFormVisible] = useState(false)
+  const [editingClient, setEditingClient] = useState<Client | null>(null)
+  const clientFormContainerRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (isAuthLoading) {
@@ -105,32 +80,6 @@ function DashboardContent() {
       window.history.replaceState({}, '', '/dashboard')
     }
   }, [searchParams, user?.id])
-
-  // Landing page "Open module" links: /dashboard?module=contract|invoice|time|clients|income
-  useEffect(() => {
-    if (!incomingModule) {
-      return
-    }
-
-    if (incomingModule === 'invalid') {
-      router.replace('/dashboard', { scroll: false })
-      return
-    }
-
-    if (incomingModule === 'contract') {
-      setContractView(contracts.length > 0 ? 'list' : 'templates')
-    } else if (incomingModule === 'invoice') {
-      setInvoiceView('list')
-    }
-
-    router.replace('/dashboard', { scroll: false })
-  }, [
-    incomingModule,
-    router,
-    contracts.length,
-    setContractView,
-    setInvoiceView,
-  ])
 
   const newClientsCount = useMemo(() => {
     const now = new Date()
@@ -182,7 +131,6 @@ function DashboardContent() {
   }, [now, timeLogs])
 
   const isClientFormOpen = isCreateClientOpen || editingClient !== null
-  const isEditingClientOpen = editingClient !== null
   const isClientPanelExpanded = isClientFormOpen || isClientFormMounted
   const shouldShowCenterPanel = !isClientFormOpen && activeDockTab !== null
   const isCenterFormActive =
@@ -190,18 +138,7 @@ function DashboardContent() {
     (activeDockTab === 'invoice' && invoiceView === 'editor')
   const isClientsPanelCollapsed = isCenterFormActive || isClientsCollapsed
   const isTimeTrackerPanelCollapsed = isCenterFormActive || isTimeTrackerCollapsed
-  const centerPanelTitle = activeDockTab === 'invoice'
-        ? 'Invoice Generator'
-        : activeDockTab === 'income'
-          ? 'Income Tracker'
-          : 'Contract Generator'
-  const shouldShowContractBackButton =
-    activeDockTab === 'contract' && contractView === 'templates'
-  const CenterPanelIcon = activeDockTab === 'invoice'
-      ? WalletBold
-      : activeDockTab === 'income'
-        ? Chart2Bold
-        : DocumentText1Bold
+
   const toggleDockTab = (tab: 'contract' | 'invoice' | 'income') => {
     setActiveDockTab((currentTab) => currentTab === tab ? null : tab)
   }
@@ -271,20 +208,6 @@ function DashboardContent() {
     setInvoiceView('editor')
   }
 
-  const getClientTagBadgeClassName = (tag: string): string => {
-    const normalizedTag = tag.trim().toLowerCase()
-
-    if (normalizedTag === 'design') {
-      return 'bg-[var(--color-warning)] text-[var(--color-text-inverse)]'
-    }
-
-    if (normalizedTag === 'development' || normalizedTag === 'devlopment') {
-      return 'bg-[var(--color-info)] text-[var(--color-text-inverse)]'
-    }
-
-    return 'bg-[var(--color-brand-subtle)] text-[var(--color-text-brand)]'
-  }
-
   React.useEffect(() => {
     if (isClientFormOpen) {
       setIsClientFormMounted(true)
@@ -341,432 +264,54 @@ function DashboardContent() {
 
   return (
     <TooltipProvider delayDuration={180}>
-    <div className="theme-page-shell">
-      <div className="dots-background" />
-
-      <AppNavbar
-        topClassName="top-8"
-        zClassName="z-40"
-        showThemeButton
-        showProfileButton
-        showProfileDropdown
-        showProfileActiveBorder
+      <DashboardShell
         onOpenPrivacyPolicy={handleOpenPrivacyPolicy}
         onDownloadReport={handleDownloadReport}
-      />
-
-      <section
-        className={`absolute z-10 flex flex-col ${
-          isClientsPanelCollapsed
-            ? 'left-[50px] top-[calc(50%+188px)] items-start gap-2'
-            : `bottom-28 left-[50px] items-center gap-4 transition-[bottom,width,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-              isClientPanelExpanded
-                ? 'w-[400px] translate-y-0'
-                : 'w-[289px] translate-y-0'
-            }`
-        }`}
       >
-        {isClientsPanelCollapsed ? (
-          <button
-            type="button"
-            onClick={() => {
-              if (isCenterFormActive) {
-                return
-              }
+        <DashboardClientsPanel
+          formTransitionMs={formTransitionMs}
+          isClientsPanelCollapsed={isClientsPanelCollapsed}
+          isClientPanelExpanded={isClientPanelExpanded}
+          isCenterFormActive={isCenterFormActive}
+          setIsClientsCollapsed={setIsClientsCollapsed}
+          isClientFormMounted={isClientFormMounted}
+          isClientFormVisible={isClientFormVisible}
+          clientFormContainerRef={clientFormContainerRef}
+          editingClient={editingClient}
+          setIsCreateClientOpen={setIsCreateClientOpen}
+          setEditingClient={setEditingClient}
+          isClientsLoading={isClientsLoading}
+          clients={clients}
+          newClientsCount={newClientsCount}
+          taskCountByClientId={taskCountByClientId}
+          onDeleteClient={handleDeleteClient}
+        />
 
-              setIsClientsCollapsed(false)
-            }}
-            className="theme-shell-chip inline-flex h-8 w-fit items-center gap-1 rounded-[8px] px-2"
-            aria-label="Expand Manage Clients"
-          >
-            <PeopleBold size={16} />
-            <span className="text-[14px] font-medium leading-none">Manage Clients</span>
-          </button>
-        ) : (
-          <>
-            <div
-              className={`theme-shell-card flex w-full min-h-[341px] flex-col gap-[10px] overflow-hidden rounded-[14px] p-4 transition-[height,max-height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                isClientPanelExpanded
-                  ? 'h-[min(640px,calc(100vh-240px))]'
-                  : 'max-h-[min(600px,calc(100vh-240px))]'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => setIsClientsCollapsed(true)}
-                  className="theme-shell-chip inline-flex h-8 items-center gap-1 rounded-[8px] px-2"
-                  aria-label={isClientPanelExpanded ? 'Collapse Add Clients' : 'Collapse Manage Clients'}
-                >
-                  {isClientPanelExpanded ? <AddCircleBold size={16} /> : <PeopleBold size={16} />}
-                  <span className="text-[14px] font-medium">{isClientPanelExpanded ? 'Add Clients' : 'Manage Clients'}</span>
-                </button>
-                {isClientPanelExpanded ? (
-                  <button
-                    type="button"
-                    aria-label="Close client form"
-                    onClick={() => {
-                      setIsCreateClientOpen(false)
-                      setEditingClient(null)
-                    }}
-                    className="text-[var(--tertiary)]"
-                  >
-                    <CloseCircleBold size={24} />
-                  </button>
-                ) : (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label="Add client"
-                        onClick={() => {
-                          setEditingClient(null)
-                          setIsCreateClientOpen(true)
-                        }}
-                        className="text-[var(--tertiary)]"
-                      >
-                        <AddCircleBold size={24} />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Add client</TooltipContent>
-                  </Tooltip>
-                )}
-              </div>
-              <div className="theme-shell-divider h-px w-full" />
-              <div className="flex-1 min-h-0 overflow-hidden rounded-[10px]">
-                {isClientFormMounted ? (
-                  <div
-                    ref={clientFormContainerRef}
-                    className={`h-full min-h-0 overflow-hidden transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                      isClientFormVisible
-                        ? 'translate-y-0 opacity-100'
-                        : 'pointer-events-none -translate-y-1 opacity-0'
-                    }`}
-                    style={{ transitionDuration: `${formTransitionMs}ms` }}
-                  >
-                    <ClientForm
-                      isOpen={isClientFormMounted}
-                      onClose={() => {
-                        setIsCreateClientOpen(false)
-                        setEditingClient(null)
-                      }}
-                      client={editingClient}
-                      mode={isEditingClientOpen ? 'edit' : 'create'}
-                      renderMode="inline"
-                    />
-                  </div>
-                ) : (
-                  <div className="space-y-2 overflow-y-auto">
-                    {isClientsLoading ? (
-                      <div className="rounded-[10px] bg-[var(--surface-card-subtle)] p-3 text-[13px] text-text-muted">
-                        Loading clients...
-                      </div>
-                    ) : clients.length === 0 ? (
-                      <div className="rounded-[10px] bg-[var(--surface-card-subtle)] p-3 text-[13px] text-text-muted">
-                        Add a client to get started. They&apos;ll be available across contracts, invoices, and time tracking.
-                      </div>
-                    ) : (
-                      clients.map((client) => (
-                        <article
-                          key={client.id}
-                          className="rounded-[10px] border border-[var(--surface-panel-border)] bg-[var(--surface-panel-strong)] p-3"
-                        >
-                          <div className="flex flex-col gap-[10px]">
-                            <div className="flex w-full items-center justify-between gap-[10px]">
-                              <h3 className="min-w-0 flex-1 truncate text-[16px] font-medium leading-none text-text-base">
-                                {client.name}
-                              </h3>
-                              <div className="inline-flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  aria-label={`Edit ${client.name}`}
-                                  onClick={() => {
-                                    setIsCreateClientOpen(false)
-                                    setEditingClient(client)
-                                  }}
-                                  className="inline-flex shrink-0 items-center justify-center text-text-base transition-colors hover:text-[var(--tertiary)]"
-                                >
-                                  <EditBold size={16} />
-                                </button>
-                                <button
-                                  type="button"
-                                  aria-label={`Delete ${client.name}`}
-                                  onClick={() => {
-                                    void handleDeleteClient(client)
-                                  }}
-                                  className="inline-flex shrink-0 items-center justify-center text-text-base transition-colors hover:text-[var(--tertiary)]"
-                                >
-                                  <TrashBold size={16} />
-                                </button>
-                              </div>
-                            </div>
+        <DashboardCenterPanel
+          shouldShowCenterPanel={shouldShowCenterPanel}
+          isCenterFormActive={isCenterFormActive}
+          activeDockTab={activeDockTab}
+          contractView={contractView}
+          invoiceView={invoiceView}
+          setContractView={setContractView}
+          setInvoiceView={setInvoiceView}
+          setActiveDockTab={setActiveDockTab}
+          onOpenInvoiceFromIncome={openInvoiceFromIncome}
+        />
 
-                            <div className="w-full">
-                              <p className="truncate text-[14px] leading-none text-text-muted">
-                                {client.email || 'No email added'}
-                              </p>
-                            </div>
+        <DashboardTimePanel
+          isTimeTrackerPanelCollapsed={isTimeTrackerPanelCollapsed}
+          isCenterFormActive={isCenterFormActive}
+          dailyTotal={dailyTotal}
+          weeklyTotal={weeklyTotal}
+          setIsTimeTrackerCollapsed={setIsTimeTrackerCollapsed}
+        />
 
-                            <div className="flex w-full items-center justify-between gap-[10px]">
-                              {client.tags && client.tags.length > 0 ? (
-                                <span
-                                  className={`inline-flex h-fit w-fit items-center justify-center rounded-[4px] pl-[8px] pr-[8px] pt-[4px] pb-[4px] text-[14px] font-medium leading-none ${getClientTagBadgeClassName(client.tags[0])}`}
-                                >
-                                  {client.tags[0].charAt(0).toUpperCase() + client.tags[0].slice(1)}
-                                </span>
-                              ) : (
-                                <span className="invisible inline-flex h-fit w-fit items-center justify-center rounded-[4px] pl-[8px] pr-[8px] pt-[4px] pb-[4px] text-[14px] font-medium leading-none">
-                                  Placeholder
-                                </span>
-                              )}
-                              <span className="truncate text-[12px] leading-none text-text-muted">
-                                Tasks: {taskCountByClientId.get(client.id) ?? 0}
-                              </span>
-                            </div>
-                          </div>
-                        </article>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </>
-        )}
-
-        <div className="theme-shell-card inline-flex items-center gap-[2px] rounded-[8px] px-1">
-          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-text-muted">
-            <span>Total Clients:</span>
-            <span>{clients.length}</span>
-          </div>
-          <div className="theme-shell-divider h-6 w-px" />
-          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-text-muted">
-            <span>New Clients:</span>
-            <span>{newClientsCount}</span>
-          </div>
-        </div>
-      </section>
-
-      <section
-        aria-hidden={!shouldShowCenterPanel}
-        className={`absolute z-10 flex flex-col gap-2 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          isCenterFormActive
-            ? 'bottom-28 left-[214px] right-[214px] top-[120px] w-auto translate-x-0'
-            : 'bottom-28 left-1/2 top-[120px] w-[min(90%,700px)] -translate-x-1/2 max-h-[calc(100vh-200px)] lg:w-[min(50vw,900px)]'
-        } ${
-          shouldShowCenterPanel
-            ? 'pointer-events-auto opacity-100 translate-y-0 scale-100'
-            : 'pointer-events-none opacity-0 translate-y-3 scale-[0.98]'
-        }`}
-      >
-          <div className="flex items-center justify-between">
-            <div className="inline-flex w-fit items-center gap-1">
-              <div className="theme-shell-chip-strong inline-flex h-8 w-8 items-center justify-center rounded-[3px] transition-colors duration-200">
-                <CenterPanelIcon size={16} />
-              </div>
-              <div className="theme-shell-chip-strong inline-flex h-8 items-center rounded-[4px] px-4 transition-all duration-200">
-                <span className="text-[14px] font-medium">
-                  {centerPanelTitle}
-                </span>
-              </div>
-            </div>
-
-            {shouldShowContractBackButton && (
-              <button
-                type="button"
-                onClick={() => setContractView('list')}
-                className="theme-shell-chip-strong inline-flex h-8 w-8 items-center justify-center rounded-[3px] text-[var(--tertiary)] transition-colors duration-200 hover:text-[var(--primary)]"
-                aria-label="Back from Contract Generator"
-              >
-                <CloseCircleBold size={16} />
-              </button>
-            )}
-
-            {!shouldShowContractBackButton && ((activeDockTab === 'contract' && contractView === 'editor') ||
-              (activeDockTab === 'invoice' && invoiceView === 'editor')) && (
-              <button
-                type="button"
-                onClick={() => {
-                  if (activeDockTab === 'contract') {
-                    setContractView('list')
-                    return
-                  }
-
-                  if (activeDockTab === 'invoice') {
-                    setInvoiceView('list')
-                  }
-                }}
-                className="theme-shell-chip-strong inline-flex h-8 w-8 items-center justify-center rounded-[3px] text-[var(--tertiary)] transition-colors duration-200 hover:text-[var(--primary)]"
-                aria-label={`Close ${centerPanelTitle}`}
-              >
-                <CloseCircleBold size={16} />
-              </button>
-            )}
-
-          </div>
-          <div className="theme-shell-panel relative flex-1 min-h-0 overflow-visible rounded-[14px] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]">
-            <div className="h-full min-h-0 overflow-visible rounded-[14px]">
-              {activeDockTab === 'contract' ? (
-                <div className="h-full overflow-visible rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] p-4 theme-scrollbar">
-                  <ContractGenerator variant="dashboard" />
-                </div>
-              ) : activeDockTab === 'invoice' ? (
-                <div className="h-full overflow-visible rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] p-4 theme-scrollbar">
-                  <InvoiceGenerator variant="dashboard" />
-                </div>
-              ) : activeDockTab === 'income' ? (
-                <div className="h-full overflow-visible rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] p-4 theme-scrollbar">
-                  <IncomeTracker
-                    variant="dashboard"
-                    onOpenInvoice={openInvoiceFromIncome}
-                    onOpenInvoiceGenerator={() => {
-                      setActiveDockTab('invoice')
-                      setInvoiceView('list')
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="flex h-full flex-col items-center justify-center rounded-[10px] border border-[var(--surface-divider)] bg-[var(--surface-overlay)] text-center">
-                  <CenterPanelIcon size={28} className="text-[var(--tertiary)]" />
-                  <p className="mt-2 text-sm font-medium text-[var(--tertiary)]">{centerPanelTitle}</p>
-                  <p className="mt-1 max-w-[280px] text-xs text-text-muted">
-                    This module is coming soon.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-      </section>
-
-      <section
-        className={`absolute z-[5] flex flex-col ${
-          isTimeTrackerPanelCollapsed
-            ? 'right-[50px] top-[calc(50%+188px)] items-end gap-2'
-            : 'bottom-28 right-[50px] w-[289px] translate-y-0 items-center gap-4 transition-[bottom,width,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]'
-        }`}
-      >
-        {isTimeTrackerPanelCollapsed ? (
-          <button
-            type="button"
-            onClick={() => {
-              if (isCenterFormActive) {
-                return
-              }
-
-              setIsTimeTrackerCollapsed(false)
-            }}
-            className="theme-shell-chip inline-flex h-8 w-fit items-center gap-1 rounded-[8px] px-2"
-            aria-label="Expand Time Tracker"
-          >
-            <Timer1Bold size={16} />
-            <span className="text-[14px] font-medium leading-none">Time Tracker</span>
-          </button>
-        ) : (
-          <>
-            <TimeTracker
-              variant="dashboard"
-              onCollapse={() => setIsTimeTrackerCollapsed(true)}
-            />
-          </>
-        )}
-
-        <div className="theme-shell-card inline-flex items-center gap-[2px] rounded-[8px] px-1">
-          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-text-muted">
-            <span>Today:</span>
-            <span>{formatHoursAndMinutes(dailyTotal)}</span>
-          </div>
-          <div className="theme-shell-divider h-6 w-px" />
-          <div className="flex h-6 items-center gap-1 px-1 text-[12px] text-text-muted">
-            <span>This Week:</span>
-            <span>{formatHoursAndMinutes(weeklyTotal)}</span>
-          </div>
-        </div>
-      </section>
-
-      <footer className="theme-shell-card absolute bottom-8 left-1/2 z-10 flex h-12 -translate-x-1/2 items-center gap-[10px] rounded-[14px] p-2">
-        {activeDockTab === 'contract' ? (
-          <button
-            type="button"
-            onClick={() => toggleDockTab('contract')}
-            aria-pressed
-            className="theme-shell-chip inline-flex h-8 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-[8px] px-2 text-[14px] font-medium text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-          >
-            <DocumentText1Bold size={16} />
-            Contract Generator
-          </button>
-        ) : (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={() => toggleDockTab('contract')}
-                aria-pressed={false}
-                className="inline-flex h-8 w-8 items-center justify-center overflow-hidden whitespace-nowrap text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-              >
-                <DocumentText1Bold size={16} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Contract Generator</TooltipContent>
-          </Tooltip>
-        )}
-
-        <div className="theme-shell-divider h-8 w-px" />
-
-        {activeDockTab === 'invoice' ? (
-          <button
-            type="button"
-            onClick={() => toggleDockTab('invoice')}
-            aria-pressed
-            className="theme-shell-chip inline-flex h-8 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-[8px] px-2 text-[14px] font-medium text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-          >
-            <WalletBold size={16} />
-            Invoice Generator
-          </button>
-        ) : (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={() => toggleDockTab('invoice')}
-                aria-pressed={false}
-                className="inline-flex h-8 w-8 items-center justify-center overflow-hidden whitespace-nowrap text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-              >
-                <WalletBold size={16} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Invoice Generator</TooltipContent>
-          </Tooltip>
-        )}
-
-        <div className="theme-shell-divider h-8 w-px" />
-
-        {activeDockTab === 'income' ? (
-          <button
-            type="button"
-            onClick={() => toggleDockTab('income')}
-            aria-pressed
-            className="theme-shell-chip inline-flex h-8 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-[8px] px-2 text-[14px] font-medium text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-          >
-            <Chart2Bold size={16} />
-            Income Tracker
-          </button>
-        ) : (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={() => toggleDockTab('income')}
-                aria-pressed={false}
-                className="inline-flex h-8 w-8 items-center justify-center overflow-hidden whitespace-nowrap text-[var(--tertiary)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-              >
-                <Chart2Bold size={16} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Income Tracker</TooltipContent>
-          </Tooltip>
-        )}
-      </footer>
-    </div>
+        <DashboardDockControls
+          activeDockTab={activeDockTab}
+          toggleDockTab={toggleDockTab}
+        />
+      </DashboardShell>
     </TooltipProvider>
   )
 }
