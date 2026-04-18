@@ -36,12 +36,12 @@ export function DashboardFloatingTimerPill() {
       <button
         type="button"
         onClick={() => setSheetOpen(true)}
-        className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] right-4 z-40 flex max-w-[min(200px,calc(100vw-2rem))] items-center gap-2 rounded-full border border-border-base bg-background-highlight px-3 py-2 text-left shadow-md md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand"
+        className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] right-4 z-40 flex max-w-[min(200px,calc(100vw-2rem))] items-center gap-2 rounded-full border border-border-base bg-background-highlight px-3 py-2 text-left shadow-md md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand"
         aria-label={runningEntry ? `Timer running ${label}` : 'Open time tracker'}
       >
         <span
-          className={`h-2 w-2 shrink-0 rounded-full ${
-            runningEntry ? 'animate-pulse bg-feedback-success-text' : 'bg-text-muted'
+          className={`h-2 w-2 shrink-0 rounded-full bg-feedback-success-text ${
+            runningEntry ? 'animate-pulse' : ''
           }`}
           aria-hidden
         />

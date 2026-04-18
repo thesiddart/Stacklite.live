@@ -21,9 +21,10 @@ const guestHighlights = [
 export default function Home() {
   return (
     <div className="dark min-h-screen bg-background-base text-text-base">
-      <div className="pointer-events-none fixed inset-0 -z-10 dots-background opacity-20 [background-size:20px_20px]" />
+      <div className="pointer-events-none fixed inset-0 z-0 dots-background opacity-20 [background-size:20px_20px]" />
 
-      <header className="border-b border-border-muted bg-[var(--color-canvas-bg)] text-text-inverse">
+      <div className="relative z-10">
+        <header className="border-b border-border-muted bg-[var(--color-canvas-bg)] text-text-inverse">
         <div className="mx-auto flex w-full max-w-[1200px] items-center justify-between gap-4 px-5 py-4">
           <div className="flex items-center gap-3">
             <Link
@@ -52,8 +53,8 @@ export default function Home() {
             >
               <Link href="/login">Sign in</Link>
             </Button>
-            <Button asChild size="sm">
-              <Link href="/dashboard">Try free</Link>
+            <Button asChild size="sm" className="!text-white hover:!text-white">
+              <Link href="/dashboard" className="!text-white hover:!text-white">Try free</Link>
             </Button>
           </div>
         </div>
@@ -77,8 +78,8 @@ export default function Home() {
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                <Button asChild size="lg">
-                  <Link href="/dashboard">Open workspace</Link>
+                <Button asChild size="lg" className="!text-white hover:!text-white">
+                  <Link href="/dashboard" className="!text-white hover:!text-white">Open workspace</Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="border-button-primary bg-transparent !text-button-secondary-fg hover:bg-background-highlight hover:!text-button-secondary-fg">
                   <Link href="#how-it-works" className="!text-button-secondary-fg hover:!text-button-secondary-fg">See how it works</Link>
@@ -129,8 +130,8 @@ export default function Home() {
           </p>
         </section>
 
-        <section id="guest" className="relative px-5 py-16">
-          <div className="absolute inset-0 dots-background opacity-20 [background-size:20px_20px]" />
+        <section id="guest" className="relative isolate px-5 py-16">
+          <div className="absolute inset-0 -z-10 dots-background opacity-20 [background-size:20px_20px]" />
           <div className="relative mx-auto grid w-full max-w-[920px] gap-7 rounded-2xl border border-button-primary bg-background-base p-8 lg:grid-cols-2">
             <div>
               <div className="mb-3 flex flex-wrap gap-2">
@@ -170,6 +171,7 @@ export default function Home() {
           <p>© 2026 Stacklite · Siddhartha Dwivedi</p>
         </div>
       </footer>
+      </div>
     </div>
   )
 }

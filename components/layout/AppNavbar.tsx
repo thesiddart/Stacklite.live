@@ -404,44 +404,70 @@ export function AppNavbar({
                   <span className="inline-flex h-4 w-4" aria-hidden="true" />
                 </div>
 
-                <div className="grid flex-1 grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => handleThemeChange('dark')}
-                    className={`overflow-hidden rounded-[18px] border bg-[var(--surface-card)] text-left transition-all duration-200 ${
-                      selectedTheme === 'dark'
-                        ? 'border-border-brand'
-                        : 'border-border-muted hover:border-border-base'
-                    }`}
-                  >
-                    <div className="flex h-[92px] items-center justify-center bg-background-emphasis">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-button-primary text-button-primary-fg shadow-md">
-                        <ColorfilterBold size={28} />
+                <div className="space-y-2">
+                  <p className="px-1 text-[12px] font-medium uppercase tracking-[0.12em] text-text-muted">Light / Dark mode</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => handleThemeChange('dark')}
+                      className={`overflow-hidden rounded-[18px] border bg-[var(--surface-card)] text-left transition-all duration-200 ${
+                        selectedTheme === 'dark'
+                          ? 'border-border-brand'
+                          : 'border-border-muted hover:border-border-base'
+                      }`}
+                    >
+                      <div className="flex h-[92px] items-center justify-center bg-background-emphasis">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-button-primary text-button-primary-fg shadow-md">
+                          <ColorfilterBold size={28} />
+                        </div>
                       </div>
-                    </div>
-                    <div className="bg-[var(--surface-card)] px-4 py-4 text-[14px] font-semibold leading-none text-text-base">
-                      Dark
-                    </div>
-                  </button>
+                      <div className="bg-[var(--surface-card)] px-4 py-4 text-[14px] font-semibold leading-none text-text-base">
+                        Dark
+                      </div>
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => handleThemeChange('light')}
-                    className={`overflow-hidden rounded-[18px] border bg-[var(--surface-card)] text-left transition-all duration-200 ${
-                      selectedTheme === 'light'
-                        ? 'border-[var(--primary)]'
-                        : 'border-border-muted hover:border-border-base'
-                    }`}
-                  >
-                    <div className="flex h-[92px] items-center justify-center bg-background-highlight">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-button-secondary text-button-secondary-fg shadow-md">
-                        <ColorfilterBold size={28} />
+                    <button
+                      type="button"
+                      onClick={() => handleThemeChange('light')}
+                      className={`overflow-hidden rounded-[18px] border bg-[var(--surface-card)] text-left transition-all duration-200 ${
+                        selectedTheme === 'light'
+                          ? 'border-[var(--primary)]'
+                          : 'border-border-muted hover:border-border-base'
+                      }`}
+                    >
+                      <div className="flex h-[92px] items-center justify-center bg-background-highlight">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-button-secondary text-button-secondary-fg shadow-md">
+                          <ColorfilterBold size={28} />
+                        </div>
+                      </div>
+                      <div className="bg-[var(--surface-card)] px-4 py-4 text-[14px] font-semibold leading-none text-text-base">
+                        Light
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="px-1 text-[12px] font-medium uppercase tracking-[0.12em] text-text-muted">Specialized themes</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="overflow-hidden rounded-[18px] border border-dashed border-border-muted bg-[var(--surface-card)]">
+                      <div className="flex h-[92px] items-center justify-center bg-background-highlight">
+                        <span className="rounded-full border border-border-muted px-3 py-1 text-[11px] font-medium text-text-muted">Coming soon</span>
+                      </div>
+                      <div className="bg-[var(--surface-card)] px-4 py-4 text-[14px] font-semibold leading-none text-text-muted">
+                        Focus
                       </div>
                     </div>
-                    <div className="bg-[var(--surface-card)] px-4 py-4 text-[14px] font-semibold leading-none text-text-base">
-                      Light
+
+                    <div className="overflow-hidden rounded-[18px] border border-dashed border-border-muted bg-[var(--surface-card)]">
+                      <div className="flex h-[92px] items-center justify-center bg-background-highlight">
+                        <span className="rounded-full border border-border-muted px-3 py-1 text-[11px] font-medium text-text-muted">Coming soon</span>
+                      </div>
+                      <div className="bg-[var(--surface-card)] px-4 py-4 text-[14px] font-semibold leading-none text-text-muted">
+                        Midnight
+                      </div>
                     </div>
-                  </button>
+                  </div>
                 </div>
               </div>
             </div>
