@@ -1,0 +1,503 @@
+# Stacklite - Freelancer OS
+A Next.js + Supabase freelancer workspace with five core modules: Client Manager, Time Tracker, Contract Generator, Invoice Generator, and Income Tracker.
+
+## Current State
+- Auth: Supabase Auth (email/password + social), callback routes, protected dashboard
+- Client Manager: Full CRUD with search, persisted to Supabase
+- Time Tracker: Running timers, manual entries, pause/resume/stop, edit support
+- Contract Generator: Guest + auth flows, PDF export, share-token routes
+- Invoice Generator: Guest + auth flows, itemized totals, payment status, share-token routes
+- Income Tracker: Data-driven from invoice/client data, period-based insights
+- Guest mode: Zustand persist with guest-aware hooks (localStorage ↔ Supabase switching)
+
+## Tech Stack
+- Framework: Next.js 16 (App Router)
+- Runtime: React 19
+- Language: TypeScript (strict mode)
+- Styling: Tailwind CSS v4
+- Database: Supabase SSR + Supabase JS
+- Data Fetching: React Query
+- State: Zustand (with persist)
+- Validation: Zod
+- Testing: Vitest
+
+## Design System: Lumea Token Architecture
+
+### Typography
+- Primary Font: Satoshi (titles AND body — no Inter)
+- Variable: --font-sans in app/globals.css
+- Tailwind mapping: fontFamily.sans
+- Roles:
+  - Page title: prominent, semibold, high contrast
+  - Section heading: concise, stable across modules
+  - Body: readable line length, moderate contrast
+  - Helper/meta: subdued with text-text-muted
+  - Labels/errors: compact, context-bound
+
+### Color Token System (CRITICAL)
+**Never use raw hex or Tailwind default palette classes.**
+Always use semantic Lumea utilities defined in tailwind.config.ts.
+
+Token categories:
+1. Canvas/Page: bg-page, bg-canvas, bg-background-base, bg-background-highlight, bg-background-muted
+2. Text: text-text-base, text-text-body, text-text-muted, text-text-placeholder, text-text-disabled, text-text-brand
+3. Borders: border-border-base, border-border-muted, border-border-input, border-border-disabled, border-border-brand
+4. Buttons:
+   - Primary: bg-button-primary text-button-primary-fg
+   - Secondary: bg-button-secondary text-button-secondary-fg
+   - Ghost: text-button-ghost-fg
+5. Feedback:
+   - Error: text-feedback-error-text, bg-feedback-error-bg, border-feedback-error-border
+   - Success: text-feedback-success-text, bg-feedback-success-bg, border-feedback-success-border
+   - Warning: text-feedback-warning-text, bg-feedback-warning-bg, border-feedback-warning-border
+   - Info: text-feedback-info-text, bg-feedback-info-bg, border-feedback-info-border
+6. Brand: text-brand-*, bg-brand-*, border-brand-*
+7. Specialized: icon.*, topbar.*, module.*, dock.*, step.*, badge.*, preview.*
+
+### Spacing Scale (4px grid system)
+Token aliases: xs, sm, md, lg, xl, 2xl, 3xl, 4xl
+Use consistent 4px-increment rhythm in layouts.
+
+### Shape Tokens
+- Radius: rounded-sm (tight), rounded-md (inputs), rounded-lg (buttons), rounded-xl (cards/panels)
+- Shadows: shadow-sm (inline fields), shadow-md (cards), shadow-lg (modals/floating)
+
+### Focus Ring Contract (NON-NEGOTIABLE)
+Every interactive control MUST have:
+- focus-visible:ring-2
+- focus-visible:ring-text-brand (or semantic ring token)
+- Appropriate ring offset on layered surfaces
+
+### Global Utility Classes
+Available helpers:
+- canvas-grid, dots-background
+- theme-page-shell
+- theme-shell-card, theme-shell-panel, theme-shell-divider, theme-shell-chip, theme-shell-chip-strong
+- theme-shell-muted, theme-shell-subtle, theme-shell-strong
+- theme-shell-field
+- theme-scrollbar
+
+### Motion Tokens
+- animate-fade-in / animate-fadeIn
+- animate-slide-in / animate-slideIn
+- skeleton shimmer for loading states
+Rules: Motion indicates state change, not decoration. Keep durations subtle and brief.
+
+## Architecture Patterns
+
+### Project Structure
+app/                         App Router routes and layouts
+├── (auth)/                  Auth route group
+├── (dashboard)/             Protected dashboard routes
+├── auth/                    Auth handlers (callback, signout, delete-account)
+├── c/[token]/              Contract share view
+├── i/[token]/              Invoice share view
+├── globals.css             CSS custom properties (token source)
+└── layout.tsx              Root layoutcomponents/
+├── ui/                      Primitives (Button, Input, Card, Modal, etc.)
+├── workspace/              Canvas, ModuleCard, Dock, Navbar
+├── layout/                 AppNavbar, GuestIndicator, SavePromptModal, SignInButton
+└── modules/                ClientManager, TimeTracker, ContractGenerator, InvoiceGenerator, IncomeTrackerhooks/                       React Query and app hooks
+lib/                         API, validation, types, utilities, Supabase clients
+stores/                      Zustand stores (guest-aware)
+supabase/migrations/         Database schema and migrations
+tests/                       Unit tests (Vitest)
+docs/                        Product and implementation docs
+
+### Component Composition Rules
+1. Reuse primitives from components/ui before creating module-specific controls
+2. Keep visual rhythm consistent across all modules
+3. Every module MUST include: empty, loading, error, and success states
+4. Destructive actions require explicit confirmation UI
+
+### Naming Conventions
+- Components: PascalCase (ClientCard.tsx)
+- Utilities: camelCase (formatCurrency.ts)
+- Types: PascalCase with T prefix (TClient, TInvoice, TContract)
+- Hooks: use prefix (useClients.ts, useTimers.ts)
+- Stores: use prefix (useClientStore.ts, useGuestStore.ts)
+- Constants: UPPER_SNAKE_CASE
+
+## TypeScript Standards
+
+### Strict Mode Requirements
+- No any types (use unknown or proper typing)
+- Interfaces for object shapes, Types for unions/primitives
+- Props interfaces: suffix with Props (ClientCardProps)
+- All functions: explicit return type annotations
+- Null checks: strict null checking enabled
+
+### Type Organization
+```typescript
+// Export types from dedicated files
+// lib/types/client.ts
+export type TClient = {
+id: string;
+name: string;
+email: string | null;
+company: string | null;
+created_at: string;
+updated_at: string;
+};export type TClientFormData = Omit<TClient, 'id' | 'created_at' | 'updated_at'>;
+
+## React Patterns
+
+### Server vs Client Components
+- Server Components by default (no 'use client' unless needed)
+- Client Components only for: interactivity, state, effects, browser APIs
+- Keep Server Components for: static content, data fetching, layouts
+
+### Component Structure Template
+```typescript// Server Component (default)
+import { ComponentProps } from './types';export function ComponentName({ prop }: ComponentProps) {
+return <div>...</div>;
+}// Client Component (when needed)
+'use client';import { useState } from 'react';
+import { ComponentProps } from './types';export function InteractiveComponent({ prop }: ComponentProps) {
+const [state, setState] = useState();
+return <div>...</div>;
+}
+
+### Custom Hooks
+- Prefix with 'use'
+- Extract shared logic from components
+- Keep single responsibility
+- Return stable references (useMemo, useCallback where needed)
+
+## State Management
+
+### Zustand Store Pattern
+```typescriptimport { create } from 'zustand';
+import { persist } from 'zustand/middleware';interface TFeatureStore {
+items: TItem[];
+loading: boolean;
+error: string | null;
+// Actions
+setItems: (items: TItem[]) => void;
+addItem: (item: TItem) => void;
+updateItem: (id: string, updates: Partial<TItem>) => void;
+removeItem: (id: string) => void;
+}export const useFeatureStore = create<TFeatureStore>()(
+persist(
+(set) => ({
+items: [],
+loading: false,
+error: null,
+setItems: (items) => set({ items }),
+addItem: (item) => set((state) => ({
+items: [...state.items, item]
+})),
+updateItem: (id, updates) => set((state) => ({
+items: state.items.map(item =>
+item.id === id ? { ...item, ...updates } : item
+)
+})),
+removeItem: (id) => set((state) => ({
+items: state.items.filter(item => item.id !== id)
+}))
+}),
+{ name: 'feature-storage' }
+)
+);
+
+### Guest-Aware Hook Pattern
+```typescript// hooks/useClients.ts
+import { useAuth } from './useAuth';
+import { useGuestStore } from '@/stores/useGuestStore';
+import { useQuery } from '@tanstack/react-query';export function useClients() {
+const { user } = useAuth();
+const guestClients = useGuestStore(state => state.clients);const { data: supabaseClients } = useQuery({
+queryKey: ['clients', user?.id],
+queryFn: fetchClientsFromSupabase,
+enabled: !!user
+});return user ? supabaseClients : guestClients;
+}
+
+## Supabase Integration
+
+### Client Usage
+```typescript// Server-side data fetching
+import { createClient } from '@/lib/supabase/server';export async function getClients() {
+const supabase = await createClient();
+const { data, error } = await supabase
+.from('clients')
+.select('*')
+.order('created_at', { ascending: false });if (error) throw error;
+return data;
+}// Client-side auth/mutations
+import { createClient } from '@/lib/supabase/client';const supabase = createClient();
+await supabase.auth.signInWithPassword({ email, password });
+
+### RLS Requirements
+- ALL user-isolated tables MUST have RLS enabled
+- Policies must enforce user_id matching auth.uid()
+- Share-token routes use public read policies with token validation
+- Never expose service-role key to client code
+
+### Migration Order (CRITICAL)
+Apply in exact sequence:
+1. 20260212000000_initial_schema.sql
+2. 20260214000000_extend_clients_profile.sql
+3. 20260401000000_extend_contracts.sql
+4. 20260403000000_backfill_share_tokens.sql
+5. 20260404000000_invoices_clean.sql
+6. 20260406000000_cookie_consents.sql
+
+## Validation with Zod
+
+### Form Validation Pattern
+```typescriptimport { z } from 'zod';export const clientSchema = z.object({
+name: z.string().min(1, 'Name is required'),
+email: z.string().email('Invalid email').nullable(),
+company: z.string().nullable(),
+});export type TClientFormData = z.infer<typeof clientSchema>;// In component
+const { register, handleSubmit, formState: { errors } } = useForm<TClientFormData>({
+resolver: zodResolver(clientSchema)
+});
+
+## Component Library (components/ui)
+
+### Available Primitives
+- Button (variants: primary, secondary, ghost, outline, danger; sizes: sm, md, lg)
+- IconButton (requires accessible label prop)
+- Input, InputWrapper
+- Select
+- Textarea
+- DatePicker
+- Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter
+- Modal (sizes: sm, md, lg, xl)
+- Dropdown, DropdownTrigger, DropdownContent, DropdownItem, DropdownGroup, DropdownLabel, DropdownDivider, DropdownShortcut
+- Badge (variants: soft, outline, strong; tones: neutral, primary, success, warning, danger, info)
+- BadgeDot
+- TooltipProvider, Tooltip, TooltipTrigger, TooltipContent
+- Avatar, AvatarImage, AvatarFallback
+
+### Button Usage
+```typescript<Button variant="primary" size="md" isLoading={loading}>
+  Save Client
+</Button><IconButton
+icon={<TrashIcon />}
+label="Delete client"
+variant="danger"
+onClick={handleDelete}
+/>
+
+### Input Usage
+```typescript<Input
+label="Client name"
+hint="Use legal entity name"
+error={errors.name?.message}
+required
+{...register('name')}
+/>
+
+### Card Usage
+```typescript<Card clickable onClick={handleClick}>
+  <CardHeader>
+    <CardTitle>Invoice #1234</CardTitle>
+    <CardDescription>Due in 7 days</CardDescription>
+  </CardHeader>
+  <CardContent>
+    {/* content */}
+  </CardContent>
+  <CardFooter>
+    <Button variant="secondary">View Details</Button>
+  </CardFooter>
+</Card>
+```
+Component State Requirements (NON-NEGOTIABLE)
+Every interactive component MUST define and visually support:
+
+Default
+Hover
+Focus-visible
+Active/pressed
+Disabled
+Error (where applicable)
+Success (where applicable)
+Warning (where applicable)
+
+No component may ship with partial state coverage.
+Accessibility Standards (MANDATORY)
+
+Keyboard navigation complete for all interactive controls
+Focus ring visible on every control and variant
+Icon-only controls need aria-label AND tooltip
+Inputs/selects/textarea/datepickers MUST have labels
+Color cannot be the only channel for meaning
+Error messages adjacent and understandable
+Dialogs/dropdowns maintain correct focus behavior
+
+Routes
+Public Routes
+
+/ (landing)
+/privacy
+/terms
+/support
+
+Auth Routes
+
+/login
+/signup
+/auth/reset-password
+/auth/callback (route handler)
+/auth/signout (route handler)
+/auth/delete-account (route handler)
+
+Dashboard Routes (Protected)
+
+/dashboard
+/clients
+/time
+/contracts
+/invoices
+/income
+
+Share Routes (Public with token)
+
+/c/[token] (contract view)
+/i/[token] (invoice view)
+
+Security Rules
+
+Supabase RLS required for user-isolated tables
+Input validated with Zod in app flows
+Guest mode never relies on service-role access from client
+Sensitive keys remain in environment variables
+Share tokens validated server-side before rendering content
+No client-side exposure of other users' data
+
+Performance Targets
+
+First Contentful Paint: < 1.5s
+Time to Interactive: < 3s
+Lighthouse score: > 90
+Bundle size: monitor with next/bundle-analyzer
+
+Testing (Vitest)
+
+Test file naming: ComponentName.test.tsx
+Coverage target: 80% (focus on business logic)
+Unit tests for: utilities, validation schemas, hooks
+Integration tests for: user flows, auth, data mutations
+
+Git Workflow
+Branch Naming
+
+feat/module-name
+fix/bug-description
+refactor/component-name
+chore/task-name
+
+Commit Format (Conventional Commits)
+type(scope): descriptionfeat(client-manager): add bulk delete functionality
+fix(time-tracker): correct pause/resume state transition
+refactor(invoice): extract PDF generation to utility
+style(ui): align button focus states with design system
+docs(readme): update setup instructions
+chore(deps): upgrade React Query to v5
+
+## Style Rules (NON-NEGOTIABLE)
+
+1. NEVER use raw hex classes in component markup
+2. NEVER use Tailwind default palette classes for product UI colors
+3. ALWAYS use semantic Lumea token utilities
+4. Do NOT delete or rename existing token mappings in tailwind.config.ts
+5. Do NOT alter token variables in app/globals.css without explicit approval
+6. Keep business logic outside presentational primitives
+7. Avoid inline styles for design-system behavior
+8. Avoid duplicate style systems
+9. Keep component APIs stable; evolve via additive changes
+10. Maintain strict TypeScript typing for all reusable components
+
+## Pre-Merge Checklist
+
+- [ ] No raw hex or default Tailwind color classes in component markup
+- [ ] Semantic tokens used for all color decisions
+- [ ] Labels, hints, and errors implemented for form controls
+- [ ] Focus-visible styles verified for keyboard navigation
+- [ ] Empty/loading/error states present
+- [ ] Reused shared primitives where applicable
+- [ ] Verified in light and dark theme
+- [ ] Verified on mobile and desktop breakpoints
+- [ ] TypeScript strict mode passes
+- [ ] ESLint passes
+- [ ] Tests passing (if applicable)
+
+## Content and Language Standards
+
+1. Use concise action-oriented labels
+2. Use sentence case in helper and error text
+3. Avoid vague errors; provide next-step guidance
+4. Keep status language consistent across modules
+
+## Common Patterns
+
+### Date Formatting
+```typescriptconst formatDate = (date: Date) =>
+new Intl.DateTimeFormat('en-US', {
+dateStyle: 'medium'
+}).format(date);
+
+### Currency Formatting
+```typescriptconst formatCurrency = (amount: number, currency = 'USD') =>
+new Intl.NumberFormat('en-US', {
+style: 'currency',
+currency
+}).format(amount);
+
+### Error Handling
+```typescript// Toast notifications for user-facing errors
+// console.error for debugging
+// Graceful degradation on API failures
+
+## Module-Specific Behavior
+
+### Client Manager
+- Full CRUD with optimistic updates
+- Search with debounce
+- Bulk operations (post-MVP)
+- Avatar upload support (post-MVP)
+
+### Time Tracker
+- Running timer with pause/resume
+- Manual entry creation
+- Timer edit/delete
+- Weekly summary view
+- Export timesheets (post-MVP)
+
+### Contract Generator
+- Template-based generation
+- Guest + authenticated flows
+- PDF export via share token
+- Client auto-populate
+
+### Invoice Generator
+- Itemized line items
+- Payment status tracking
+- Guest + authenticated flows
+- PDF export via share token
+- Client auto-populate
+
+### Income Tracker
+- Period-based insights (weekly, monthly, quarterly)
+- Outstanding vs. paid breakdown
+- Client-level earnings
+- Read-only (data-driven from invoices)
+
+## Source of Truth
+
+1. Token variables: app/globals.css
+2. Tailwind mappings: tailwind.config.ts
+3. Primitive components: components/ui
+4. Workspace shell: components/workspace
+5. Module composition: components/modules
+6. Design system documentation: designsystem.md
+7. Color system reference: docs/stacklite-complete-color-system.md
+8. Copilot instructions: .github/copilot-instructions.md
+
+If conflict exists between implementation and documentation:
+1. Align implementation back to tokenized foundations
+2. Update documentation to reflect intentional behavior changes
+3. Never silently diverge from token system

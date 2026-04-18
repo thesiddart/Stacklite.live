@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useContractStore, DEFAULT_CLAUSES } from '@/stores/contractStore'
+import { normalizeContractFormForSave } from '@/lib/utils/normalizeContractForm'
 import { useCreateContract, useUpdateContract } from '@/hooks/useContracts'
 import { useClients } from '@/hooks/useClients'
 import { useAuth } from '@/hooks/useAuth'
@@ -30,6 +31,7 @@ export function ContractEditor() {
   const isGuest = useSessionStore((s) => s.isGuest)
   const openWithAction = useSavePromptStore((s) => s.openWithAction)
   const [isPreviewFocused, setIsPreviewFocused] = useState(false)
+  const [saveErrorMessage, setSaveErrorMessage] = useState('')
 
   const selectedClient = useMemo(
     () => clients.find((client) => client.id === formData.client_id),
@@ -37,47 +39,54 @@ export function ContractEditor() {
   )
 
   const handleSave = useCallback(async () => {
-    if (!isDirty && saveStatus !== 'idle') return
+    if (!isDirty) return
 
     setSaveStatus('saving')
+    setSaveErrorMessage('')
 
     try {
+      const payload = normalizeContractFormForSave(formData)
+
       if (activeContractId) {
         await updateMutation.mutateAsync({
           id: activeContractId,
-          data: formData,
+          data: payload,
         })
       } else {
         const created = await createMutation.mutateAsync({
-          client_id: formData.client_id || null,
-          template_type: formData.template_type || null,
-          project_name: formData.project_name || null,
-          scope: formData.scope || null,
-          deliverables: formData.deliverables || [],
-          exclusions: formData.exclusions || null,
-          start_date: formData.start_date || null,
-          end_date: formData.end_date || null,
-          milestones: formData.milestones || [],
-          total_fee: formData.total_fee || null,
-          currency: formData.currency || 'USD',
-          payment_structure: formData.payment_structure || null,
-          payment_method: formData.payment_method || null,
-          clauses: formData.clauses || DEFAULT_CLAUSES,
-          status: formData.status || 'sent',
-          freelancer_name: formData.freelancer_name || null,
-          freelancer_email: formData.freelancer_email || null,
-          freelancer_location: formData.freelancer_location || null,
-          client_name: formData.client_name || null,
-          client_email: formData.client_email || null,
+          client_id: payload.client_id || null,
+          template_type: payload.template_type || null,
+          project_name: payload.project_name || null,
+          scope: payload.scope || null,
+          deliverables: payload.deliverables || [],
+          exclusions: payload.exclusions || null,
+          start_date: payload.start_date || null,
+          end_date: payload.end_date || null,
+          milestones: payload.milestones || [],
+          total_fee: payload.total_fee || null,
+          currency: payload.currency || 'USD',
+          payment_structure: payload.payment_structure || null,
+          payment_method: payload.payment_method || null,
+          clauses: payload.clauses || DEFAULT_CLAUSES,
+          status: payload.status || 'sent',
+          freelancer_name: payload.freelancer_name || null,
+          freelancer_email: payload.freelancer_email || null,
+          freelancer_location: payload.freelancer_location || null,
+          client_name: payload.client_name || null,
+          client_email: payload.client_email || null,
         })
         useContractStore.getState().setActiveContract(created.id)
       }
       setSaveStatus('saved')
+      setSaveErrorMessage('')
       useContractStore.setState({ isDirty: false })
-    } catch {
+    } catch (error: unknown) {
       setSaveStatus('error')
+      setSaveErrorMessage(
+        error instanceof Error ? error.message : 'Could not save contract. Please try again.'
+      )
     }
-  }, [activeContractId, createMutation, formData, isDirty, saveStatus, setSaveStatus, updateMutation])
+  }, [activeContractId, createMutation, formData, isDirty, setSaveStatus, updateMutation])
 
   // Auto-save every 30 seconds when dirty
   useEffect(() => {
@@ -222,6 +231,12 @@ export function ContractEditor() {
           </button>
         </div>
       </div>
+
+      {saveStatus === 'error' && saveErrorMessage ? (
+        <p className="text-[12px] leading-none text-feedback-error-text" role="alert">
+          {saveErrorMessage}
+        </p>
+      ) : null}
 
       {/* Two column layout */}
       {isPreviewFocused ? (

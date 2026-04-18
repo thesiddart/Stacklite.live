@@ -68,8 +68,10 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <PlausibleScript />
-        <QueryProvider>{children}</QueryProvider>
-        <CookieBanner />
+        <QueryProvider>
+          {children}
+          <CookieBanner />
+        </QueryProvider>
       </body>
     </html>
   );

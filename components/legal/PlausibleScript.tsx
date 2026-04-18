@@ -8,9 +8,12 @@ import {
 } from '@/lib/cookieConsent'
 
 export function PlausibleScript() {
+  const isProduction = process.env.NODE_ENV === 'production'
   const [enabled, setEnabled] = useState(false)
 
   useEffect(() => {
+    if (!isProduction) return
+
     const refresh = () => {
       setEnabled(hasAcceptedCookieConsent())
     }
@@ -23,9 +26,9 @@ export function PlausibleScript() {
       window.removeEventListener(COOKIE_CONSENT_CHANGE_EVENT, refresh)
       window.removeEventListener('storage', refresh)
     }
-  }, [])
+  }, [isProduction])
 
-  if (!enabled) return null
+  if (!isProduction || !enabled) return null
 
   return (
     <Script

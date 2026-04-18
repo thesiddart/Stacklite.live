@@ -40,10 +40,10 @@ export function WorkspaceMock() {
   const active = tabContent[activeTab]
 
   return (
-    <div className="mx-auto mt-10 max-w-[920px] overflow-hidden rounded-2xl border border-border-brand bg-background-base text-text-base shadow-lg">
+    <div className="mx-auto mt-10 max-w-[920px] overflow-hidden rounded-2xl border border-button-primary bg-background-base text-text-base shadow-lg">
       <div className="flex items-center justify-between border-b border-border-muted bg-background-highlight px-4 py-3 text-xs text-text-muted">
         <div className="inline-flex items-center gap-2">
-          <Image src="/logo-dark.svg" alt="Stacklite" width={76} height={20} className="h-5 w-auto" />
+          <Image src="/logo-dark.svg" alt="Stacklite" width={76} height={20} style={{ width: 'auto', height: 'auto' }} />
         </div>
         <div className="inline-flex items-center gap-2">
           <span className="rounded-full border border-border-base px-2 py-1">04:40 PM</span>

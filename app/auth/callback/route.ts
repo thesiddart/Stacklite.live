@@ -1,25 +1,26 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { getSafePostAuthRedirectPath } from '@/lib/supabase/safeRedirectPath'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard'
+  const next = getSafePostAuthRedirectPath(searchParams.get('next'))
   const migrate = searchParams.get('migrate')
 
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      // If migrate flag is set, pass it through to the dashboard
-      // The client-side will pick it up and trigger migrateGuestData()
-      const redirectUrl = migrate === 'true'
-        ? `${origin}${next}?migration=pending`
-        : `${origin}${next}`
+      const redirectUrl = new URL(next, origin)
+      if (migrate === 'true') {
+        redirectUrl.searchParams.set('migration', 'pending')
+      }
       return NextResponse.redirect(redirectUrl)
     }
   }
 
-  // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/login?error=Could not authenticate user`)
+  const failureUrl = new URL('/login', origin)
+  failureUrl.searchParams.set('error', 'Could not authenticate user')
+  return NextResponse.redirect(failureUrl)
 }

@@ -9,6 +9,7 @@ import Image from 'next/image'
 import { AppNavbar } from '@/components/layout/AppNavbar'
 import { track } from '@/lib/analytics'
 import { SmsBold, UserBold } from 'sicons'
+import { buildAuthRedirectUrl } from '@/lib/supabase/env'
 
 function normalizeEmail(value: string): string {
   return value.trim().toLowerCase()
@@ -67,8 +68,7 @@ function SignupPageContent() {
 
     try {
       const supabase = getSupabaseClient()
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || window.location.origin
-      const callbackUrl = `${appUrl}/auth/callback?next=/dashboard`
+      const callbackUrl = buildAuthRedirectUrl('/auth/callback?next=/dashboard')
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -116,8 +116,7 @@ function SignupPageContent() {
 
     try {
       const supabase = getSupabaseClient()
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || window.location.origin
-      const callbackUrl = `${appUrl}/auth/callback?next=/dashboard`
+      const callbackUrl = buildAuthRedirectUrl('/auth/callback?next=/dashboard')
 
       const { error: resendError } = await supabase.auth.resend({
         type: 'signup',
@@ -153,8 +152,7 @@ function SignupPageContent() {
     setError('')
     try {
       const supabase = getSupabaseClient()
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || window.location.origin
-      const callbackUrl = `${appUrl}/auth/callback?next=/dashboard`
+      const callbackUrl = buildAuthRedirectUrl('/auth/callback?next=/dashboard')
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -173,8 +171,7 @@ function SignupPageContent() {
     setError('')
     try {
       const supabase = getSupabaseClient()
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || window.location.origin
-      const callbackUrl = `${appUrl}/auth/callback?next=/dashboard`
+      const callbackUrl = buildAuthRedirectUrl('/auth/callback?next=/dashboard')
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',

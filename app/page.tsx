@@ -55,9 +55,9 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="inline-flex items-center rounded-xl border border-border-base bg-background-base px-3 py-2"
+              className="inline-flex items-center rounded-xl border border-border-base bg-background-base px-2.5 py-1.5"
             >
-              <Image src="/logo-dark.svg" alt="Stacklite" width={96} height={24} className="h-6 w-auto" />
+              <Image src="/logo-dark.svg" alt="Stacklite" width={96} height={24} priority style={{ width: 'auto', height: '20px' }} />
             </Link>
             <span className="rounded-full border border-border-base bg-background-highlight px-2 py-0.5 text-[10px] text-text-muted">
               Beta
@@ -107,7 +107,7 @@ export default function Home() {
                 <Button asChild size="lg">
                   <Link href="/dashboard">Open workspace</Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="border-border-base bg-transparent !text-button-secondary-fg hover:bg-background-highlight hover:!text-button-secondary-fg">
+                <Button asChild variant="outline" size="lg" className="border-button-primary bg-transparent !text-button-secondary-fg hover:bg-background-highlight hover:!text-button-secondary-fg">
                   <Link href="#how-it-works" className="!text-button-secondary-fg hover:!text-button-secondary-fg">See how it works</Link>
                 </Button>
               </div>
@@ -155,7 +155,7 @@ export default function Home() {
 
         <section id="guest" className="relative px-5 py-16">
           <div className="absolute inset-0 dots-background opacity-20 [background-size:20px_20px]" />
-          <div className="relative mx-auto grid w-full max-w-[920px] gap-7 rounded-2xl border border-border-brand bg-background-base p-8 lg:grid-cols-2">
+          <div className="relative mx-auto grid w-full max-w-[920px] gap-7 rounded-2xl border border-button-primary bg-background-base p-8 lg:grid-cols-2">
             <div>
               <div className="mb-3 flex flex-wrap gap-2">
                 <span className="rounded-full border border-border-base px-3 py-1 text-xs text-text-muted">No credit card</span>

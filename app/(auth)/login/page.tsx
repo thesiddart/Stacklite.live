@@ -7,6 +7,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { LoginBold } from 'sicons'
 import { createClient } from '@/lib/supabase/client'
 import { AppNavbar } from '@/components/layout/AppNavbar'
+import { buildAuthRedirectUrl } from '@/lib/supabase/env'
+import { getSafePostAuthRedirectPath } from '@/lib/supabase/safeRedirectPath'
+import { getEmailPasswordSignInUserMessage } from '@/lib/supabase/signInUserMessages'
 
 function GoogleIcon() {
   return <Image src="/icons/social/google-original.svg" alt="Google" width={16} height={16} />
@@ -34,6 +37,8 @@ function LoginPageContent() {
   )
 
   const callbackError = searchParams.get('error')
+  const redirectedFrom = searchParams.get('redirectedFrom')
+  const postAuthPath = getSafePostAuthRedirectPath(redirectedFrom)
 
   const handleEmailSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -59,7 +64,7 @@ function LoginPageContent() {
         throw signInError
       }
 
-      router.push('/dashboard')
+      router.push(postAuthPath)
       router.refresh()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Sign in failed. Please try again.'
@@ -79,7 +84,9 @@ function LoginPageContent() {
             setAttempts(0)
           }, 15 * 60 * 1000)
         } else {
-          setError(`${message} (${5 - nextAttempts} attempts remaining)`)
+          const mapped = getEmailPasswordSignInUserMessage(err)
+          const body = mapped ?? message
+          setError(`${body} (${5 - nextAttempts} attempts remaining)`)
         }
       }
     } finally {
@@ -99,8 +106,7 @@ function LoginPageContent() {
 
     try {
       const supabase = createClient()
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || window.location.origin
-      const redirectUrl = `${appUrl}/auth/reset-password`
+      const redirectUrl = buildAuthRedirectUrl('/auth/reset-password')
 
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
         redirectTo: redirectUrl,
@@ -122,8 +128,10 @@ function LoginPageContent() {
 
     try {
       const supabase = createClient()
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || window.location.origin
-      const callbackUrl = `${appUrl}/auth/callback?next=/dashboard`
+      const nextPath = getSafePostAuthRedirectPath(searchParams.get('redirectedFrom'))
+      const callbackUrl = buildAuthRedirectUrl(
+        `/auth/callback?next=${encodeURIComponent(nextPath)}`
+      )
 
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider,
@@ -204,15 +212,34 @@ function LoginPageContent() {
               <hr className="h-px flex-1 border-0 bg-border-muted" />
             </div>
 
-            <form id="login-form" onSubmit={handleEmailSignIn} className="flex flex-col gap-4">
+            <form
+              id="login-form"
+              onSubmit={handleEmailSignIn}
+              className="flex flex-col gap-4"
+              aria-describedby={
+                [callbackError && 'login-callback-error-alert', error && 'login-form-error-alert']
+                  .filter(Boolean)
+                  .join(' ') || undefined
+              }
+            >
               {callbackError && (
-                <div className="rounded-md border border-feedback-error-base/40 bg-feedback-error-base/10 p-md">
+                <div
+                  id="login-callback-error-alert"
+                  role="alert"
+                  aria-live="assertive"
+                  className="rounded-md border border-feedback-error-base/40 bg-feedback-error-base/10 p-md"
+                >
                   <p className="text-sm text-feedback-error-text">{callbackError}</p>
                 </div>
               )}
 
               {error && (
-                <div className="rounded-md border border-feedback-error-base/40 bg-feedback-error-base/10 p-md">
+                <div
+                  id="login-form-error-alert"
+                  role="alert"
+                  aria-live="assertive"
+                  className="rounded-md border border-feedback-error-base/40 bg-feedback-error-base/10 p-md"
+                >
                   <p className="text-sm text-feedback-error-text">{error}</p>
                 </div>
               )}
