@@ -1,22 +1,19 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { readCookieConsent, type ConsentValue, writeCookieConsent } from '@/lib/cookieConsent'
 
 export function CookieBanner() {
-  const [visible, setVisible] = useState(false)
+  const [consent, setConsent] = useState<ConsentValue | null>(() => readCookieConsent())
 
-  useEffect(() => {
-    if (!readCookieConsent()) setVisible(true)
-  }, [])
-
-  const setConsent = (value: ConsentValue) => {
+  const handleConsent = (value: ConsentValue) => {
+    // Always hide immediately in UI, then persist best-effort.
+    setConsent(value)
     writeCookieConsent(value)
-    setVisible(false)
   }
 
-  if (!visible) return null
+  if (consent) return null
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-[300] md:right-auto md:w-[430px]">
@@ -36,7 +33,7 @@ export function CookieBanner() {
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <button
-            onClick={() => setConsent('accepted')}
+            onClick={() => handleConsent('accepted')}
             className="w-full rounded-lg bg-button-primary px-4 py-2 text-sm font-medium text-button-primary-fg transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand sm:w-auto sm:flex-1"
             type="button"
             aria-label="Accept strictly necessary cookie"
@@ -44,7 +41,7 @@ export function CookieBanner() {
             Accept
           </button>
           <button
-            onClick={() => setConsent('declined')}
+            onClick={() => handleConsent('declined')}
             className="w-full rounded-lg border border-border-base bg-background-base px-4 py-2 text-sm font-medium text-text-base transition-colors hover:bg-background-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand sm:w-auto sm:flex-1"
             type="button"
             aria-label="Decline strictly necessary cookie"

@@ -10,6 +10,8 @@ import { AppNavbar } from '@/components/layout/AppNavbar'
 import { buildAuthRedirectUrl } from '@/lib/supabase/env'
 import { getSafePostAuthRedirectPath } from '@/lib/supabase/safeRedirectPath'
 import { getEmailPasswordSignInUserMessage } from '@/lib/supabase/signInUserMessages'
+import { useSessionStore } from '@/stores/sessionStore'
+import { migrateGuestData } from '@/lib/migration/migrateGuestData'
 
 function GoogleIcon() {
   return <Image src="/icons/social/google-original.svg" alt="Google" width={16} height={16} />
@@ -22,6 +24,7 @@ function GithubIcon() {
 function LoginPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const isGuest = useSessionStore((s) => s.isGuest)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -39,6 +42,8 @@ function LoginPageContent() {
   const callbackError = searchParams.get('error')
   const redirectedFrom = searchParams.get('redirectedFrom')
   const postAuthPath = getSafePostAuthRedirectPath(redirectedFrom)
+  const shouldMigrateGuest =
+    isGuest || searchParams.get('migrate') === 'true'
 
   const handleEmailSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -55,13 +60,17 @@ function LoginPageContent() {
 
     try {
       const supabase = createClient()
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (signInError) {
         throw signInError
+      }
+
+      if (shouldMigrateGuest && signInData.user?.id) {
+        await migrateGuestData(signInData.user.id)
       }
 
       router.push(postAuthPath)
@@ -129,8 +138,9 @@ function LoginPageContent() {
     try {
       const supabase = createClient()
       const nextPath = getSafePostAuthRedirectPath(searchParams.get('redirectedFrom'))
+      const migrateQuery = shouldMigrateGuest ? '&migrate=true' : ''
       const callbackUrl = buildAuthRedirectUrl(
-        `/auth/callback?next=${encodeURIComponent(nextPath)}`
+        `/auth/callback?next=${encodeURIComponent(nextPath)}${migrateQuery}`
       )
 
       const { error: oauthError } = await supabase.auth.signInWithOAuth({

@@ -108,7 +108,8 @@ export function AppNavbar({
   const { data: profile } = useProfile(Boolean(user))
   const updateProfileMutation = useUpdateProfile()
   const deleteAccountMutation = useDeleteAccount()
-  const [currentTime, setCurrentTime] = useState<string>(() => formatWorkspaceTime(new Date()))
+  // Keep SSR and first client render deterministic to avoid hydration mismatches.
+  const [currentTime, setCurrentTime] = useState<string>('00:00:00 AM')
   const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window === 'undefined') {
       return 'light'
@@ -136,6 +137,10 @@ export function AppNavbar({
   const themeMenuRef = useRef<HTMLDivElement | null>(null)
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
   const photoInputId = useId()
+  const themeMenuId = useId()
+  const profileMenuId = useId()
+  const deleteDialogTitleId = useId()
+  const deleteDialogDescriptionId = useId()
   const authInputClassName =
     'theme-shell-field h-9 w-full rounded-[6px] pl-3 pr-3 py-1 text-[13px] leading-5 focus-visible:border-[var(--primary)] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
   const authTextareaClassName =
@@ -290,6 +295,23 @@ export function AppNavbar({
     }
   }
 
+  useEffect(() => {
+    if (!isDeleteAccountModalOpen) {
+      return
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !deleteAccountMutation.isPending) {
+        setIsDeleteAccountModalOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [isDeleteAccountModalOpen, deleteAccountMutation.isPending])
+
   return (
     <>
     <header
@@ -325,17 +347,20 @@ export function AppNavbar({
             <button
               type="button"
               aria-label="Theme"
+              aria-expanded={isThemeMenuOpen}
+              aria-controls={themeMenuId}
               onClick={() => {
                 setIsThemeMenuOpen((prev) => !prev)
                 setIsMusicMenuOpen(false)
                 closeProfileMenu()
               }}
-              className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[var(--primary)] text-white"
+              className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[var(--primary)] text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand"
             >
               <ColorfilterBold size={16} />
             </button>
 
             <div
+              id={themeMenuId}
               aria-hidden={!isThemeMenuOpen}
               className={`theme-shell-card absolute right-0 top-[48px] z-50 overflow-hidden rounded-[18px] p-4 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                 isThemeMenuOpen
@@ -398,11 +423,12 @@ export function AppNavbar({
             <button
               type="button"
               aria-label="Music"
+              aria-expanded={isMusicMenuOpen}
               onClick={() => {
                 setIsMusicMenuOpen((prev) => !prev)
                 closeProfileMenu()
               }}
-              className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[var(--primary)] text-white"
+              className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[var(--primary)] text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand"
             >
               <MusicCircleBold size={16} />
             </button>
@@ -430,6 +456,8 @@ export function AppNavbar({
             <button
               type="button"
               aria-label="Profile"
+              aria-expanded={isProfileMenuOpen}
+              aria-controls={profileMenuId}
               onClick={() => {
                 if (!showProfileDropdown) {
                   return
@@ -449,7 +477,7 @@ export function AppNavbar({
                 showProfileActiveBorder && isProfileMenuOpen
                   ? 'border border-[var(--tertiary)]'
                   : 'border border-border-brand'
-              }`}
+              } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand`}
             >
               {profilePhoto ? (
                 <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-[6px] bg-white">
@@ -468,6 +496,7 @@ export function AppNavbar({
 
             {showProfileDropdown && (
               <div
+                id={profileMenuId}
                 aria-hidden={!isProfileMenuOpen}
                 className={`theme-shell-card absolute right-0 top-[48px] z-50 overflow-hidden rounded-[10px] p-4 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                   isProfileMenuOpen
@@ -688,7 +717,7 @@ export function AppNavbar({
                           onClick={onConnectGithub}
                           disabled={connectDisabled}
                           aria-label="Connect GitHub"
-                          className="disabled:opacity-60"
+                          className="rounded-[6px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand disabled:opacity-60"
                         >
                           <GithubIcon />
                         </button>
@@ -697,11 +726,11 @@ export function AppNavbar({
                           onClick={onConnectGoogle}
                           disabled={connectDisabled}
                           aria-label="Connect Gmail"
-                          className="disabled:opacity-60"
+                          className="rounded-[6px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand disabled:opacity-60"
                         >
                           <GoogleIcon />
                         </button>
-                        <button type="button" aria-label="Connect Notion">
+                        <button type="button" aria-label="Connect Notion" className="rounded-[6px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand">
                           <NotionIcon />
                         </button>
                       </div>
@@ -719,12 +748,18 @@ export function AppNavbar({
           className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fadeIn"
           onClick={handleDeleteBackdropClick}
         >
-          <div className="mx-4 w-full max-w-[400px] animate-slideIn rounded-[16px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-6 shadow-lg">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={deleteDialogTitleId}
+            aria-describedby={deleteDialogDescriptionId}
+            className="mx-4 w-full max-w-[400px] animate-slideIn rounded-[16px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-6 shadow-lg"
+          >
             <div>
-              <h2 className="text-[16px] font-semibold text-text-base">
+              <h2 id={deleteDialogTitleId} className="text-[16px] font-semibold text-text-base">
                 Delete your account permanently
               </h2>
-              <p className="mt-2 text-[13px] leading-relaxed text-text-muted">
+              <p id={deleteDialogDescriptionId} className="mt-2 text-[13px] leading-relaxed text-text-muted">
                 This will permanently remove your Stacklite account and all associated access. This action cannot be undone.
               </p>
             </div>
@@ -734,7 +769,7 @@ export function AppNavbar({
                 type="button"
                 onClick={handleDeleteAccount}
                 disabled={deleteAccountMutation.isPending}
-                className="flex h-10 w-full items-center justify-center rounded-full bg-feedback-error-base text-[14px] font-medium text-white transition-all hover:opacity-90 disabled:opacity-60"
+                className="flex h-10 w-full items-center justify-center rounded-full bg-feedback-error-base text-[14px] font-medium text-white transition-all hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand disabled:opacity-60"
               >
                 {deleteAccountMutation.isPending ? 'Deleting...' : 'Delete account'}
               </button>
@@ -742,7 +777,7 @@ export function AppNavbar({
                 type="button"
                 onClick={() => setIsDeleteAccountModalOpen(false)}
                 disabled={deleteAccountMutation.isPending}
-                className="flex h-10 w-full items-center justify-center rounded-full border border-[var(--surface-divider)] text-[13px] font-medium text-text-muted transition-all hover:bg-[var(--surface-overlay)] disabled:opacity-60"
+                className="flex h-10 w-full items-center justify-center rounded-full border border-[var(--surface-divider)] text-[13px] font-medium text-text-muted transition-all hover:bg-[var(--surface-overlay)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand disabled:opacity-60"
               >
                 Cancel
               </button>

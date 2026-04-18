@@ -43,9 +43,32 @@ import {
 
 function DashboardContent() {
   const formTransitionMs = 220
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const incomingModule = useMemo<
+    'contract' | 'invoice' | 'income' | 'clients' | 'time' | 'invalid' | null
+  >(() => {
+    const raw = searchParams.get('module')
+    if (!raw) {
+      return null
+    }
+
+    const key = raw.trim().toLowerCase()
+    if (key === 'contract' || key === 'invoice' || key === 'income' || key === 'clients' || key === 'time') {
+      return key
+    }
+
+    return 'invalid'
+  }, [searchParams])
   const [isClientsCollapsed, setIsClientsCollapsed] = useState(false)
   const [isTimeTrackerCollapsed, setIsTimeTrackerCollapsed] = useState(false)
-  const [activeDockTab, setActiveDockTab] = useState<'contract' | 'invoice' | 'income' | null>('contract')
+  const [activeDockTab, setActiveDockTab] = useState<'contract' | 'invoice' | 'income' | null>(() => {
+    if (incomingModule === 'contract') return 'contract'
+    if (incomingModule === 'invoice') return 'invoice'
+    if (incomingModule === 'income') return 'income'
+    if (incomingModule === 'clients' || incomingModule === 'time') return null
+    return 'contract'
+  })
   const [isCreateClientOpen, setIsCreateClientOpen] = useState(false)
   const [isClientFormMounted, setIsClientFormMounted] = useState(false)
   const [isClientFormVisible, setIsClientFormVisible] = useState(false)
@@ -62,8 +85,6 @@ function DashboardContent() {
   const { data: invoices = [] } = useInvoices()
   const { data: timeLogs = [] } = useTimeLogs()
   const { user, isLoading: isAuthLoading } = useAuth()
-  const searchParams = useSearchParams()
-  const router = useRouter()
 
   useEffect(() => {
     if (isAuthLoading) {
@@ -87,41 +108,24 @@ function DashboardContent() {
 
   // Landing page "Open module" links: /dashboard?module=contract|invoice|time|clients|income
   useEffect(() => {
-    const raw = searchParams.get('module')
-
-    if (!raw) {
+    if (!incomingModule) {
       return
     }
 
-    const key = raw.trim().toLowerCase()
-
-    const allowed = ['contract', 'invoice', 'time', 'clients', 'income'] as const
-    if (!(allowed as readonly string[]).includes(key)) {
+    if (incomingModule === 'invalid') {
       router.replace('/dashboard', { scroll: false })
       return
     }
 
-    if (key === 'contract') {
-      setActiveDockTab('contract')
+    if (incomingModule === 'contract') {
       setContractView(contracts.length > 0 ? 'list' : 'templates')
-    } else if (key === 'invoice') {
-      setActiveDockTab('invoice')
+    } else if (incomingModule === 'invoice') {
       setInvoiceView('list')
-    } else if (key === 'income') {
-      setActiveDockTab('income')
-    } else if (key === 'clients') {
-      setActiveDockTab(null)
-      setIsClientsCollapsed(false)
-      setIsCreateClientOpen(false)
-      setEditingClient(null)
-    } else if (key === 'time') {
-      setActiveDockTab(null)
-      setIsTimeTrackerCollapsed(false)
     }
 
     router.replace('/dashboard', { scroll: false })
   }, [
-    searchParams,
+    incomingModule,
     router,
     contracts.length,
     setContractView,

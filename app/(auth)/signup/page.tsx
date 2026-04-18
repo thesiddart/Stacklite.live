@@ -10,6 +10,8 @@ import { AppNavbar } from '@/components/layout/AppNavbar'
 import { track } from '@/lib/analytics'
 import { SmsBold, UserBold } from 'sicons'
 import { buildAuthRedirectUrl } from '@/lib/supabase/env'
+import { useSessionStore } from '@/stores/sessionStore'
+import { migrateGuestData } from '@/lib/migration/migrateGuestData'
 
 function normalizeEmail(value: string): string {
   return value.trim().toLowerCase()
@@ -17,6 +19,7 @@ function normalizeEmail(value: string): string {
 
 function SignupPageContent() {
   const searchParams = useSearchParams()
+  const isGuest = useSessionStore((s) => s.isGuest)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -30,6 +33,8 @@ function SignupPageContent() {
   const [verificationError, setVerificationError] = useState('')
   const [isResending, setIsResending] = useState(false)
   const router = useRouter()
+  const shouldMigrateGuest =
+    isGuest || searchParams.get('migrate') === 'true'
 
   function getSupabaseClient() {
     if (!getSupabaseEnv().isConfigured) {
@@ -68,7 +73,9 @@ function SignupPageContent() {
 
     try {
       const supabase = getSupabaseClient()
-      const callbackUrl = buildAuthRedirectUrl('/auth/callback?next=/dashboard')
+      const callbackUrl = buildAuthRedirectUrl(
+        `/auth/callback?next=/dashboard${shouldMigrateGuest ? '&migrate=true' : ''}`
+      )
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -84,6 +91,9 @@ function SignupPageContent() {
       if (error) throw error
 
       if (data.session) {
+        if (shouldMigrateGuest && data.user?.id) {
+          await migrateGuestData(data.user.id)
+        }
         track('signup_completed')
         router.push('/dashboard')
         router.refresh()
@@ -116,7 +126,9 @@ function SignupPageContent() {
 
     try {
       const supabase = getSupabaseClient()
-      const callbackUrl = buildAuthRedirectUrl('/auth/callback?next=/dashboard')
+      const callbackUrl = buildAuthRedirectUrl(
+        `/auth/callback?next=/dashboard${shouldMigrateGuest ? '&migrate=true' : ''}`
+      )
 
       const { error: resendError } = await supabase.auth.resend({
         type: 'signup',
@@ -152,7 +164,9 @@ function SignupPageContent() {
     setError('')
     try {
       const supabase = getSupabaseClient()
-      const callbackUrl = buildAuthRedirectUrl('/auth/callback?next=/dashboard')
+      const callbackUrl = buildAuthRedirectUrl(
+        `/auth/callback?next=/dashboard${shouldMigrateGuest ? '&migrate=true' : ''}`
+      )
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -171,7 +185,9 @@ function SignupPageContent() {
     setError('')
     try {
       const supabase = getSupabaseClient()
-      const callbackUrl = buildAuthRedirectUrl('/auth/callback?next=/dashboard')
+      const callbackUrl = buildAuthRedirectUrl(
+        `/auth/callback?next=/dashboard${shouldMigrateGuest ? '&migrate=true' : ''}`
+      )
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
