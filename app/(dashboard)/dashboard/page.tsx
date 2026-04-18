@@ -85,6 +85,49 @@ function DashboardContent() {
     }
   }, [searchParams, user?.id])
 
+  // Landing page "Open module" links: /dashboard?module=contract|invoice|time|clients|income
+  useEffect(() => {
+    const raw = searchParams.get('module')
+
+    if (!raw) {
+      return
+    }
+
+    const key = raw.trim().toLowerCase()
+
+    const allowed = ['contract', 'invoice', 'time', 'clients', 'income'] as const
+    if (!(allowed as readonly string[]).includes(key)) {
+      router.replace('/dashboard', { scroll: false })
+      return
+    }
+
+    if (key === 'contract') {
+      setActiveDockTab('contract')
+      setContractView(contracts.length > 0 ? 'list' : 'templates')
+    } else if (key === 'invoice') {
+      setActiveDockTab('invoice')
+      setInvoiceView('list')
+    } else if (key === 'income') {
+      setActiveDockTab('income')
+    } else if (key === 'clients') {
+      setActiveDockTab(null)
+      setIsClientsCollapsed(false)
+      setIsCreateClientOpen(false)
+      setEditingClient(null)
+    } else if (key === 'time') {
+      setActiveDockTab(null)
+      setIsTimeTrackerCollapsed(false)
+    }
+
+    router.replace('/dashboard', { scroll: false })
+  }, [
+    searchParams,
+    router,
+    contracts.length,
+    setContractView,
+    setInvoiceView,
+  ])
+
   const newClientsCount = useMemo(() => {
     const now = new Date()
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)

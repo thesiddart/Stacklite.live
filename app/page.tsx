@@ -11,33 +11,34 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
 }
 
+/** Opens the canvas workspace on /dashboard with the matching module (single-page modules, not standalone routes). */
 const allModules = [
   {
     name: 'Contract Generator',
     description: 'Professional contracts in minutes with share-ready templates.',
-    href: '/contracts',
+    module: 'contract',
   },
   {
     name: 'Invoice Generator',
     description: 'Line items, tax, discounts, and clean PDF export.',
-    href: '/invoices',
+    module: 'invoice',
   },
   {
     name: 'Time Tracker',
     description: 'Track hours against clients and convert entries to invoices.',
-    href: '/time',
+    module: 'time',
   },
   {
     name: 'Client Manager',
     description: 'Store client data once and auto-fill across modules.',
-    href: '/clients',
+    module: 'clients',
   },
   {
     name: 'Income Tracker',
     description: 'Monthly earnings, outstanding totals, and trend visibility.',
-    href: '/income',
+    module: 'income',
   },
-]
+] as const
 
 const guestHighlights = [
   { title: 'Guest mode starts instantly', detail: 'All data saves for 24 hours in your browser while you explore.' },
@@ -133,7 +134,10 @@ export default function Home() {
               <article key={module.name} className="rounded-xl border border-border-base bg-background-highlight p-4">
                 <h3 className="text-sm font-medium text-text-base">{module.name}</h3>
                 <p className="mt-2 text-xs leading-relaxed text-text-muted">{module.description}</p>
-                <Link href={module.href} className="mt-3 inline-block text-xs font-medium text-text-brand hover:text-link-hover">
+                <Link
+                  href={`/dashboard?module=${module.module}`}
+                  className="mt-3 inline-block text-xs font-medium text-text-brand hover:text-link-hover"
+                >
                   Open module →
                 </Link>
               </article>
