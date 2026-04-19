@@ -1,0 +1,17 @@
+{
+  "name": "Stacklite",
+  "short_name": "Stacklite",
+  "description": "The freelancer operating system",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e1410",
+  "theme_color": "#2d8a64",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -93,16 +93,26 @@ app/                         App Router routes and layouts
 ├── c/[token]/              Contract share view
 ├── i/[token]/              Invoice share view
 ├── globals.css             CSS custom properties (token source)
-└── layout.tsx              Root layoutcomponents/
+└── layout.tsx              Root layout
+
+components/
 ├── ui/                      Primitives (Button, Input, Card, Modal, etc.)
 ├── workspace/              Canvas, ModuleCard, Dock, Navbar
 ├── layout/                 AppNavbar, GuestIndicator, SavePromptModal, SignInButton
-└── modules/                ClientManager, TimeTracker, ContractGenerator, InvoiceGenerator, IncomeTrackerhooks/                       React Query and app hooks
-lib/                         API, validation, types, utilities, Supabase clients
+└── modules/                ClientManager, TimeTracker, ContractGenerator, InvoiceGenerator, IncomeTracker
+
+hooks/                       React Query and app hooks
+lib/                         API, validation, types, utilities, Supabase clients, navigation registries (e.g. workspaceModules)
 stores/                      Zustand stores (guest-aware)
 supabase/migrations/         Database schema and migrations
 tests/                       Unit tests (Vitest)
-docs/                        Product and implementation docs
+docs/                        Product and implementation docs (includes architecture-standards.md)
+
+### Cross-cutting architecture (scalability)
+
+- **Canonical workspace modules** — IDs, `?module=` deep links, and landing card copy for modules live in `lib/navigation/workspaceModules.ts`. Do not duplicate module id lists or hand-build `/dashboard?module=` strings in multiple files; import helpers from that module.
+- **Layering** — Keep Supabase and heavy validation in `lib/` + `hooks/`; routes and `components/modules` compose UI and call hooks. Avoid embedding new API clients inside large UI files.
+- **Authoritative doc** — See `docs/architecture-standards.md` for layering rules, quality gates, and how to add features without one-offs.
 
 ### Component Composition Rules
 1. Reuse primitives from components/ui before creating module-specific controls
@@ -494,8 +504,10 @@ currency
 4. Workspace shell: components/workspace
 5. Module composition: components/modules
 6. Design system documentation: designsystem.md
-7. Color system reference: docs/stacklite-complete-color-system.md
-8. Copilot instructions: .github/copilot-instructions.md
+7. Architecture standards (layers, registries, scalability): docs/architecture-standards.md
+8. Workspace module IDs and dashboard deep-link helpers: lib/navigation/workspaceModules.ts
+9. Color system reference: docs/stacklite-complete-color-system.md
+10. Copilot instructions: .github/copilot-instructions.md
 
 If conflict exists between implementation and documentation:
 1. Align implementation back to tokenized foundations

@@ -506,6 +506,7 @@ a {
 .dots-background {
   position: absolute;
   inset: 0;
+  z-index: 0;
   background-image: radial-gradient(circle, var(--color-canvas-dot) 1px, transparent 1px);
   background-size: 16px 16px;
   opacity: 1;
@@ -1180,4 +1181,10 @@ a {
   .guest-card h2 {
     font-size: 30px;
   }
+}
+
+/* Mobile dashboard primary scroll (stacklite-mobile-implementation-plan.md) */
+.mobile-scroll-area {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }

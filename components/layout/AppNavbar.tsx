@@ -72,6 +72,14 @@ function AnalogClockIcon({ size = 16 }: { size?: number }) {
 }
 
 type AppNavbarProps = {
+  /** When true: hide Beta, Guest, clock, theme (dashboard mobile plan). md+ unchanged. */
+  compactForMobile?: boolean
+  /**
+   * When true with compactForMobile: header is in normal flow (stacked under safe-area) instead of
+   * absolutely positioned — use on `/dashboard` mobile so module + dock get reliable flex layout.
+   * Guest badge stays visible on small screens when stacked (desktop canvas remains unchanged).
+   */
+  stackedLayout?: boolean
   topClassName?: string
   zClassName?: string
   showThemeButton?: boolean
@@ -88,6 +96,8 @@ type AppNavbarProps = {
 }
 
 export function AppNavbar({
+  compactForMobile = false,
+  stackedLayout = false,
   topClassName = 'top-[50px]',
   zClassName = 'z-40',
   showThemeButton = false,
@@ -108,7 +118,8 @@ export function AppNavbar({
   const { data: profile } = useProfile(Boolean(user))
   const updateProfileMutation = useUpdateProfile()
   const deleteAccountMutation = useDeleteAccount()
-  const [currentTime, setCurrentTime] = useState<string>(() => formatWorkspaceTime(new Date()))
+  // Keep SSR and first client render deterministic to avoid hydration mismatches.
+  const [currentTime, setCurrentTime] = useState<string>('00:00:00 AM')
   const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window === 'undefined') {
       return 'light'
@@ -136,6 +147,10 @@ export function AppNavbar({
   const themeMenuRef = useRef<HTMLDivElement | null>(null)
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
   const photoInputId = useId()
+  const themeMenuId = useId()
+  const profileMenuId = useId()
+  const deleteDialogTitleId = useId()
+  const deleteDialogDescriptionId = useId()
   const authInputClassName =
     'theme-shell-field h-9 w-full rounded-[6px] pl-3 pr-3 py-1 text-[13px] leading-5 focus-visible:border-[var(--primary)] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
   const authTextareaClassName =
@@ -290,27 +305,64 @@ export function AppNavbar({
     }
   }
 
+  useEffect(() => {
+    if (!isDeleteAccountModalOpen) {
+      return
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !deleteAccountMutation.isPending) {
+        setIsDeleteAccountModalOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [isDeleteAccountModalOpen, deleteAccountMutation.isPending])
+
   return (
     <>
     <header
-      className={`absolute left-0 right-0 ${topClassName} ${zClassName} flex w-full items-center justify-between px-6 sm:px-10 lg:px-[50px]`}
+      className={`${
+        stackedLayout && compactForMobile
+          ? `relative shrink-0 w-full bg-[var(--surface-page)] pt-[max(0.5rem,env(safe-area-inset-top,0px))] pb-2 ${zClassName}`
+          : `absolute left-0 right-0 ${topClassName} ${zClassName}`
+      } flex w-full items-center justify-between ${
+        compactForMobile ? 'px-4' : 'px-6 sm:px-10 lg:px-[50px]'
+      }`}
     >
-      <div className="flex items-center gap-3">
-        <Link href="/dashboard" aria-label="Go to dashboard" className="focus-visible:outline-none">
-          <div className="theme-shell-card flex h-12 items-center gap-[5.94px] rounded-[14px] p-2 transition-opacity hover:opacity-90">
-            <Image src={logoSrc} alt="Stacklite" width={161} height={44} className="h-8 w-auto" priority />
+      <div className="flex min-w-0 items-center gap-2 md:gap-3">
+        <Link href="/dashboard" aria-label="Go to dashboard" className="min-w-0 shrink-0 focus-visible:outline-none">
+          <div className="theme-shell-card flex h-11 max-w-[140px] items-center gap-[5.94px] rounded-[14px] p-2 transition-opacity hover:opacity-90 sm:h-12 md:max-w-none">
+            <Image src={logoSrc} alt="Stacklite" width={161} height={44} className="h-7 w-auto md:h-8" priority />
           </div>
         </Link>
-        <span className="text-[14px] font-medium leading-none text-text-base">Beta</span>
+        <span
+          className={`text-[14px] font-medium leading-none text-text-base ${
+            compactForMobile ? 'hidden md:inline' : ''
+          }`}
+        >
+          Beta
+        </span>
         {isGuest && !isAuthOrPublicSharePage ? (
-          <span className="inline-flex h-8 items-center rounded-[8px] bg-feedback-error-base/12 px-3 text-[12px] font-medium leading-none text-feedback-error-text">
+          <span
+            className={`inline-flex h-8 items-center rounded-[8px] bg-feedback-error-base/12 px-3 text-[12px] font-medium leading-none text-feedback-error-text ${
+              compactForMobile && !stackedLayout ? 'hidden md:inline-flex' : ''
+            }`}
+          >
             Guest Mode
           </span>
         ) : null}
       </div>
 
-      <div className="theme-shell-card relative flex h-12 items-center gap-2 rounded-[14px] p-2">
-        <div className="theme-shell-subtle flex h-9 items-center justify-center gap-1.5 rounded-[8px] px-2.5">
+      <div className="theme-shell-card relative flex h-11 shrink-0 items-center gap-1.5 rounded-[14px] p-2 md:h-12 md:gap-2">
+        <div
+          className={`theme-shell-subtle flex h-9 items-center justify-center gap-1.5 rounded-[8px] px-2.5 ${
+            compactForMobile ? 'hidden md:flex' : ''
+          }`}
+        >
           <AnalogClockIcon size={24} />
           <span className="text-[14px] font-medium leading-none">
             {currentTime?.split(' ')[0] ?? '--:--:--'}
@@ -321,21 +373,24 @@ export function AppNavbar({
         </div>
 
         {showThemeButton && (
-          <div ref={themeMenuRef} className="relative">
+          <div ref={themeMenuRef} className={`relative ${compactForMobile ? 'hidden md:block' : ''}`}>
             <button
               type="button"
               aria-label="Theme"
+              aria-expanded={isThemeMenuOpen}
+              aria-controls={themeMenuId}
               onClick={() => {
                 setIsThemeMenuOpen((prev) => !prev)
                 setIsMusicMenuOpen(false)
                 closeProfileMenu()
               }}
-              className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[var(--primary)] text-white"
+              className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[var(--primary)] text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand"
             >
               <ColorfilterBold size={16} />
             </button>
 
             <div
+              id={themeMenuId}
               aria-hidden={!isThemeMenuOpen}
               className={`theme-shell-card absolute right-0 top-[48px] z-50 overflow-hidden rounded-[18px] p-4 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                 isThemeMenuOpen
@@ -349,44 +404,70 @@ export function AppNavbar({
                   <span className="inline-flex h-4 w-4" aria-hidden="true" />
                 </div>
 
-                <div className="grid flex-1 grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => handleThemeChange('dark')}
-                    className={`overflow-hidden rounded-[18px] border bg-[var(--surface-card)] text-left transition-all duration-200 ${
-                      selectedTheme === 'dark'
-                        ? 'border-border-brand'
-                        : 'border-border-muted hover:border-border-base'
-                    }`}
-                  >
-                    <div className="flex h-[92px] items-center justify-center bg-background-emphasis">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-button-primary text-button-primary-fg shadow-md">
-                        <ColorfilterBold size={28} />
+                <div className="space-y-2">
+                  <p className="px-1 text-[12px] font-medium uppercase tracking-[0.12em] text-text-muted">Light / Dark mode</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => handleThemeChange('dark')}
+                      className={`overflow-hidden rounded-[18px] border bg-[var(--surface-card)] text-left transition-all duration-200 ${
+                        selectedTheme === 'dark'
+                          ? 'border-border-brand'
+                          : 'border-border-muted hover:border-border-base'
+                      }`}
+                    >
+                      <div className="flex h-[92px] items-center justify-center bg-background-emphasis">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-button-primary text-button-primary-fg shadow-md">
+                          <ColorfilterBold size={28} />
+                        </div>
                       </div>
-                    </div>
-                    <div className="bg-[var(--surface-card)] px-4 py-4 text-[14px] font-semibold leading-none text-text-base">
-                      Dark
-                    </div>
-                  </button>
+                      <div className="bg-[var(--surface-card)] px-4 py-4 text-[14px] font-semibold leading-none text-text-base">
+                        Dark
+                      </div>
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => handleThemeChange('light')}
-                    className={`overflow-hidden rounded-[18px] border bg-[var(--surface-card)] text-left transition-all duration-200 ${
-                      selectedTheme === 'light'
-                        ? 'border-[var(--primary)]'
-                        : 'border-border-muted hover:border-border-base'
-                    }`}
-                  >
-                    <div className="flex h-[92px] items-center justify-center bg-background-highlight">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-button-secondary text-button-secondary-fg shadow-md">
-                        <ColorfilterBold size={28} />
+                    <button
+                      type="button"
+                      onClick={() => handleThemeChange('light')}
+                      className={`overflow-hidden rounded-[18px] border bg-[var(--surface-card)] text-left transition-all duration-200 ${
+                        selectedTheme === 'light'
+                          ? 'border-[var(--primary)]'
+                          : 'border-border-muted hover:border-border-base'
+                      }`}
+                    >
+                      <div className="flex h-[92px] items-center justify-center bg-background-highlight">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-button-secondary text-button-secondary-fg shadow-md">
+                          <ColorfilterBold size={28} />
+                        </div>
+                      </div>
+                      <div className="bg-[var(--surface-card)] px-4 py-4 text-[14px] font-semibold leading-none text-text-base">
+                        Light
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="px-1 text-[12px] font-medium uppercase tracking-[0.12em] text-text-muted">Specialized themes</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="overflow-hidden rounded-[18px] border border-dashed border-border-muted bg-[var(--surface-card)]">
+                      <div className="flex h-[92px] items-center justify-center bg-background-highlight">
+                        <span className="rounded-full border border-border-muted px-3 py-1 text-[11px] font-medium text-text-muted">Coming soon</span>
+                      </div>
+                      <div className="bg-[var(--surface-card)] px-4 py-4 text-[14px] font-semibold leading-none text-text-muted">
+                        Focus
                       </div>
                     </div>
-                    <div className="bg-[var(--surface-card)] px-4 py-4 text-[14px] font-semibold leading-none text-text-base">
-                      Light
+
+                    <div className="overflow-hidden rounded-[18px] border border-dashed border-border-muted bg-[var(--surface-card)]">
+                      <div className="flex h-[92px] items-center justify-center bg-background-highlight">
+                        <span className="rounded-full border border-border-muted px-3 py-1 text-[11px] font-medium text-text-muted">Coming soon</span>
+                      </div>
+                      <div className="bg-[var(--surface-card)] px-4 py-4 text-[14px] font-semibold leading-none text-text-muted">
+                        Midnight
+                      </div>
                     </div>
-                  </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -398,11 +479,12 @@ export function AppNavbar({
             <button
               type="button"
               aria-label="Music"
+              aria-expanded={isMusicMenuOpen}
               onClick={() => {
                 setIsMusicMenuOpen((prev) => !prev)
                 closeProfileMenu()
               }}
-              className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[var(--primary)] text-white"
+              className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[var(--primary)] text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand"
             >
               <MusicCircleBold size={16} />
             </button>
@@ -430,6 +512,8 @@ export function AppNavbar({
             <button
               type="button"
               aria-label="Profile"
+              aria-expanded={isProfileMenuOpen}
+              aria-controls={profileMenuId}
               onClick={() => {
                 if (!showProfileDropdown) {
                   return
@@ -449,7 +533,7 @@ export function AppNavbar({
                 showProfileActiveBorder && isProfileMenuOpen
                   ? 'border border-[var(--tertiary)]'
                   : 'border border-border-brand'
-              }`}
+              } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand`}
             >
               {profilePhoto ? (
                 <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-[6px] bg-white">
@@ -468,6 +552,7 @@ export function AppNavbar({
 
             {showProfileDropdown && (
               <div
+                id={profileMenuId}
                 aria-hidden={!isProfileMenuOpen}
                 className={`theme-shell-card absolute right-0 top-[48px] z-50 overflow-hidden rounded-[10px] p-4 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                   isProfileMenuOpen
@@ -688,7 +773,7 @@ export function AppNavbar({
                           onClick={onConnectGithub}
                           disabled={connectDisabled}
                           aria-label="Connect GitHub"
-                          className="disabled:opacity-60"
+                          className="rounded-[6px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand disabled:opacity-60"
                         >
                           <GithubIcon />
                         </button>
@@ -697,11 +782,11 @@ export function AppNavbar({
                           onClick={onConnectGoogle}
                           disabled={connectDisabled}
                           aria-label="Connect Gmail"
-                          className="disabled:opacity-60"
+                          className="rounded-[6px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand disabled:opacity-60"
                         >
                           <GoogleIcon />
                         </button>
-                        <button type="button" aria-label="Connect Notion">
+                        <button type="button" aria-label="Connect Notion" className="rounded-[6px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand">
                           <NotionIcon />
                         </button>
                       </div>
@@ -719,12 +804,18 @@ export function AppNavbar({
           className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fadeIn"
           onClick={handleDeleteBackdropClick}
         >
-          <div className="mx-4 w-full max-w-[400px] animate-slideIn rounded-[16px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-6 shadow-lg">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={deleteDialogTitleId}
+            aria-describedby={deleteDialogDescriptionId}
+            className="mx-4 w-full max-w-[400px] animate-slideIn rounded-[16px] border border-[var(--surface-panel-border)] bg-[var(--surface-card)] p-6 shadow-lg"
+          >
             <div>
-              <h2 className="text-[16px] font-semibold text-text-base">
+              <h2 id={deleteDialogTitleId} className="text-[16px] font-semibold text-text-base">
                 Delete your account permanently
               </h2>
-              <p className="mt-2 text-[13px] leading-relaxed text-text-muted">
+              <p id={deleteDialogDescriptionId} className="mt-2 text-[13px] leading-relaxed text-text-muted">
                 This will permanently remove your Stacklite account and all associated access. This action cannot be undone.
               </p>
             </div>
@@ -734,7 +825,7 @@ export function AppNavbar({
                 type="button"
                 onClick={handleDeleteAccount}
                 disabled={deleteAccountMutation.isPending}
-                className="flex h-10 w-full items-center justify-center rounded-full bg-feedback-error-base text-[14px] font-medium text-white transition-all hover:opacity-90 disabled:opacity-60"
+                className="flex h-10 w-full items-center justify-center rounded-full bg-feedback-error-base text-[14px] font-medium text-white transition-all hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand disabled:opacity-60"
               >
                 {deleteAccountMutation.isPending ? 'Deleting...' : 'Delete account'}
               </button>
@@ -742,7 +833,7 @@ export function AppNavbar({
                 type="button"
                 onClick={() => setIsDeleteAccountModalOpen(false)}
                 disabled={deleteAccountMutation.isPending}
-                className="flex h-10 w-full items-center justify-center rounded-full border border-[var(--surface-divider)] text-[13px] font-medium text-text-muted transition-all hover:bg-[var(--surface-overlay)] disabled:opacity-60"
+                className="flex h-10 w-full items-center justify-center rounded-full border border-[var(--surface-divider)] text-[13px] font-medium text-text-muted transition-all hover:bg-[var(--surface-overlay)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-brand disabled:opacity-60"
               >
                 Cancel
               </button>

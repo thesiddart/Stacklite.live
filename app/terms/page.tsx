@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { AppNavbar } from '@/components/layout/AppNavbar'
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
   description: 'Terms and conditions for using Stacklite.',
   robots: { index: true, follow: true },
+  alternates: { canonical: 'https://stacklite.live/terms' },
 }
 
 export default function TermsPage() {
@@ -130,6 +132,15 @@ export default function TermsPage() {
               <a className="text-[var(--primary)] underline underline-offset-2" href="mailto:hello@siddart.net">
                 hello@siddart.net
               </a>
+            </p>
+            <p className="text-sm text-text-muted">
+              <Link href="/" className="text-[var(--primary)] underline underline-offset-2">
+                Home
+              </Link>
+              {' · '}
+              <Link href="/privacy" className="text-[var(--primary)] underline underline-offset-2">
+                Privacy Policy
+              </Link>
             </p>
           </section>
         </article>
