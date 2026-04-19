@@ -110,22 +110,25 @@ export const LANDING_WORKSPACE_MODULE_CARDS: readonly LandingModuleCard[] = [
   {
     id: 'contract',
     name: 'Contract Generator',
-    description: 'Professional contracts in minutes with share-ready templates.',
+    description:
+      'Create professional freelance contracts in minutes with share-ready templates.',
   },
   {
     id: 'invoice',
     name: 'Invoice Generator',
-    description: 'Line items, tax, discounts, and clean PDF export.',
+    description:
+      'Generate and send freelance invoices with line items, tax, discounts, and PDF export.',
   },
   {
     id: 'time',
     name: 'Time Tracker',
-    description: 'Track hours against clients and convert entries to invoices.',
+    description:
+      'Simple freelance time tracking: log hours by client and roll them into invoices.',
   },
   {
     id: 'clients',
     name: 'Client Manager',
-    description: 'Store client data once and auto-fill across modules.',
+    description: 'Freelance client management: store details once and auto-fill across modules.',
   },
   {
     id: 'income',

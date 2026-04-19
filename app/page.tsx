@@ -4,12 +4,13 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { WorkspaceMock } from '@/components/landing/WorkspaceMock'
 import { buildDashboardUrlWithModule, LANDING_WORKSPACE_MODULE_CARDS } from '@/lib/navigation/workspaceModules'
+import { LANDING_PAGE_JSON_LD } from '@/lib/seo/siteStructuredData'
 
 export const metadata: Metadata = {
   title: 'The freelancer operating system',
   description:
-    'Contracts, invoices, time tracking, and client management. Everything a freelancer needs in one calm workspace.',
-  alternates: { canonical: '/' },
+    'Free workspace for freelancers. Create contracts, send invoices, track time, and manage clients — all in one place. No sign up needed.',
+  alternates: { canonical: 'https://stacklite.live' },
 }
 
 const guestHighlights = [
@@ -21,6 +22,12 @@ const guestHighlights = [
 export default function Home() {
   return (
     <div className="dark min-h-screen bg-background-base text-text-base">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(LANDING_PAGE_JSON_LD),
+        }}
+      />
       <div className="pointer-events-none fixed inset-0 z-0 dots-background opacity-20 [background-size:20px_20px]" />
 
       <div className="relative z-10">
@@ -61,7 +68,7 @@ export default function Home() {
       </header>
 
       <main>
-        <section className="bg-[var(--color-canvas-bg)] text-text-inverse">
+        <section aria-label="Hero" className="bg-[var(--color-canvas-bg)] text-text-inverse">
           <div className="relative mx-auto w-full max-w-[1200px] px-5 pb-14 pt-16 text-center">
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 rounded-full border border-border-base bg-background-highlight px-4 py-1 text-xs text-text-muted">
@@ -70,11 +77,11 @@ export default function Home() {
               </div>
 
               <h1 className="mx-auto mt-6 max-w-[680px] text-4xl font-bold leading-[1.08] tracking-tight text-text-base sm:text-5xl lg:text-6xl">
-                The workspace built for freelancers
+                The freelancer operating system
               </h1>
 
               <p className="mx-auto mt-5 max-w-[560px] text-base leading-relaxed text-text-muted">
-                Contracts, invoices, time tracking, and client management - all in one calm place. Start in seconds.
+                Contracts, invoices, time tracking, and client management — all in one calm place. Start in seconds.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -91,12 +98,14 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="features" className="mx-auto w-full max-w-[1200px] px-5 py-16">
+        <section id="features" aria-label="Features" className="mx-auto w-full max-w-[1200px] px-5 py-16">
           <div className="mb-10 text-center">
             <span className="inline-flex rounded-full border border-border-base bg-background-highlight px-4 py-1 text-xs text-text-muted">
               Five focused modules
             </span>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-text-base sm:text-4xl">Everything in one workspace</h2>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-text-base sm:text-4xl">
+              Everything a freelancer needs in one workspace
+            </h2>
             <p className="mx-auto mt-3 max-w-[520px] text-sm leading-relaxed text-text-muted">
               No switching between apps. No separate subscriptions. One calm workspace for freelance operations.
             </p>
@@ -118,7 +127,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="how-it-works" className="border-y border-border-muted bg-background-highlight px-5 py-16 text-center">
+        <section id="how-it-works" aria-label="How it works" className="border-y border-border-muted bg-background-highlight px-5 py-16 text-center">
           <span className="inline-flex rounded-full border border-border-base bg-background-base px-4 py-1 text-xs text-text-muted">
             Philosophy
           </span>
@@ -130,7 +139,7 @@ export default function Home() {
           </p>
         </section>
 
-        <section id="guest" className="relative isolate px-5 py-16">
+        <section id="guest" aria-label="Guest mode" className="relative isolate px-5 py-16">
           <div className="absolute inset-0 -z-10 dots-background opacity-20 [background-size:20px_20px]" />
           <div className="relative mx-auto grid w-full max-w-[920px] gap-7 rounded-2xl border border-button-primary bg-background-base p-8 lg:grid-cols-2">
             <div>

@@ -5,6 +5,7 @@ import { AppNavbar } from '@/components/layout/AppNavbar'
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   description: 'How Stacklite collects, uses, and protects your data.',
+  alternates: { canonical: 'https://stacklite.live/privacy' },
 }
 
 export default function PrivacyPage() {
@@ -425,9 +426,15 @@ export default function PrivacyPage() {
 
           <footer className="mt-8 border-t border-border-muted pt-6 text-sm text-text-muted">
             <p>Stacklite is a product by Siddhartha Dwivedi · stacklite.live</p>
-            <p className="mt-3">
+            <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
+              <Link href="/" className="text-text-brand underline underline-offset-2">
+                Home
+              </Link>
+              <Link href="/terms" className="text-text-brand underline underline-offset-2">
+                Terms of Service
+              </Link>
               <Link href="/dashboard" className="text-text-brand underline underline-offset-2">
-                Back to Dashboard
+                Dashboard
               </Link>
             </p>
           </footer>

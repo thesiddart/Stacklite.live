@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Support',
   description: 'Get help with Stacklite.',
   robots: { index: true, follow: true },
+  alternates: { canonical: 'https://stacklite.live/support' },
 }
 
 export default function SupportPage() {
@@ -21,6 +23,10 @@ export default function SupportPage() {
           hello@siddart.net
         </a>
         <p className="mt-6 text-xs text-text-muted">
+          <Link href="/" className="hover:text-text-base">
+            Home
+          </Link>
+          {' · '}
           <a href="/privacy" className="hover:text-text-base">Privacy Policy</a>
           {' · '}
           <a href="/terms" className="hover:text-text-base">Terms of Service</a>
