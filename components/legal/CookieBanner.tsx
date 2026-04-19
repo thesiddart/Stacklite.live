@@ -1,22 +1,42 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { readCookieConsent, type ConsentValue, writeCookieConsent } from '@/lib/cookieConsent'
 
 export function CookieBanner() {
-  const [consent, setConsent] = useState<ConsentValue | null>(() => readCookieConsent())
+  const [mounted, setMounted] = useState(false)
+  const [consent, setConsent] = useState<ConsentValue | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    queueMicrotask(() => {
+      if (cancelled) return
+      setMounted(true)
+      setConsent(readCookieConsent())
+    })
+
+    // Do not listen to COOKIE_CONSENT_CHANGE_EVENT: writeCookieConsent fires it in the same turn as
+    // the click, which re-enters setConsent and can race React batching. Same-tab dismiss uses only
+    // handleConsent. `storage` is for other tabs/windows (same-origin), not the current document.
+    const onStorage = () => setConsent(readCookieConsent())
+    window.addEventListener('storage', onStorage)
+    return () => {
+      cancelled = true
+      window.removeEventListener('storage', onStorage)
+    }
+  }, [])
 
   const handleConsent = (value: ConsentValue) => {
-    // Always hide immediately in UI, then persist best-effort.
     setConsent(value)
     writeCookieConsent(value)
   }
 
+  if (!mounted) return null
   if (consent) return null
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-[300] md:right-auto md:w-[430px]">
+    <div className="pointer-events-auto fixed bottom-4 left-4 right-4 z-[300] md:right-auto md:w-[430px]">
       <div className="rounded-2xl border border-border-base bg-background-highlight p-4 shadow-lg">
         <div className="mb-3 flex items-start gap-3">
           <div className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-text-brand" aria-hidden="true" />
