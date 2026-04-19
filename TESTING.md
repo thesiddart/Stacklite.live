@@ -432,9 +432,10 @@ For releases or any change that touches multiple modules, run this in a fresh br
 - [ ] Use VoiceOver/NVDA on the dashboard — every icon-only button announces its label.
 
 ### Cookie consent
-- [ ] Fresh profile shows the cookie banner.
-- [ ] Decline → analytics calls suppressed.
-- [ ] Accept → `cookie_consents` row written for the signed-in user with the current `policy_version`.
+- [ ] Fresh profile shows the cookie banner (`components/legal/CookieBanner.tsx`).
+- [ ] Accept or Decline → banner dismisses and stays dismissed after **full reload** in the same tab (state in `lib/cookieConsent.ts`: `sessionStorage` + `localStorage` + cookie).
+- [ ] Decline → Plausible custom events from `lib/analytics.ts` do not fire (`hasAcceptedCookieConsent()` false).
+- [ ] Accept → Plausible events allowed; signed-in user gets `cookie_consents` upsert with current `policy_version` from `hooks/useAuth.ts`.
 
 ---
 

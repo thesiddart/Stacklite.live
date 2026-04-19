@@ -16,7 +16,7 @@ A single-page, canvas-based workspace for freelancers. It is NOT a multi-page ap
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 15 (App Router) |
+| Framework | Next.js 16 (App Router) |
 | Language | TypeScript 5 — strict mode ON |
 | Styling | TailwindCSS 4 |
 | State | Zustand + persist middleware |
@@ -33,31 +33,21 @@ A single-page, canvas-based workspace for freelancers. It is NOT a multi-page ap
 ## Project Structure
 
 ```
-src/
-├── app/                    # Next.js App Router pages only
-├── components/
-│   ├── ui/                 # Base Radian UI components
-│   ├── modules/            # Feature modules
-│   │   ├── contract-generator/
-│   │   ├── invoice-generator/
-│   │   ├── time-tracker/
-│   │   ├── client-manager/
-│   │   └── income-tracker/
-│   └── workspace/          # Canvas, Dock, GuestIndicator, SavePromptModal
-├── hooks/                  # useClients, useContracts, useInvoices, useTimeEntries
-├── stores/                 # Zustand stores
-│   ├── guestStore.ts
-│   ├── sessionStore.ts
-│   ├── savePromptStore.ts
-│   └── [module]Store.ts
-├── lib/
-│   ├── supabase/           # client.ts + server.ts
-│   ├── pdf/                # PDF generation utilities
-│   ├── migration/          # migrateGuestData.ts
-│   └── utils.ts
-├── types/                  # Global TypeScript interfaces
-└── styles/
-    └── globals.css         # Lumea token CSS variables — DO NOT MODIFY
+app/                        # Next.js App Router (routes, layouts, sitemap.ts, robots.ts)
+components/
+├── ui/                     # Primitives (token-based)
+├── modules/                # Client, Time, Contract, Invoice, Income
+├── layout/                 # App shell (navbar, shared modals)
+├── legal/                  # CookieBanner, PlausibleScript
+└── workspace/              # Dashboard canvas, dock, panels
+hooks/                      # React Query + feature hooks
+stores/                     # Zustand (guest, session, timer, module stores)
+lib/
+├── supabase/               # client + server helpers
+├── api/                    # Domain API helpers
+├── cookieConsent.ts        # Consent read/write + storage order
+├── analytics.ts            # Plausible wrapper (gated on consent)
+└── ...
 ```
 
 Do not create folders outside this structure without asking.
@@ -323,4 +313,4 @@ Do not build beyond the current module scope unless explicitly told to.
 ---
 
 *Stacklite — Built by Siddhartha Dwivedi*
-*Next.js 15 · TypeScript 5 · TailwindCSS 4 · Supabase · Vercel*
+*Next.js 16 · TypeScript 5 · TailwindCSS 4 · Supabase · Vercel*

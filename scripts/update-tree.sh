@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-OUT="docs/codebase-tree.md"
+OUT="codebase-tree.md"
 
 {
   echo "# Stacklite Codebase Tree"
@@ -19,7 +19,7 @@ OUT="docs/codebase-tree.md"
   echo "## Workflow"
   echo
   echo "- Run npm run tree:update after any feature that adds, removes, or moves files/folders."
-  echo "- Read docs/codebase-tree.md before implementation tasks."
+  echo "- Read codebase-tree.md (repo root) before implementation tasks."
   echo
   echo "## Tree"
   echo

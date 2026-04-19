@@ -19,6 +19,8 @@ The app is in active development with core auth and data foundations in place.
 - Invoice Generator supports guest + authenticated draft flows, itemized totals, payment status updates, and share-token route support.
 - Income Tracker is data-driven from invoice/client data and provides period-based earnings/outstanding insights.
 - Guest mode is supported via Zustand persist; hooks are guest-aware and switch between local guest state and Supabase.
+- **Cookie consent** (`components/legal/CookieBanner.tsx`, `lib/cookieConsent.ts`): Accept/Decline persists across reloads using `sessionStorage` (same tab), `localStorage`, and a first-party cookie; signed-in users sync to `cookie_consents` via `hooks/useAuth.ts`. Plausible custom events (`lib/analytics.ts`) run only after acceptance.
+- **SEO surfaces:** `app/sitemap.ts` and `app/robots.ts` expose `/sitemap.xml` and `/robots.txt` for crawlers.
 
 ## Stack
 
@@ -35,14 +37,15 @@ The app is in active development with core auth and data foundations in place.
 ## Project Layout
 
 ```text
-app/                    App Router routes and layouts
-components/             UI, layout, workspace, and feature modules
+app/                    App Router routes, layouts, sitemap.ts, robots.ts
+components/             UI, layout, workspace, feature modules, legal (banner, Plausible)
 hooks/                  React Query and app hooks
-lib/                    API, validation, types, utilities, Supabase clients
+lib/                    API, validation, cookieConsent, analytics, Supabase clients
 stores/                 Zustand stores
 supabase/migrations/    Database schema and follow-up migrations
 tests/                  Unit tests
-docs/                   Product and implementation documentation
+docs/                   Optional planning notes (gitignored; not maintained as shipped docs)
+codebase-tree.md        Auto-generated file map (`npm run tree:update`)
 ```
 
 ## Local Setup
@@ -126,9 +129,11 @@ npm run tree:update
 
 ## Reference Docs
 
+- [codebase-tree.md](./codebase-tree.md) — auto-generated file map (`npm run tree:update`)
 - [SUPABASE_SETUP.md](./SUPABASE_SETUP.md)
 - [SECURITY_AUDIT.md](./SECURITY_AUDIT.md)
 - [TESTING.md](./TESTING.md)
 - [designsystem.md](./designsystem.md)
-- [docs/stacklite-complete-color-system.md](./docs/stacklite-complete-color-system.md)
 - [.github/copilot-instructions.md](./.github/copilot-instructions.md)
+
+Planning and exploration notes may live under `docs/` locally (see `.gitignore`); they are **not** treated as canonical product documentation.

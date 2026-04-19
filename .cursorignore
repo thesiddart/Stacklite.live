@@ -15,4 +15,5 @@ public/uploads/
 *.test.ts
 *.spec.tsx
 *.spec.ts
+.docs
 

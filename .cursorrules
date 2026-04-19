@@ -106,13 +106,13 @@ lib/                         API, validation, types, utilities, Supabase clients
 stores/                      Zustand stores (guest-aware)
 supabase/migrations/         Database schema and migrations
 tests/                       Unit tests (Vitest)
-docs/                        Product and implementation docs (includes architecture-standards.md)
+docs/                        Optional planning drafts (gitignored). Do **not** update these to “sync” product changes.
 
 ### Cross-cutting architecture (scalability)
 
 - **Canonical workspace modules** — IDs, `?module=` deep links, and landing card copy for modules live in `lib/navigation/workspaceModules.ts`. Do not duplicate module id lists or hand-build `/dashboard?module=` strings in multiple files; import helpers from that module.
 - **Layering** — Keep Supabase and heavy validation in `lib/` + `hooks/`; routes and `components/modules` compose UI and call hooks. Avoid embedding new API clients inside large UI files.
-- **Authoritative doc** — See `docs/architecture-standards.md` for layering rules, quality gates, and how to add features without one-offs.
+- **Authoritative layering** — Follow **Cross-cutting architecture** above and `lib/navigation/workspaceModules.ts`; use `codebase-tree.md` (repo root) for file layout. Ignore ad hoc edits under `docs/` for shipped behavior.
 
 ### Component Composition Rules
 1. Reuse primitives from components/ui before creating module-specific controls
@@ -504,10 +504,9 @@ currency
 4. Workspace shell: components/workspace
 5. Module composition: components/modules
 6. Design system documentation: designsystem.md
-7. Architecture standards (layers, registries, scalability): docs/architecture-standards.md
-8. Workspace module IDs and dashboard deep-link helpers: lib/navigation/workspaceModules.ts
-9. Color system reference: docs/stacklite-complete-color-system.md
-10. Copilot instructions: .github/copilot-instructions.md
+7. Architecture and workspace module registry (layers, `?module=` helpers): this file, README.md, `lib/navigation/workspaceModules.ts`
+8. Color system: designsystem.md (files under `docs/` are planning-only, not canonical)
+9. Copilot instructions: .github/copilot-instructions.md
 
 If conflict exists between implementation and documentation:
 1. Align implementation back to tokenized foundations
