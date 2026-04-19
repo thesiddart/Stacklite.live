@@ -130,5 +130,4 @@ npm run tree:update
 - [SECURITY_AUDIT.md](./SECURITY_AUDIT.md)
 - [TESTING.md](./TESTING.md)
 - [designsystem.md](./designsystem.md)
-- [docs/stacklite-complete-color-system.md](./docs/stacklite-complete-color-system.md)
 - [.github/copilot-instructions.md](./.github/copilot-instructions.md)
