@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/dashboard', '/c/', '/i/', '/login', '/signup', '/auth/'],
+      disallow: [ '/c/', '/i/', '/login', '/signup', '/auth/'],
     },
     sitemap: 'https://stacklite.live/sitemap.xml',
   }
